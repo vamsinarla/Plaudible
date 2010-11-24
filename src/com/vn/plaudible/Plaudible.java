@@ -12,7 +12,6 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.os.RemoteException;
 import android.speech.tts.TextToSpeech;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -33,8 +32,8 @@ public class Plaudible extends ListActivity implements TextToSpeech.OnInitListen
 	private ArticleListAdapter adapter;
 	private TextToSpeech ttsEngine;
 	
-	private PLSInterface plsInterface;
-	
+	private SpeechService mSpeechService;
+		
 	private static final int TTS_INSTALLED_CHECK_CODE = 1;
 	
     /** Called when the activity is first created. */
@@ -63,8 +62,7 @@ public class Plaudible extends ListActivity implements TextToSpeech.OnInitListen
         								articles }));
         
         checkAndInstallTTSEngine();
-        
-        this.bindService(new Intent(Plaudible.this, PLSInterface.class), mConnection, Context.BIND_AUTO_CREATE);
+        bindSpeechService();
     }
    
     @Override
@@ -72,8 +70,7 @@ public class Plaudible extends ListActivity implements TextToSpeech.OnInitListen
     	ttsEngine.stop();
     	ttsEngine.shutdown();
     	
-    	this.unbindService(mConnection);
-    	
+    	unBindSpeechService();
     	super.onDestroy();
     }
     
@@ -108,19 +105,6 @@ public class Plaudible extends ListActivity implements TextToSpeech.OnInitListen
 	   for (int i = 0; i < articles.size(); ++i) {
 		   this.adapter.add(articles.get(i));
 	   }
-   }
- 
-   public TextToSpeech getTTSEngine() {
-	   return this.ttsEngine;
-   }
-   
-   public void startReadingArticles() {
-	   try {
-			plsInterface.stopReading();
-			plsInterface.readArticle("Yes!!! This works. That is amazing . I am so happy, I can eat a banana.");
-		} catch (RemoteException e) {
-			e.printStackTrace();
-		}
    }
    
    @SuppressWarnings("rawtypes")
@@ -181,22 +165,27 @@ public class Plaudible extends ListActivity implements TextToSpeech.OnInitListen
 		if (status == TextToSpeech.SUCCESS) {
 	           ttsEngine.setLanguage(Locale.US);
 	            
-	           ttsEngine.speak("Text to speech is initialized", 
-	        		   TextToSpeech.QUEUE_ADD, null);	      	 
+	           ttsEngine.speak("Text to speech is initialized", TextToSpeech.QUEUE_ADD, null);	      	 
 		}
 	}
 	
-	private ServiceConnection mConnection = new ServiceConnection()
-    {
-		public void onServiceConnected(ComponentName className, IBinder service) {
-			plsInterface = PLSInterface.Stub.asInterface((IBinder)service);
-			startReadingArticles();
-			SpeechService m = (SpeechService) service;
+	private ServiceConnection mConnection = new ServiceConnection() {
+		@Override
+		public void onServiceConnected(ComponentName name, IBinder service) {
+			mSpeechService = ((SpeechService.SpeechBinder)service).getService();
 		}
 
-		public void onServiceDisconnected(ComponentName className) {
-			plsInterface = null;
-		}
-    };
-   
+		@Override
+		public void onServiceDisconnected(ComponentName name) {
+			mSpeechService = null;
+		}	
+	};
+	
+	void bindSpeechService() {
+		this.bindService(new Intent(Plaudible.this, SpeechService.class), mConnection, Context.BIND_AUTO_CREATE);
+	}
+	
+	void unBindSpeechService() {
+		this.unbindService(mConnection);
+	}
 }

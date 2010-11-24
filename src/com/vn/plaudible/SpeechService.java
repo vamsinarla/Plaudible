@@ -1,22 +1,21 @@
 package com.vn.plaudible;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import android.app.Application;
 import android.app.NotificationManager;
 import android.app.Service;
 import android.content.Intent;
+import android.os.Binder;
 import android.os.IBinder;
-import android.os.RemoteException;
-import android.speech.tts.TextToSpeech;
 
 public class SpeechService extends Service {
 
 	private NotificationManager nm;
-	private static final int NOTIFY_ID = R.layout.main;
-
-	private TextToSpeech ttsEngine;
+	
+	public class SpeechBinder extends Binder {
+		SpeechService getService() {
+			return SpeechService.this;
+		}
+	}
+	
 	@Override
 	public IBinder onBind(Intent intent) {
 		return mBinder;
@@ -24,35 +23,24 @@ public class SpeechService extends Service {
 	
 	@Override
 	public void onCreate() {
-		super.onCreate();
 		nm = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+		
+		showNotification();
+	}
+	
+	@Override
+	public int onStartCommand(Intent intent, int flags, int startId) {
+		return START_STICKY;
 	}
 	
 	@Override
 	public void onDestroy() {
-		nm.cancel(NOTIFY_ID);
+		// nm.cancel(R.string.speech_service_started);
 	}
 	
-	public IBinder getBinder() {
-		return mBinder;
-	}
+	private final IBinder mBinder = new SpeechBinder();
 	
-	public void abc() {
-	}
-	
-	private final PLSInterface.Stub mBinder = new PLSInterface.Stub() {
+	private void showNotification() {
 		
-		@Override
-		public void readArticle(String text) throws RemoteException {
-			// ttsEngine.speak(text, TextToSpeech.QUEUE_FLUSH, null);
-			Integer i = new Integer(42);
-		}
-
-		@Override
-		public void stopReading() throws RemoteException {
-			// ttsEngine.stop();
-			Integer i = new Integer(42);
-		}
-	};
-
+	}
 }
