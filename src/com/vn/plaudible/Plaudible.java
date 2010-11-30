@@ -22,6 +22,7 @@ import android.widget.TextView;
 
 public class Plaudible extends ListActivity implements TextToSpeech.OnInitListener {
 	
+	// ViewHolder pattern for efficient ListAdapter usage
 	static class ViewHolder {
         TextView title;
         TextView description;
@@ -30,8 +31,7 @@ public class Plaudible extends ListActivity implements TextToSpeech.OnInitListen
 
 	private ArrayList<Article> articles;
 	private ArticleListAdapter adapter;
-	private TextToSpeech ttsEngine;
-	
+	private TextToSpeech ttsEngine;	
 	private SpeechService mSpeechService;
 		
 	private static final int TTS_INSTALLED_CHECK_CODE = 1;
@@ -45,11 +45,11 @@ public class Plaudible extends ListActivity implements TextToSpeech.OnInitListen
         articles = new ArrayList<Article>();
         adapter = new ArticleListAdapter(this, R.layout.list_item, articles);
         
-		setListAdapter(adapter);
-        
+        setListAdapter(adapter);
+		
         URL feedURL = null;
 		try {
-			feedURL = new URL("http://online.wsj.com/xml/rss/3_7014.xml");
+			feedURL = new URL("http://feeds.nytimes.com/nyt/rss/HomePage");
 		} catch (MalformedURLException e) {
 			e.printStackTrace();
 		}
@@ -61,8 +61,8 @@ public class Plaudible extends ListActivity implements TextToSpeech.OnInitListen
         								feedURL,
         								articles }));
         
-        checkAndInstallTTSEngine();
         bindSpeechService();
+        checkAndInstallTTSEngine(); 
     }
    
     @Override
@@ -100,11 +100,8 @@ public class Plaudible extends ListActivity implements TextToSpeech.OnInitListen
     
    // Used by the AsyncTask to update the set of articles
    public void setArticles(ArrayList<Article> articles) {
-	   this.articles = articles;
-	   
-	   for (int i = 0; i < articles.size(); ++i) {
-		   this.adapter.add(articles.get(i));
-	   }
+	   this.articles = articles;   
+	   this.adapter.notifyDataSetChanged();
    }
    
    @SuppressWarnings("rawtypes")
@@ -142,6 +139,24 @@ public class Plaudible extends ListActivity implements TextToSpeech.OnInitListen
 		   
 		   holder.title.setText(this.articles.get(position).getTitle());
 		   holder.description.setText(this.articles.get(position).getDescription());
+
+		   // Set the tag for the button as the index
+		   holder.playButton.setTag((Integer)position);
+		   
+		   // Set the listener on the play button
+		   holder.playButton.setOnClickListener(new View.OnClickListener() {
+			   @Override
+			   public void onClick(View v) {
+				   Integer position = (Integer) v.getTag();
+				   
+				   new PlaudibleAsyncTask().execute(
+						   new PlaudibleAsyncTask.Payload(
+								   PlaudibleAsyncTask.ARTICLE_DOWNLOADER_TASK,
+								   new Object[] { Plaudible.this,
+										   			position,
+										   			articles }));
+			   }
+		   });
 		   
 		   return convertView;
 	   }
@@ -160,12 +175,15 @@ public class Plaudible extends ListActivity implements TextToSpeech.OnInitListen
    }
 
     // OnInitListener for TTSEngine initialization
+    // Check if the Service is bound and if it is then we can set the TTS Engine it should use
 	@Override
 	public void onInit(int status) {
 		if (status == TextToSpeech.SUCCESS) {
-	           ttsEngine.setLanguage(Locale.US);
-	            
-	           ttsEngine.speak("Text to speech is initialized", TextToSpeech.QUEUE_ADD, null);	      	 
+	           ttsEngine.setLanguage(Locale.UK);	            
+	           
+	           if (mSpeechService != null) {
+	        	   mSpeechService.setTTSEngine(this.ttsEngine);
+	           }
 		}
 	}
 	

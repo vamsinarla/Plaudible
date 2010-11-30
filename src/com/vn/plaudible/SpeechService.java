@@ -5,10 +5,12 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.Binder;
 import android.os.IBinder;
+import android.speech.tts.TextToSpeech;
 
 public class SpeechService extends Service {
 
 	private NotificationManager nm;
+	private TextToSpeech ttsEngine;
 	
 	public class SpeechBinder extends Binder {
 		SpeechService getService() {
@@ -42,5 +44,13 @@ public class SpeechService extends Service {
 	
 	private void showNotification() {
 		
+	}
+	
+	public void setTTSEngine(TextToSpeech ttsEngine) {
+		this.ttsEngine = ttsEngine;
+		
+		this.ttsEngine.speak("Text to speech is initialized. And I hope we can now move behind being restricted to one activity only. THis is so great and I am so happy that I can eat a banana.",
+				TextToSpeech.QUEUE_ADD, null);
+        
 	}
 }

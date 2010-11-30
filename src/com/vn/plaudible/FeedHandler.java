@@ -15,18 +15,17 @@ public class FeedHandler extends DefaultHandler {
 	private String titleTag;
 	private String descriptionTag;
 	private String itemTag;
+	private String linkTag;
 	
-	FeedHandler() {
+	FeedHandler(ArrayList<Article> articles) {
 		titleTag = "title";
 		descriptionTag = "description";
 		itemTag = "item";
+		linkTag = "guid";
+		
+		Articles = articles;
 	}
-	
-	
-	public ArrayList<Article> getArticles(){
-		return this.Articles;
-	}
-	
+		
 	@Override
 	public void characters(char[] ch, int start, int length)
 			throws SAXException {
@@ -44,6 +43,8 @@ public class FeedHandler extends DefaultHandler {
 				currentArticle.setTitle(builder.toString().trim());
 			} else if (localName.equalsIgnoreCase(descriptionTag)) {
 				currentArticle.setDescription(builder.toString().trim());
+			} else if (localName.equalsIgnoreCase(linkTag)) {
+				currentArticle.setUrl(builder.toString().trim());
 			} else if (localName.equalsIgnoreCase(itemTag)) {
 				Articles.add(currentArticle);
 			}
@@ -55,7 +56,6 @@ public class FeedHandler extends DefaultHandler {
 	@Override
 	public void startDocument() throws SAXException {
 		super.startDocument();
-		Articles = new ArrayList<Article>();
 		builder = new StringBuilder();
 	}
 
