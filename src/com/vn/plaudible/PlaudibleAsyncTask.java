@@ -1,10 +1,5 @@
 package com.vn.plaudible;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.io.StringWriter;
-import java.io.Writer;
 import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
@@ -13,9 +8,14 @@ import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
 import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.htmlparser.NodeFilter;
+import org.htmlparser.Parser;
+import org.htmlparser.filters.TagNameFilter;
+import org.htmlparser.lexer.Lexer;
+import org.htmlparser.lexer.Page;
+import org.htmlparser.util.NodeList;
 
 import android.os.AsyncTask;
 import android.util.Log;
@@ -37,12 +37,31 @@ public class PlaudibleAsyncTask extends AsyncTask<PlaudibleAsyncTask.Payload, Ar
 			case ARTICLE_DOWNLOADER_TASK:
 				SAXParserFactory factory = SAXParserFactory.newInstance();
 				try {
-					SAXParser parser = factory.newSAXParser();
+					/*SAXParser parser = factory.newSAXParser();
 					
 					String content = new String();
 					ArticleParser articleHandler = new ArticleParser(content);
 					HttpResponse response = (HttpResponse) payload.result;
-					parser.parse(response.getEntity().getContent(), articleHandler);
+					// parser.parse(response.getEntity().getContent(), articleHandler);
+					// InputSource is = new InputSource(response.getEntity().getContent());
+					InputSource is = new InputSource("http://www.nytimes.com/2010/12/01/technology/01google.html");
+					is.setEncoding("UTF-8");
+					parser.parse(is, articleHandler);*/
+					
+					HttpResponse response = (HttpResponse) payload.result;
+					Page p = new Page(response.getEntity().getContent(), "UTF-8");
+					Lexer l = new Lexer(p);
+					Parser parser = new Parser(l);
+					NodeFilter filter = new TagNameFilter("p");
+					String content = new String();
+					NodeList list = parser.parse(filter);
+					for (int i = 0; i < list.size(); ++i)
+					{
+						content += list.elementAt(i).toPlainTextString();
+					}
+					
+					activity.sendArticleForReading(content);
+					
 				} catch (Exception exception) {
 					Log.e("onPostExecute", exception.getMessage());
 				}
@@ -82,7 +101,7 @@ public class PlaudibleAsyncTask extends AsyncTask<PlaudibleAsyncTask.Payload, Ar
 					if (articles.get(index).isDownloaded() == false) {
 						String content = new String();
 						URI url = new URI(articles.get(index).getUrl());
-						HttpClient client = new DefaultHttpClient();
+						DefaultHttpClient client = new DefaultHttpClient();
 						HttpGet request = new HttpGet();
 						
 						request.setURI(url);

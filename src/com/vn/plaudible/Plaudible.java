@@ -4,15 +4,20 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Locale;
+import java.util.concurrent.ExecutionException;
+
+import com.vn.plaudible.PlaudibleAsyncTask.Payload;
 
 import android.app.ListActivity;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.speech.tts.TextToSpeech;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -149,12 +154,23 @@ public class Plaudible extends ListActivity implements TextToSpeech.OnInitListen
 			   public void onClick(View v) {
 				   Integer position = (Integer) v.getTag();
 				   
-				   new PlaudibleAsyncTask().execute(
+				   Log.d("Button::onClick", "Before execute");
+				   AsyncTask<Payload, Article, Payload> task = new PlaudibleAsyncTask().execute(
 						   new PlaudibleAsyncTask.Payload(
 								   PlaudibleAsyncTask.ARTICLE_DOWNLOADER_TASK,
 								   new Object[] { Plaudible.this,
 										   			position,
 										   			articles }));
+				   try {
+					task.get();
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (ExecutionException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				   Log.d("Button::onClick", "After execute" + task.getStatus());
 			   }
 		   });
 		   
@@ -179,11 +195,17 @@ public class Plaudible extends ListActivity implements TextToSpeech.OnInitListen
 	@Override
 	public void onInit(int status) {
 		if (status == TextToSpeech.SUCCESS) {
-	           ttsEngine.setLanguage(Locale.UK);	            
+	           ttsEngine.setLanguage(Locale.US);	            
 	           
 	           if (mSpeechService != null) {
 	        	   mSpeechService.setTTSEngine(this.ttsEngine);
 	           }
+		}
+	}
+	
+	public void sendArticleForReading(String content) {
+		if (mSpeechService != null) {
+			mSpeechService.readArticle(content);
 		}
 	}
 	

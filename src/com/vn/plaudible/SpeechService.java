@@ -49,8 +49,12 @@ public class SpeechService extends Service {
 	public void setTTSEngine(TextToSpeech ttsEngine) {
 		this.ttsEngine = ttsEngine;
 		
-		this.ttsEngine.speak("Text to speech is initialized. And I hope we can now move behind being restricted to one activity only. THis is so great and I am so happy that I can eat a banana.",
+		this.ttsEngine.speak("Text to speech is initialized.",
 				TextToSpeech.QUEUE_ADD, null);
         
+	}
+	
+	public void readArticle(String content) {
+		this.ttsEngine.speak(content, TextToSpeech.QUEUE_FLUSH, null);
 	}
 }

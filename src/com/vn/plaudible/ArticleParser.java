@@ -29,26 +29,33 @@ public class ArticleParser extends DefaultHandler {
 	@Override
 	public void startDocument() throws SAXException {
 		super.startDocument();
-		builder = new StringBuilder();
+		// builder = new StringBuilder();
 	}
 	
 	@Override
 	public void startElement(String uri, String localName, String name,
 			Attributes attributes) throws SAXException {
 		super.startElement(uri, localName, name, attributes);
-		if (localName.equalsIgnoreCase("p")) {
+		/*if (localName.equalsIgnoreCase("p")) {
 			startContent = true;
 			builder.setLength(0);
-		}
+		}*/
 	}
 
 	@Override
 	public void endElement(String uri, String localName, String name)
 			throws SAXException {
 		super.endElement(uri, localName, name);
-		if (localName.equalsIgnoreCase("p")) {
+		/*if (localName.equalsIgnoreCase("p")) {
 			content = content + builder.toString().trim();
 			startContent = false;
-		}
+		}*/
 	}
+	
+	@Override
+	public void endDocument()
+			throws SAXException {
+		super.endDocument();
+	}
+	
 }
