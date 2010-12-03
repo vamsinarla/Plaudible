@@ -203,9 +203,9 @@ public class Plaudible extends ListActivity implements TextToSpeech.OnInitListen
 		}
 	}
 	
-	public void sendArticleForReading(String content) {
+	public void sendArticleForReading(Article article) {
 		if (mSpeechService != null) {
-			mSpeechService.readArticle(content);
+			mSpeechService.readArticle(article);
 		}
 	}
 	

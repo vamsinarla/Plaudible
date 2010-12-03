@@ -36,31 +36,26 @@ public class PlaudibleAsyncTask extends AsyncTask<PlaudibleAsyncTask.Payload, Ar
 				break;
 			case ARTICLE_DOWNLOADER_TASK:
 				SAXParserFactory factory = SAXParserFactory.newInstance();
-				try {
-					/*SAXParser parser = factory.newSAXParser();
+				try 
+				{
+					int index = (Integer) payload.data[1];
+					ArrayList<Article> articles = (ArrayList<Article>) payload.data[2];
 					
-					String content = new String();
-					ArticleParser articleHandler = new ArticleParser(content);
-					HttpResponse response = (HttpResponse) payload.result;
-					// parser.parse(response.getEntity().getContent(), articleHandler);
-					// InputSource is = new InputSource(response.getEntity().getContent());
-					InputSource is = new InputSource("http://www.nytimes.com/2010/12/01/technology/01google.html");
-					is.setEncoding("UTF-8");
-					parser.parse(is, articleHandler);*/
-					
-					HttpResponse response = (HttpResponse) payload.result;
-					Page p = new Page(response.getEntity().getContent(), "UTF-8");
-					Lexer l = new Lexer(p);
-					Parser parser = new Parser(l);
-					NodeFilter filter = new TagNameFilter("p");
-					String content = new String();
-					NodeList list = parser.parse(filter);
-					for (int i = 0; i < list.size(); ++i)
-					{
-						content += list.elementAt(i).toPlainTextString();
+					if (!articles.get(index).isDownloaded()) {
+						HttpResponse response = (HttpResponse) payload.result;
+						Page p = new Page(response.getEntity().getContent(), "UTF-8");
+						Lexer l = new Lexer(p);
+						Parser parser = new Parser(l);
+						NodeFilter filter = new TagNameFilter("p");
+						String content = new String();
+						NodeList list = parser.parse(filter);
+						for (int i = 0; i < list.size(); ++i) {
+							content += list.elementAt(i).toPlainTextString();
+						}
+						articles.get(index).setContent(content);
+						articles.get(index).setDownloaded(true);
 					}
-					
-					activity.sendArticleForReading(content);
+					activity.sendArticleForReading(articles.get(index));
 					
 				} catch (Exception exception) {
 					Log.e("onPostExecute", exception.getMessage());
@@ -99,23 +94,18 @@ public class PlaudibleAsyncTask extends AsyncTask<PlaudibleAsyncTask.Payload, Ar
 				for (int index = position; /*index < articles.size()*/ index <= position; ++index) {
 					// Download the article only if it hasn't been till yet
 					if (articles.get(index).isDownloaded() == false) {
-						String content = new String();
 						URI url = new URI(articles.get(index).getUrl());
 						DefaultHttpClient client = new DefaultHttpClient();
 						HttpGet request = new HttpGet();
-						
 						request.setURI(url);
 						HttpResponse response = client.execute(request);
-						
+				
 						payload.result = response;
-		                // parser.parse(response.getEntity().getContent(), articleHandler);
-						articles.get(index).setContent(content);
-						articles.get(index).setDownloaded(true);
+		            } else {
+						payload.result = new String("Already downloaded");
 					}
 				}
-				// payload.result = new String("Success");
 				break;
-				
 			}
 		} catch (Exception exception) {	
 				Log.e("PlaudibleAsyncTask::doInBackground", exception.getMessage());
