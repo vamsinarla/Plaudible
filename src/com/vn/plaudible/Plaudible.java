@@ -6,24 +6,35 @@ import java.util.ArrayList;
 import java.util.Locale;
 import java.util.concurrent.ExecutionException;
 
-import com.vn.plaudible.PlaudibleAsyncTask.Payload;
-
+import android.app.AlertDialog;
+import android.app.Dialog;
 import android.app.ListActivity;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.speech.tts.TextToSpeech;
 import android.util.Log;
+import android.view.ContextMenu;
+import android.view.ContextMenu.ContextMenuInfo;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import com.vn.plaudible.PlaudibleAsyncTask.Payload;
 
 public class Plaudible extends ListActivity implements TextToSpeech.OnInitListener {
 	
@@ -32,6 +43,8 @@ public class Plaudible extends ListActivity implements TextToSpeech.OnInitListen
         TextView title;
         TextView description;
         ImageButton playButton;
+        
+        int position;
     }
 
 	private ArrayList<Article> articles;
@@ -40,6 +53,8 @@ public class Plaudible extends ListActivity implements TextToSpeech.OnInitListen
 	private SpeechService mSpeechService;
 		
 	private static final int TTS_INSTALLED_CHECK_CODE = 1;
+	
+	private static final int NO_INTERNET_DIALOG = 1001;
 	
     /** Called when the activity is first created. */
     @Override
@@ -52,6 +67,10 @@ public class Plaudible extends ListActivity implements TextToSpeech.OnInitListen
         
         setListAdapter(adapter);
 		
+        /*if (!isInternetConnected()) {
+        	showDialog(NO_INTERNET_DIALOG);
+        }*/
+        
         URL feedURL = null;
 		try {
 			feedURL = new URL("http://feeds.nytimes.com/nyt/rss/HomePage");
@@ -67,9 +86,9 @@ public class Plaudible extends ListActivity implements TextToSpeech.OnInitListen
         								articles }));
         
         bindSpeechService();
-        checkAndInstallTTSEngine(); 
+        checkAndInstallTTSEngine();
     }
-   
+	
     @Override
     protected void onDestroy() {
     	ttsEngine.stop();
@@ -77,6 +96,15 @@ public class Plaudible extends ListActivity implements TextToSpeech.OnInitListen
     	
     	unBindSpeechService();
     	super.onDestroy();
+    }
+    
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (keyCode == KeyEvent.KEYCODE_BACK) {
+            moveTaskToBack(true);
+            return true;
+        }
+        return super.onKeyDown(keyCode, event);
     }
     
     // Check for presence of a TTSEngine and install if not found
@@ -110,7 +138,7 @@ public class Plaudible extends ListActivity implements TextToSpeech.OnInitListen
    }
    
    @SuppressWarnings("rawtypes")
-   private class ArticleListAdapter extends ArrayAdapter<Article> {
+   private class ArticleListAdapter extends ArrayAdapter<Article> implements View.OnClickListener {
 	   
 	   ArrayList<Article> articles;
 	   Context context;
@@ -142,11 +170,14 @@ public class Plaudible extends ListActivity implements TextToSpeech.OnInitListen
 			   holder = (ViewHolder) convertView.getTag();
 		    }
 		   
+		   convertView.setOnClickListener(this);
+		   
 		   holder.title.setText(this.articles.get(position).getTitle());
 		   holder.description.setText(this.articles.get(position).getDescription());
 
 		   // Set the tag for the button as the index
 		   holder.playButton.setTag((Integer)position);
+		   holder.position = position;
 		   
 		   // Set the listener on the play button
 		   holder.playButton.setOnClickListener(new View.OnClickListener() {
@@ -176,7 +207,7 @@ public class Plaudible extends ListActivity implements TextToSpeech.OnInitListen
 		   
 		   return convertView;
 	   }
-	   
+
 	   public int getCount() {
 		   return articles.size();
 	   }
@@ -188,6 +219,16 @@ public class Plaudible extends ListActivity implements TextToSpeech.OnInitListen
 	   public long getItemId(int position) {
 		   return position;
 	   }
+
+	    // Open the browser when the user clicks on the article
+		@Override
+		public void onClick(View view) {
+			ViewHolder holder = (ViewHolder) view.getTag();
+			// Start the browser with the URI of the article
+			Uri uri = Uri.parse(getItem(holder.position).getUrl());
+			Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+			startActivity(intent);
+		}
    }
 
     // OnInitListener for TTSEngine initialization
@@ -203,11 +244,24 @@ public class Plaudible extends ListActivity implements TextToSpeech.OnInitListen
 		}
 	}
 	
+	// Send an article to the service so it can begin reading
 	public void sendArticleForReading(Article article) {
 		if (mSpeechService != null) {
 			mSpeechService.readArticle(article);
 		}
 	}
+	
+	// Check for internet access
+	private boolean isInternetConnected() {
+		ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+		NetworkInfo info = cm.getActiveNetworkInfo();
+		/*if ( info == null)
+			return false;
+		else
+			return true;*/
+		return info.isConnected();
+	}
+	
 	
 	private ServiceConnection mConnection = new ServiceConnection() {
 		@Override
@@ -227,5 +281,18 @@ public class Plaudible extends ListActivity implements TextToSpeech.OnInitListen
 	
 	void unBindSpeechService() {
 		this.unbindService(mConnection);
+	}
+	
+	@Override
+	protected Dialog onCreateDialog(int id) {
+		switch(id) {
+			case Plaudible.NO_INTERNET_DIALOG:
+				return new AlertDialog.Builder(Plaudible.this)
+		    		.setIcon(android.R.drawable.alert_dark_frame)
+		    		.setTitle("Plaudible")
+		    		.create();
+		}
+		
+		return null;
 	}
 }
