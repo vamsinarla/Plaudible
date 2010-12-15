@@ -51,6 +51,8 @@ public class Plaudible extends ListActivity implements TextToSpeech.OnInitListen
 	private ArticleListAdapter adapter;
 	private TextToSpeech ttsEngine;	
 	private SpeechService mSpeechService;
+	private String source;
+	private String url;
 		
 	private static final int TTS_INSTALLED_CHECK_CODE = 1;
 	
@@ -62,27 +64,22 @@ public class Plaudible extends ListActivity implements TextToSpeech.OnInitListen
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
  
+        Intent intent = this.getIntent();
+        source = intent.getStringExtra("Source");
+        url = intent.getStringExtra("URL");
+        
+        this.setTitle(source);
+        
         articles = new ArrayList<Article>();
         adapter = new ArticleListAdapter(this, R.layout.list_item, articles);
         
         setListAdapter(adapter);
-		
-        /*if (!isInternetConnected()) {
-        	showDialog(NO_INTERNET_DIALOG);
-        }*/
-        
-        URL feedURL = null;
-		try {
-			feedURL = new URL("http://feeds.nytimes.com/nyt/rss/HomePage");
-		} catch (MalformedURLException e) {
-			e.printStackTrace();
-		}
-        
+
         new PlaudibleAsyncTask().execute(
         		new PlaudibleAsyncTask.Payload(
         				PlaudibleAsyncTask.FEED_DOWNLOADER_TASK,
         				new Object[] { Plaudible.this,
-        								feedURL,
+        								source,
         								articles }));
         
         bindSpeechService();
@@ -96,15 +93,6 @@ public class Plaudible extends ListActivity implements TextToSpeech.OnInitListen
     	
     	unBindSpeechService();
     	super.onDestroy();
-    }
-    
-    @Override
-    public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if (keyCode == KeyEvent.KEYCODE_BACK) {
-            moveTaskToBack(true);
-            return true;
-        }
-        return super.onKeyDown(keyCode, event);
     }
     
     // Check for presence of a TTSEngine and install if not found
@@ -184,24 +172,20 @@ public class Plaudible extends ListActivity implements TextToSpeech.OnInitListen
 			   @Override
 			   public void onClick(View v) {
 				   Integer position = (Integer) v.getTag();
+				   ImageButton view = (ImageButton) v;
+				   view.setImageResource(R.drawable.pause64);
 				   
-				   Log.d("Button::onClick", "Before execute");
-				   AsyncTask<Payload, Article, Payload> task = new PlaudibleAsyncTask().execute(
-						   new PlaudibleAsyncTask.Payload(
-								   PlaudibleAsyncTask.ARTICLE_DOWNLOADER_TASK,
-								   new Object[] { Plaudible.this,
-										   			position,
-										   			articles }));
-				   try {
-					task.get();
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (ExecutionException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				   Log.d("Button::onClick", "After execute" + task.getStatus());
+				   if (!articles.get(position).isDownloaded()) {
+					   AsyncTask<Payload, Article, Payload> task = new PlaudibleAsyncTask().execute(
+							   new PlaudibleAsyncTask.Payload(
+									   PlaudibleAsyncTask.ARTICLE_DOWNLOADER_TASK,
+									   new Object[] { Plaudible.this,
+											   			position,
+											   			articles,
+											   			source }));
+				   } else {
+					   sendArticleForReading(articles.get(position));
+				   }
 			   }
 		   });
 		   

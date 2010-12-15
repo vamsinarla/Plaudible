@@ -8,7 +8,7 @@ import org.xml.sax.helpers.DefaultHandler;
 
 public class FeedHandler extends DefaultHandler {
 	
-	private ArrayList<Article> Articles;
+	private ArrayList<Article> articles;
 	private Article currentArticle;
 	private StringBuilder builder;
 	
@@ -18,12 +18,12 @@ public class FeedHandler extends DefaultHandler {
 	private String linkTag;
 	
 	FeedHandler(ArrayList<Article> articles) {
+		itemTag = "item";
 		titleTag = "title";
 		descriptionTag = "description";
-		itemTag = "item";
-		linkTag = "guid";
+		linkTag = "link";
 		
-		Articles = articles;
+		this.articles = articles;
 	}
 		
 	@Override
@@ -46,9 +46,8 @@ public class FeedHandler extends DefaultHandler {
 			} else if (localName.equalsIgnoreCase(linkTag)) {
 				currentArticle.setUrl(builder.toString().trim());
 			} else if (localName.equalsIgnoreCase(itemTag)) {
-				Articles.add(currentArticle);
+				articles.add(currentArticle);
 			}
-			
 			builder.setLength(0);	
 		}
 	}

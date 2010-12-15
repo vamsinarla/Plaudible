@@ -12,7 +12,9 @@
         android:layout_marginTop="3sp"
         android:maxWidth="15sp"
         android:maxHeight="15sp"
-        android:src="@drawable/play_button"
+        android:adjustViewBounds="false"
+        android:layout_centerVertical="true"
+        android:src="@drawable/play64"
         />
         
     <TextView android:id="@+id/ArticleTitle"
@@ -32,6 +34,7 @@
         android:maxHeight="36sp"
         android:textColor="#333333"
         android:typeface="serif"
+        android:ellipsize="end"
         android:layout_toRightOf="@id/ArticlePlay"
         android:layout_below="@id/ArticleTitle"/>
 

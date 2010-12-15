@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Sources>
+    <Item>
+        <Title>New York Times</Title>
+        <Type>newspaper</Type>
+        <URL>http://feeds.nytimes.com/nyt/rss/HomePage</URL>
+    </Item>
+    <Item>
+        <Title>Wall Street Journal</Title>
+        <Type>newspaper</Type>
+        <URL>http://online.wsj.com/xml/rss/3_7011.xml</URL>
+    </Item>
+    <Item>
+        <Title>Huffington Post</Title>
+        <Type>blog</Type>
+        <URL>http://feeds.huffingtonpost.com/huffingtonpost/raw_feed</URL>
+    </Item>
+    <Item>
+        <Title>TMZ</Title>
+        <type>blog</type>
+        <URL>http://www.tmz.com/rss.xml</URL>
+    </Item>
+    <Item>
+        <Title>engadget</Title>
+        <type>blog</type>
+        <URL>http://www.engadget.com/rss.xml</URL>
+    </Item>
+    <Item>
+        <Title>TechCrunch</Title>
+        <type>blog</type>
+        <URL>http://feeds.feedburner.com/Techcrunch</URL>
+    </Item>
+    <Item>
+        <Title>Mashable</Title>
+        <type>blog</type>
+        <URL>http://feeds.mashable.com/Mashable</URL>
+    </Item>
+</Sources>

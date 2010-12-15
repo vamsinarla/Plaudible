@@ -2,6 +2,8 @@ package com.vn.plaudible;
 
 import java.util.HashMap;
 
+import org.apache.commons.lang.StringUtils;
+
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -22,9 +24,13 @@ public class SpeechService extends Service implements OnUtteranceCompletedListen
 	private TextToSpeech ttsEngine;
 	private HashMap<String, String> speechHash;
 	private WakeLock lock;
+	private Article currentArticle;
+	private String[] chunks;
+	private Integer chunkIndex;
 	
 	private static final int NOTIFICATION_ID = 1001;
-
+	private static final int silenceInterval = 1000;
+	
 	public class SpeechBinder extends Binder {
 		SpeechService getService() {
 			return SpeechService.this;
@@ -41,7 +47,7 @@ public class SpeechService extends Service implements OnUtteranceCompletedListen
 		notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
 		
 		speechHash = new HashMap();
-		speechHash.put(TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID, "Finished reading article");
+		speechHash.put(TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID, "Finished reading sentence");
 	}
 	
 	@Override
@@ -51,6 +57,7 @@ public class SpeechService extends Service implements OnUtteranceCompletedListen
 	
 	@Override
 	public void onDestroy() {
+		lock.release();
 		// nm.cancel(R.string.speech_service_started);
 	}
 	
@@ -85,24 +92,46 @@ public class SpeechService extends Service implements OnUtteranceCompletedListen
      }
 	
 	public void readArticle(Article article) {
-		showNotification(article.getTitle());
+		this.currentArticle = article;
+		this.chunkIndex = 0;
+		this.chunks = null;
 		
+		showNotification(currentArticle.getTitle());
+		
+		// Prevent the service from sleeping by keeping the CPU awake
 		PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
 		lock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "Reading article");
-		
 		lock.acquire();
 		
-		this.ttsEngine.speak("Plaudible will now read " + article.getTitle(), TextToSpeech.QUEUE_FLUSH, null);
-		this.ttsEngine.speak(article.getContent(), TextToSpeech.QUEUE_ADD, speechHash);
-		this.ttsEngine.speak("Plaudible finished reading the article", TextToSpeech.QUEUE_ADD, null);
+		ttsEngine.speak("Plaudible will now read " + currentArticle.getTitle(), TextToSpeech.QUEUE_FLUSH, null);
+		ttsEngine.playSilence(silenceInterval, TextToSpeech.QUEUE_ADD, null);
+		
+		// Create chunks of the article and read each chunk after the other
+		prepareChunks();
+		readCurrentChunk();
+	}
+	
+	private void prepareChunks() {
+		String chunk = currentArticle.getContent();
+		chunks = chunk.split("\\.");
+		chunkIndex = 0;
+	}
+
+	private void readCurrentChunk() {
+		ttsEngine.speak(chunks[chunkIndex], TextToSpeech.QUEUE_ADD, speechHash);
 	}
 
 	@Override
 	public void onUtteranceCompleted(String utteranceId) {
-		if (utteranceId.equals("Finished reading article")) {
-			Log.d("SpeechService", "Finished reading article");
-			
-			lock.release();
+		if (utteranceId.equals("Finished reading sentence")) {
+			Log.d("SpeechService", "Finished reading sentence");
+			if (chunkIndex == chunks.length) {
+				// Finished reading the article.
+				ttsEngine.speak("Plaudible finished reading the article.", TextToSpeech.QUEUE_ADD, null);
+			} else {
+				++chunkIndex;
+				readCurrentChunk();
+			}
 		}
 	}
 }

@@ -1,21 +1,15 @@
 package com.vn.plaudible;
 
-import java.net.URI;
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
-
-import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.htmlparser.NodeFilter;
-import org.htmlparser.Parser;
-import org.htmlparser.filters.TagNameFilter;
-import org.htmlparser.lexer.Lexer;
-import org.htmlparser.lexer.Page;
-import org.htmlparser.util.NodeList;
 
 import android.os.AsyncTask;
 import android.util.Log;
@@ -35,31 +29,9 @@ public class PlaudibleAsyncTask extends AsyncTask<PlaudibleAsyncTask.Payload, Ar
 				activity.setArticles((ArrayList<Article>) payload.data[2]);
 				break;
 			case ARTICLE_DOWNLOADER_TASK:
-				SAXParserFactory factory = SAXParserFactory.newInstance();
-				try 
-				{
-					int index = (Integer) payload.data[1];
-					ArrayList<Article> articles = (ArrayList<Article>) payload.data[2];
-					
-					if (!articles.get(index).isDownloaded()) {
-						HttpResponse response = (HttpResponse) payload.result;
-						Page p = new Page(response.getEntity().getContent(), "UTF-8");
-						Lexer l = new Lexer(p);
-						Parser parser = new Parser(l);
-						NodeFilter filter = new TagNameFilter("p");
-						String content = new String();
-						NodeList list = parser.parse(filter);
-						for (int i = 0; i < list.size(); ++i) {
-							content += list.elementAt(i).toPlainTextString();
-						}
-						articles.get(index).setContent(content);
-						articles.get(index).setDownloaded(true);
-					}
-					activity.sendArticleForReading(articles.get(index));
-					
-				} catch (Exception exception) {
-					Log.e("onPostExecute", exception.getMessage());
-				}
+				Integer index = (Integer) payload.data[1];
+				ArrayList<Article> articles = (ArrayList<Article>) payload.data[2];
+				activity.sendArticleForReading(articles.get(index));
 				break;
 			}
 		}
@@ -71,6 +43,12 @@ public class PlaudibleAsyncTask extends AsyncTask<PlaudibleAsyncTask.Payload, Ar
 		SAXParserFactory factory = SAXParserFactory.newInstance();
 		PlaudibleAsyncTask.Payload payload = params[0];
 		ArrayList<Article> articles;
+		String source;
+		
+		InputStream responseStream;
+		BufferedReader reader;
+		StringBuilder builder;
+		String oneLine;		
 		
 		try {
 			SAXParser parser = factory.newSAXParser();
@@ -78,11 +56,16 @@ public class PlaudibleAsyncTask extends AsyncTask<PlaudibleAsyncTask.Payload, Ar
 			switch (payload.taskType) {
 			case FEED_DOWNLOADER_TASK:
 				// Extract the URL and arraylist of articles from the payload data
-				URL feedUrl = (URL) payload.data[1];
 				articles = (ArrayList<Article>) payload.data[2];
+				source = (String) payload.data[1];
 				
+				source = URLEncoder.encode(source, "UTF-8");
+				source = "http://evecal.appspot.com/feed?newspaper=" + source;
+				
+				URL feedUrl = new URL(source);
 				FeedHandler feedHandler = new FeedHandler(articles);
-				parser.parse(feedUrl.openConnection().getInputStream(), feedHandler);
+				responseStream = feedUrl.openConnection().getInputStream();
+				parser.parse(responseStream, feedHandler);
 				
 				payload.result = new String("Success");
 				break;
@@ -90,26 +73,40 @@ public class PlaudibleAsyncTask extends AsyncTask<PlaudibleAsyncTask.Payload, Ar
 				// Extract the index of the article and the arraylist of articles
 				Integer position = (Integer) payload.data[1];
 				articles = (ArrayList<Article>) payload.data[2];
+				source = (String) payload.data[3];
 				
 				for (int index = position; /*index < articles.size()*/ index <= position; ++index) {
 					// Download the article only if it hasn't been till yet
 					if (articles.get(index).isDownloaded() == false) {
-						URI url = new URI(articles.get(index).getUrl());
-						DefaultHttpClient client = new DefaultHttpClient();
-						HttpGet request = new HttpGet();
-						request.setURI(url);
-						HttpResponse response = client.execute(request);
-				
-						payload.result = response;
-		            } else {
-						payload.result = new String("Already downloaded");
-					}
+						source = "http://evecal.appspot.com/article?source=" + URLEncoder.encode(source, "UTF-8");
+						source += "&link=" + articles.get(position).getUrl();
+						
+						URL articleUrl = new URL(source);
+						responseStream = articleUrl.openConnection().getInputStream();
+						reader = new BufferedReader(new InputStreamReader(responseStream));
+						builder = new StringBuilder();
+						
+						while ((oneLine = reader.readLine()) != null) {
+							builder.append(oneLine);
+						}
+						reader.close();
+						
+						articles.get(index).setContent(builder.toString());
+						articles.get(index).setDownloaded(true);
+						
+						payload.result = new String("Downloaded");
+		            }
 				}
 				break;
 			}
-		} catch (Exception exception) {	
-				Log.e("PlaudibleAsyncTask::doInBackground", exception.getMessage());
-				payload.result = null;
+		} catch (MalformedURLException exception) {
+			Log.e("PlaudibleAsyncTask::doInBackground", exception.getMessage());
+			payload.result = null;
+		}
+		catch (Exception exception) {	
+			Log.e("PlaudibleAsyncTask::doInBackground", exception.getMessage());
+			exception.printStackTrace();
+			payload.result = null;
 		}
 		return payload;
 	}
