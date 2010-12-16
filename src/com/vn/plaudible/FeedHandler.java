@@ -46,6 +46,9 @@ public class FeedHandler extends DefaultHandler {
 			} else if (localName.equalsIgnoreCase(linkTag)) {
 				currentArticle.setUrl(builder.toString().trim());
 			} else if (localName.equalsIgnoreCase(itemTag)) {
+				// Set the id of the article which is basically its index
+				currentArticle.setId(articles.size());
+				// Add to the array list
 				articles.add(currentArticle);
 			}
 			builder.setLength(0);	

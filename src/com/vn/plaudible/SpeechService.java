@@ -27,9 +27,12 @@ public class SpeechService extends Service implements OnUtteranceCompletedListen
 	private Article currentArticle;
 	private String[] chunks;
 	private Integer chunkIndex;
+	private boolean pausedReading;
 	
 	private static final int NOTIFICATION_ID = 1001;
 	private static final int silenceInterval = 1000;
+	
+	public static final int NOT_SPEAKING = -1;
 	
 	public class SpeechBinder extends Binder {
 		SpeechService getService() {
@@ -64,7 +67,7 @@ public class SpeechService extends Service implements OnUtteranceCompletedListen
 	private final IBinder mBinder = new SpeechBinder();
 	
 	private void showNotification(String text) {
-		Notification notification = new Notification(android.R.drawable.star_on, text,
+		Notification notification = new Notification(R.drawable.play64, text,
 													System.currentTimeMillis());
 		notification.flags |= Notification.FLAG_ONGOING_EVENT;
 		notification.flags |= Notification.FLAG_NO_CLEAR;
@@ -106,32 +109,78 @@ public class SpeechService extends Service implements OnUtteranceCompletedListen
 		ttsEngine.speak("Plaudible will now read " + currentArticle.getTitle(), TextToSpeech.QUEUE_FLUSH, null);
 		ttsEngine.playSilence(silenceInterval, TextToSpeech.QUEUE_ADD, null);
 		
+		pausedReading = false;
+		
 		// Create chunks of the article and read each chunk after the other
 		prepareChunks();
 		readCurrentChunk();
 	}
 	
+	// Return the state of the service. If reading then return the article index it is reading currently
+	public boolean isReading() {
+		return !pausedReading;
+	}
+	
+	public Integer getCurrentlyReadArticle() {
+		if (currentArticle != null) {
+			return currentArticle.getId();
+		} else {
+			return NOT_SPEAKING;
+		}
+	}
+	
+	// Split the article's content into sentences
 	private void prepareChunks() {
 		String chunk = currentArticle.getContent();
 		chunks = chunk.split("\\.");
 		chunkIndex = 0;
 	}
 
+	// Read the current chunk
 	private void readCurrentChunk() {
-		ttsEngine.speak(chunks[chunkIndex], TextToSpeech.QUEUE_ADD, speechHash);
+		if (chunkIndex < chunks.length && !pausedReading) {
+			ttsEngine.speak(chunks[chunkIndex], TextToSpeech.QUEUE_ADD, speechHash);
+		} else {
+			Log.e("SpeechService::readCurrentChunk", "Article is finished. No more chunks to read.");
+		}
+	}
+	
+	// Read the next chunk
+	private void readNextChunk() {
+		pausedReading = false;
+		++chunkIndex;
+		readCurrentChunk();
+	}
+	
+	// Pause the reading. There should only be this one chunk in the TTS queue
+	public void pauseReading() {
+		pausedReading = true;
+		ttsEngine.stop();
 	}
 
+	// Resume reading the same chunk where we left off
+	public void resumeReading() {
+		pausedReading = false;
+		readCurrentChunk();
+	}
+	
 	@Override
 	public void onUtteranceCompleted(String utteranceId) {
 		if (utteranceId.equals("Finished reading sentence")) {
-			Log.d("SpeechService", "Finished reading sentence");
 			if (chunkIndex == chunks.length) {
+				// Reset all the necessary state variables
+				pausedReading = true;
+				chunkIndex = 0;
+				chunks = null;
+				currentArticle = null;
+				
 				// Finished reading the article.
 				ttsEngine.speak("Plaudible finished reading the article.", TextToSpeech.QUEUE_ADD, null);
-			} else {
-				++chunkIndex;
-				readCurrentChunk();
+			} else if (!pausedReading){
+				// Read the next chunk
+				readNextChunk();
 			}
 		}
 	}
+	
 }
