@@ -51,6 +51,11 @@ public class SpeechService extends Service implements OnUtteranceCompletedListen
 		
 		speechHash = new HashMap();
 		speechHash.put(TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID, "Finished reading sentence");
+		
+		// Prevent the service from sleeping by keeping the CPU awake
+		PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+		lock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "Reading article");
+		lock.acquire();
 	}
 	
 	@Override
@@ -61,13 +66,23 @@ public class SpeechService extends Service implements OnUtteranceCompletedListen
 	@Override
 	public void onDestroy() {
 		lock.release();
-		// nm.cancel(R.string.speech_service_started);
+		notificationManager.cancel(NOTIFICATION_ID);
 	}
 	
 	private final IBinder mBinder = new SpeechBinder();
 	
 	private void showNotification(String text) {
-		Notification notification = new Notification(R.drawable.play64, text,
+		// Cancel any previous notifications
+		notificationManager.cancel(NOTIFICATION_ID);
+		int notificationIcon;
+		
+		if (pausedReading) {
+			notificationIcon = R.drawable.pause64;
+		} else {
+			notificationIcon = R.drawable.play64;
+		}
+		
+		Notification notification = new Notification(notificationIcon, text,
 													System.currentTimeMillis());
 		notification.flags |= Notification.FLAG_ONGOING_EVENT;
 		notification.flags |= Notification.FLAG_NO_CLEAR;
@@ -90,8 +105,6 @@ public class SpeechService extends Service implements OnUtteranceCompletedListen
 	
 		this.ttsEngine.setOnUtteranceCompletedListener(this);
 		this.ttsEngine.setSpeechRate((float) 1);
-	
-		this.ttsEngine.speak("Text to speech is initialized.", TextToSpeech.QUEUE_ADD, null);
      }
 	
 	public void readArticle(Article article) {
@@ -100,11 +113,6 @@ public class SpeechService extends Service implements OnUtteranceCompletedListen
 		this.chunks = null;
 		
 		showNotification(currentArticle.getTitle());
-		
-		// Prevent the service from sleeping by keeping the CPU awake
-		PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
-		lock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "Reading article");
-		lock.acquire();
 		
 		ttsEngine.speak("Plaudible will now read " + currentArticle.getTitle(), TextToSpeech.QUEUE_FLUSH, null);
 		ttsEngine.playSilence(silenceInterval, TextToSpeech.QUEUE_ADD, null);
@@ -139,7 +147,9 @@ public class SpeechService extends Service implements OnUtteranceCompletedListen
 	// Read the current chunk
 	private void readCurrentChunk() {
 		if (chunkIndex < chunks.length && !pausedReading) {
-			ttsEngine.speak(chunks[chunkIndex], TextToSpeech.QUEUE_ADD, speechHash);
+			// Add the current chunk to the queue. The queue must have only 1 chunk at a time
+			// Trim the string here to remove extraneous spaces.
+			ttsEngine.speak(chunks[chunkIndex].trim(), TextToSpeech.QUEUE_ADD, speechHash);
 		} else {
 			Log.e("SpeechService::readCurrentChunk", "Article is finished. No more chunks to read.");
 		}
@@ -155,6 +165,7 @@ public class SpeechService extends Service implements OnUtteranceCompletedListen
 	// Pause the reading. There should only be this one chunk in the TTS queue
 	public void pauseReading() {
 		pausedReading = true;
+		showNotification(currentArticle.getTitle());
 		ttsEngine.stop();
 	}
 

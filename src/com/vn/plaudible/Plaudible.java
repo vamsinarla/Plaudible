@@ -3,18 +3,19 @@ package com.vn.plaudible;
 import java.util.ArrayList;
 import java.util.Locale;
 
-import android.app.AlertDialog;
-import android.app.Dialog;
 import android.app.ListActivity;
+import android.app.ProgressDialog;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.res.Configuration;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.os.IBinder;
 import android.speech.tts.TextToSpeech;
 import android.view.LayoutInflater;
@@ -48,12 +49,19 @@ public class Plaudible extends ListActivity implements TextToSpeech.OnInitListen
 	
 	private static final int NO_INTERNET_DIALOG = 1001;
 	
+	private ProgressDialog spinningWheel;
+	
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.articles_list);
  
+        // Show the spinning wheel and the counter, which suspends the wheel in 5 seconds
+        ProgressDialogTimer timer = new  ProgressDialogTimer(10000, 1000);
+        spinningWheel = ProgressDialog.show(Plaudible.this, "", "Loading articles ...", true);
+        timer.start();
+        
         Intent intent = this.getIntent();
         source = intent.getStringExtra("Source");
         url = intent.getStringExtra("URL");
@@ -71,7 +79,7 @@ public class Plaudible extends ListActivity implements TextToSpeech.OnInitListen
         				new Object[] { Plaudible.this,
         								source,
         								articles }));
-        
+
         bindSpeechService();
         checkAndInstallTTSEngine();
     }
@@ -83,6 +91,13 @@ public class Plaudible extends ListActivity implements TextToSpeech.OnInitListen
     	
     	unBindSpeechService();
     	super.onDestroy();
+    }
+    
+    // Listen for configuration changes and this is bascially to prevent the 
+    // activity from being restarted. Do nothing here.
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
     }
     
     // Check for presence of a TTSEngine and install if not found
@@ -113,6 +128,10 @@ public class Plaudible extends ListActivity implements TextToSpeech.OnInitListen
    public void setArticles(ArrayList<Article> articles) {
 	   this.articles = articles;   
 	   this.adapter.notifyDataSetChanged();
+	   
+	   if (spinningWheel.isShowing()) {
+		   spinningWheel.cancel();
+	   }
    }
    
    @SuppressWarnings("rawtypes")
@@ -263,10 +282,6 @@ public class Plaudible extends ListActivity implements TextToSpeech.OnInitListen
 	private boolean isInternetConnected() {
 		ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
 		NetworkInfo info = cm.getActiveNetworkInfo();
-		/*if ( info == null)
-			return false;
-		else
-			return true;*/
 		return info.isConnected();
 	}
 	
@@ -288,19 +303,24 @@ public class Plaudible extends ListActivity implements TextToSpeech.OnInitListen
 	}
 	
 	void unBindSpeechService() {
-		this.unbindService(mConnection);
+		if (mSpeechService != null) {
+			this.unbindService(mConnection);
+		}
 	}
 	
-	@Override
-	protected Dialog onCreateDialog(int id) {
-		switch(id) {
-			case Plaudible.NO_INTERNET_DIALOG:
-				return new AlertDialog.Builder(Plaudible.this)
-		    		.setIcon(android.R.drawable.alert_dark_frame)
-		    		.setTitle("Plaudible")
-		    		.create();
-		}
-		
-		return null;
-	}
+	public class ProgressDialogTimer extends CountDownTimer {
+	    public ProgressDialogTimer(long millisInFuture, long countDownInterval) {
+	    	super(millisInFuture, countDownInterval);
+	    }
+	    // Suspend the spinning wheel after some time.
+	    public void onFinish() {
+	 	   if (spinningWheel.isShowing()) {
+			   spinningWheel.cancel();
+		   }
+	    }
+	    // Do nothing here
+	    public void onTick(long millisUntilFinished) {
+	    	
+	    }
+	   }
 }
