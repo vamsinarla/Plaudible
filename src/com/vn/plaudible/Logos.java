@@ -2,14 +2,21 @@ package com.vn.plaudible;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Locale;
 
 import org.xmlpull.v1.XmlPullParserException;
 
 import android.app.ListActivity;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
+import android.content.res.Configuration;
 import android.content.res.XmlResourceParser;
 import android.os.Bundle;
+import android.os.IBinder;
+import android.speech.tts.TextToSpeech;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,10 +24,14 @@ import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-public class Logos extends ListActivity {
+public class Logos extends ListActivity implements TextToSpeech.OnInitListener {
 	
 	private ArrayList<NewsSource> sources;
 	private LogosAdapter adapter;
+	private TextToSpeech ttsEngine;	
+	private SpeechService mSpeechService;
+	
+	private static final int TTS_INSTALLED_CHECK_CODE = 1;
 	
 	static class ViewHolder {
 		ImageView image;
@@ -46,7 +57,72 @@ public class Logos extends ListActivity {
         
         adapter = new LogosAdapter(this, R.layout.main_page_list_item, sources);
         setListAdapter(adapter);
+        
+        bindSpeechService();
+        checkAndInstallTTSEngine();
     }
+	
+	@Override
+	protected void onDestroy() {
+		ttsEngine.stop();
+    	ttsEngine.shutdown();
+    	
+    	unBindSpeechService();
+    	super.onDestroy();
+	}
+	
+	@Override
+	public boolean onKeyDown(int keyCode, KeyEvent event) {
+	    if (keyCode == KeyEvent.KEYCODE_BACK) {
+	        moveTaskToBack(true);
+	        return true;
+	    }
+	    return super.onKeyDown(keyCode, event);
+	}
+	
+    // Listen for configuration changes and this is bascially to prevent the 
+    // activity from being restarted. Do nothing here.
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+    }
+    
+    // Check for presence of a TTSEngine and install if not found
+    protected void checkAndInstallTTSEngine() {
+	    Intent checkIntent = new Intent();
+	    checkIntent.setAction(TextToSpeech.Engine.ACTION_CHECK_TTS_DATA);
+	    startActivityForResult(checkIntent, TTS_INSTALLED_CHECK_CODE);
+    }
+    
+    // Called for the intent which checks if TTS was installed and starts TTS up
+    protected void onActivityResult(
+            int requestCode, int resultCode, Intent data) {
+        if (requestCode == TTS_INSTALLED_CHECK_CODE) {
+            if (resultCode == TextToSpeech.Engine.CHECK_VOICE_DATA_PASS) {
+                // success, create the TTS instance
+                ttsEngine = new TextToSpeech(this, this);
+            } else {
+                // missing data, install it
+                Intent installIntent = new Intent();
+                installIntent.setAction(
+                    TextToSpeech.Engine.ACTION_INSTALL_TTS_DATA);
+                startActivity(installIntent);
+            }
+        }
+    }
+    
+    // OnInitListener for TTSEngine initialization
+    // Check if the Service is bound and if it is then we can set the TTS Engine it should use
+	@Override
+	public void onInit(int status) {
+		if (status == TextToSpeech.SUCCESS) {
+	           ttsEngine.setLanguage(Locale.US);	            
+	           
+	           if (mSpeechService != null) {
+	        	   mSpeechService.setTTSEngine(this.ttsEngine);
+	           }
+		}
+	}
 	
 	private void populateSourcesFromXML() throws XmlPullParserException, IOException {
 		XmlResourceParser parser = getResources().getXml(R.xml.newssourcesdata);	
@@ -77,8 +153,6 @@ public class Logos extends ListActivity {
 	          }
 	          eventType = parser.next();
 	         }
-		
-		int i;
 	}
 	
 	private class LogosAdapter extends ArrayAdapter<NewsSource> implements View.OnClickListener {
@@ -149,4 +223,27 @@ public class Logos extends ListActivity {
 			context.startActivity(listArticlesInFeed);
 		}
 	}
+	
+	private ServiceConnection mConnection = new ServiceConnection() {
+		@Override
+		public void onServiceConnected(ComponentName name, IBinder service) {
+			mSpeechService = ((SpeechService.SpeechBinder)service).getService();
+		}
+
+		@Override
+		public void onServiceDisconnected(ComponentName name) {
+			mSpeechService = null;
+		}
+	};
+	
+	void bindSpeechService() {
+		this.bindService(new Intent(Logos.this, SpeechService.class), mConnection, Context.BIND_AUTO_CREATE);
+	}
+	
+	void unBindSpeechService() {
+		if (mSpeechService != null) {
+			this.unbindService(mConnection);
+		}
+	}
+	
 }

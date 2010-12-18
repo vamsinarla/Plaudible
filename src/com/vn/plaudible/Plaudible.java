@@ -1,7 +1,6 @@
 package com.vn.plaudible;
 
 import java.util.ArrayList;
-import java.util.Locale;
 
 import android.app.ListActivity;
 import android.app.ProgressDialog;
@@ -10,14 +9,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.res.Configuration;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.IBinder;
-import android.speech.tts.TextToSpeech;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -25,9 +20,7 @@ import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
-import com.vn.plaudible.PlaudibleAsyncTask.Payload;
-
-public class Plaudible extends ListActivity implements TextToSpeech.OnInitListener {
+public class Plaudible extends ListActivity {
 	
 	// ViewHolder pattern for efficient ListAdapter usage
 	static class ViewHolder {
@@ -40,16 +33,11 @@ public class Plaudible extends ListActivity implements TextToSpeech.OnInitListen
 
 	private ArrayList<Article> articles;
 	private ArticleListAdapter adapter;
-	private TextToSpeech ttsEngine;	
+	private String currentNewsSource;
 	private SpeechService mSpeechService;
-	private String source;
-	private String url;
-		
-	private static final int TTS_INSTALLED_CHECK_CODE = 1;
-	
-	private static final int NO_INTERNET_DIALOG = 1001;
-	
 	private ProgressDialog spinningWheel;
+	
+	private static final int TIMEOUT = 10000;
 	
     /** Called when the activity is first created. */
     @Override
@@ -58,15 +46,15 @@ public class Plaudible extends ListActivity implements TextToSpeech.OnInitListen
         setContentView(R.layout.articles_list);
  
         // Show the spinning wheel and the counter, which suspends the wheel in 5 seconds
-        ProgressDialogTimer timer = new  ProgressDialogTimer(10000, 1000);
+        ProgressDialogTimer timer = new  ProgressDialogTimer(TIMEOUT, 1000);
         spinningWheel = ProgressDialog.show(Plaudible.this, "", "Loading articles ...", true);
         timer.start();
         
+        // Get the intent and the related extras
         Intent intent = this.getIntent();
-        source = intent.getStringExtra("Source");
-        url = intent.getStringExtra("URL");
+        currentNewsSource = intent.getStringExtra("Source");
         
-        this.setTitle(source);
+        this.setTitle(currentNewsSource);
         
         articles = new ArrayList<Article>();
         adapter = new ArticleListAdapter(this, R.layout.articles_list_item, articles);
@@ -77,18 +65,14 @@ public class Plaudible extends ListActivity implements TextToSpeech.OnInitListen
         		new PlaudibleAsyncTask.Payload(
         				PlaudibleAsyncTask.FEED_DOWNLOADER_TASK,
         				new Object[] { Plaudible.this,
-        								source,
+        								currentNewsSource,
         								articles }));
-
+        
         bindSpeechService();
-        checkAndInstallTTSEngine();
     }
 	
     @Override
     protected void onDestroy() {
-    	ttsEngine.stop();
-    	ttsEngine.shutdown();
-    	
     	unBindSpeechService();
     	super.onDestroy();
     }
@@ -98,30 +82,6 @@ public class Plaudible extends ListActivity implements TextToSpeech.OnInitListen
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
-    }
-    
-    // Check for presence of a TTSEngine and install if not found
-    protected void checkAndInstallTTSEngine() {
-	    Intent checkIntent = new Intent();
-	    checkIntent.setAction(TextToSpeech.Engine.ACTION_CHECK_TTS_DATA);
-	    startActivityForResult(checkIntent, TTS_INSTALLED_CHECK_CODE);
-    }
-    
-    // Called for the intent which checks if TTS was installed and starts TTS up
-    protected void onActivityResult(
-            int requestCode, int resultCode, Intent data) {
-        if (requestCode == TTS_INSTALLED_CHECK_CODE) {
-            if (resultCode == TextToSpeech.Engine.CHECK_VOICE_DATA_PASS) {
-                // success, create the TTS instance
-                ttsEngine = new TextToSpeech(this, this);
-            } else {
-                // missing data, install it
-                Intent installIntent = new Intent();
-                installIntent.setAction(
-                    TextToSpeech.Engine.ACTION_INSTALL_TTS_DATA);
-                startActivity(installIntent);
-            }
-        }
     }
     
    // Used by the AsyncTask to update the set of articles
@@ -134,18 +94,14 @@ public class Plaudible extends ListActivity implements TextToSpeech.OnInitListen
 	   }
    }
    
-   @SuppressWarnings("rawtypes")
    private class ArticleListAdapter extends ArrayAdapter<Article> implements View.OnClickListener {
 	   
 	   ArrayList<Article> articles;
-	   Context context;
 	   
 	   public ArticleListAdapter(Context context, int textViewResourceId, ArrayList<Article> articles) {
 		   super(context, textViewResourceId, articles);
 		   
-		   this.context = context;
 		   this.articles = articles;
-		   
 		   this.setNotifyOnChange(true);
 	   }
 	   
@@ -165,10 +121,11 @@ public class Plaudible extends ListActivity implements TextToSpeech.OnInitListen
 			   // Decide the drawable for this button
 			   Integer articleBeingRead = mSpeechService.getCurrentlyReadArticle();
 			   boolean isSpeechServiceReading = mSpeechService.isReading();
-			   if (isSpeechServiceReading && articleBeingRead == position) {
+			   
+			   if (isSpeechServiceReading && articleBeingRead == position &&
+					   currentNewsSource.equalsIgnoreCase(mSpeechService.getCurrentNewsSource())) {
 				   holder.playButton.setImageResource(R.drawable.pause64);
 			   }
-			   
 			   convertView.setTag(holder);
 		    } else {
 			   holder = (ViewHolder) convertView.getTag();
@@ -218,16 +175,16 @@ public class Plaudible extends ListActivity implements TextToSpeech.OnInitListen
 				   if (!articles.get(position).isDownloaded()) {
 					   // Set the button to pause and start the AsyncTask to download the article
 					   view.setImageResource(R.drawable.pause64);
-					   AsyncTask<Payload, Article, Payload> task = new PlaudibleAsyncTask().execute(
+					   new PlaudibleAsyncTask().execute(
 							   new PlaudibleAsyncTask.Payload(
 									   PlaudibleAsyncTask.ARTICLE_DOWNLOADER_TASK,
 									   new Object[] { Plaudible.this,
 											   			position,
 											   			articles,
-											   			source }));
+											   			currentNewsSource }));
 				   } else {
 					   view.setImageResource(R.drawable.pause64);
-					   sendArticleForReading(articles.get(position));
+					   sendArticleForReading(articles.get(position), currentNewsSource);
 				   }
 			   }
 		   });
@@ -257,34 +214,29 @@ public class Plaudible extends ListActivity implements TextToSpeech.OnInitListen
 			startActivity(intent);
 		}
    }
-
-    // OnInitListener for TTSEngine initialization
-    // Check if the Service is bound and if it is then we can set the TTS Engine it should use
-	@Override
-	public void onInit(int status) {
-		if (status == TextToSpeech.SUCCESS) {
-	           ttsEngine.setLanguage(Locale.US);	            
-	           
-	           if (mSpeechService != null) {
-	        	   mSpeechService.setTTSEngine(this.ttsEngine);
-	           }
-		}
-	}
 	
 	// Send an article to the service so it can begin reading
-	public void sendArticleForReading(Article article) {
+	public void sendArticleForReading(Article article, String newsSource) {
 		if (mSpeechService != null) {
-			mSpeechService.readArticle(article);
+			mSpeechService.readArticle(article, newsSource);
 		}
 	}
 	
-	// Check for internet access
-	private boolean isInternetConnected() {
-		ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-		NetworkInfo info = cm.getActiveNetworkInfo();
-		return info.isConnected();
+	public class ProgressDialogTimer extends CountDownTimer {
+		public ProgressDialogTimer(long millisInFuture, long countDownInterval) {
+			super(millisInFuture, countDownInterval);
+		}
+		// Suspend the spinning wheel after some time.
+		public void onFinish() {
+		   if (spinningWheel.isShowing()) {
+			   spinningWheel.cancel();
+		   }
+		}
+		// Do nothing here
+		public void onTick(long millisUntilFinished) {
+			
+		}
 	}
-	
 	
 	private ServiceConnection mConnection = new ServiceConnection() {
 		@Override
@@ -307,20 +259,4 @@ public class Plaudible extends ListActivity implements TextToSpeech.OnInitListen
 			this.unbindService(mConnection);
 		}
 	}
-	
-	public class ProgressDialogTimer extends CountDownTimer {
-	    public ProgressDialogTimer(long millisInFuture, long countDownInterval) {
-	    	super(millisInFuture, countDownInterval);
-	    }
-	    // Suspend the spinning wheel after some time.
-	    public void onFinish() {
-	 	   if (spinningWheel.isShowing()) {
-			   spinningWheel.cancel();
-		   }
-	    }
-	    // Do nothing here
-	    public void onTick(long millisUntilFinished) {
-	    	
-	    }
-	   }
 }

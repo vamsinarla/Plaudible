@@ -21,6 +21,7 @@ public class PlaudibleAsyncTask extends AsyncTask<PlaudibleAsyncTask.Payload, Ar
 	public static final int FEED_DOWNLOADER_TASK = 1001;
 	public static final int ARTICLE_DOWNLOADER_TASK = 1002;
 	
+	@SuppressWarnings("unchecked")
 	@Override
 	protected void onPostExecute(PlaudibleAsyncTask.Payload payload) {
 		if (payload.result != null) {
@@ -33,12 +34,15 @@ public class PlaudibleAsyncTask extends AsyncTask<PlaudibleAsyncTask.Payload, Ar
 			case ARTICLE_DOWNLOADER_TASK:
 				Integer index = (Integer) payload.data[1];
 				ArrayList<Article> articles = (ArrayList<Article>) payload.data[2];
-				activity.sendArticleForReading(articles.get(index));
+				String source = (String) payload.data[3];
+				
+				activity.sendArticleForReading(articles.get(index), source);
 				break;
 			}
 		}
 	}
 	
+	@SuppressWarnings("unchecked")
 	@Override
 	protected PlaudibleAsyncTask.Payload doInBackground(PlaudibleAsyncTask.Payload... params) {
 		

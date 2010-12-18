@@ -2,8 +2,6 @@ package com.vn.plaudible;
 
 import java.util.HashMap;
 
-import org.apache.commons.lang.StringUtils;
-
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -25,6 +23,7 @@ public class SpeechService extends Service implements OnUtteranceCompletedListen
 	private HashMap<String, String> speechHash;
 	private WakeLock lock;
 	private Article currentArticle;
+	private String currentNewsSource;
 	private String[] chunks;
 	private Integer chunkIndex;
 	private boolean pausedReading;
@@ -45,6 +44,7 @@ public class SpeechService extends Service implements OnUtteranceCompletedListen
 		return mBinder;
 	}
 	
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Override
 	public void onCreate() {
 		notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
@@ -88,7 +88,7 @@ public class SpeechService extends Service implements OnUtteranceCompletedListen
 		notification.flags |= Notification.FLAG_NO_CLEAR;
 		
 		Intent notificationIntent = new Intent(this, Plaudible.class);
-		notificationIntent.putExtra("Source", "Notification");
+		notificationIntent.putExtra("Source", currentNewsSource);
 		notificationIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
 		
 		PendingIntent contentIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
@@ -105,12 +105,13 @@ public class SpeechService extends Service implements OnUtteranceCompletedListen
 	
 		this.ttsEngine.setOnUtteranceCompletedListener(this);
 		this.ttsEngine.setSpeechRate((float) 1);
-     }
+    }
 	
-	public void readArticle(Article article) {
+	public void readArticle(Article article, String newsSource) {
 		this.currentArticle = article;
 		this.chunkIndex = 0;
 		this.chunks = null;
+		this.currentNewsSource = newsSource;
 		
 		showNotification(currentArticle.getTitle());
 		
@@ -129,12 +130,18 @@ public class SpeechService extends Service implements OnUtteranceCompletedListen
 		return !pausedReading;
 	}
 	
+	// Return the index of the currently read article
 	public Integer getCurrentlyReadArticle() {
 		if (currentArticle != null) {
 			return currentArticle.getId();
 		} else {
 			return NOT_SPEAKING;
 		}
+	}
+	
+	// Return the currently read news source
+	public String getCurrentNewsSource() {
+		return this.currentNewsSource;
 	}
 	
 	// Split the article's content into sentences
@@ -151,7 +158,7 @@ public class SpeechService extends Service implements OnUtteranceCompletedListen
 			// Trim the string here to remove extraneous spaces.
 			ttsEngine.speak(chunks[chunkIndex].trim(), TextToSpeech.QUEUE_ADD, speechHash);
 		} else {
-			Log.e("SpeechService::readCurrentChunk", "Article is finished. No more chunks to read.");
+			Log.d("SpeechService::readCurrentChunk", "Article is finished. No more chunks to read.");
 		}
 	}
 	
@@ -193,5 +200,4 @@ public class SpeechService extends Service implements OnUtteranceCompletedListen
 			}
 		}
 	}
-	
 }
