@@ -7,11 +7,8 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.util.ArrayList;
-
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
-
-import org.xml.sax.InputSource;
 
 import android.os.AsyncTask;
 import android.util.Log;
@@ -71,10 +68,7 @@ public class PlaudibleAsyncTask extends AsyncTask<PlaudibleAsyncTask.Payload, Ar
 				URL feedUrl = new URL(source);
 				FeedHandler feedHandler = new FeedHandler(articles);
 				responseStream = feedUrl.openConnection().getInputStream();
-				InputSource s = new InputSource();
-				s.setByteStream(responseStream);
-				s.setEncoding("ISO-8859-1");
-				parser.parse(s, feedHandler);
+				parser.parse(responseStream, feedHandler);
 				
 				payload.result = new String("Success");
 				break;

@@ -1,6 +1,7 @@
 package com.vn.plaudible;
 
 import java.util.HashMap;
+import java.util.Locale;
 
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -8,20 +9,29 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Binder;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
+import android.preference.PreferenceManager;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.TextToSpeech.OnUtteranceCompletedListener;
+import android.telephony.PhoneStateListener;
+import android.telephony.TelephonyManager;
 import android.util.Log;
+import android.widget.Toast;
 
 public class SpeechService extends Service implements OnUtteranceCompletedListener {
 
 	private NotificationManager notificationManager;
+	private TelephonyManager telephonyManager;
+	
 	private TextToSpeech ttsEngine;
 	private HashMap<String, String> speechHash;
+	
 	private WakeLock lock;
+	
 	private Article currentArticle;
 	private String currentNewsSource;
 	private String[] chunks;
@@ -48,7 +58,9 @@ public class SpeechService extends Service implements OnUtteranceCompletedListen
 	@Override
 	public void onCreate() {
 		notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+		telephonyManager = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
 		
+		// Specify the hashmap for the TTS Engine
 		speechHash = new HashMap();
 		speechHash.put(TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID, "Finished reading sentence");
 		
@@ -56,6 +68,41 @@ public class SpeechService extends Service implements OnUtteranceCompletedListen
 		PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
 		lock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "Reading article");
 		lock.acquire();
+		
+		// Acquire the telephony service instance which is required to stop reading when a call is incoming
+		telephonyManager.listen(new CallListener(), PhoneStateListener.LISTEN_CALL_STATE);
+	}
+
+	// Call status checking
+	private boolean checkCallStatus() {
+		int dataState = telephonyManager.getCallState();
+		
+		if (dataState != TelephonyManager.CALL_STATE_IDLE) {
+			Toast butterToast = Toast.makeText(this, "Cannot start reading when the call is on", Toast.LENGTH_SHORT);
+			butterToast.show();
+			return false;
+		}
+		
+		return true;
+	}
+	
+	// Listener class to respond to call state changes
+	private class CallListener extends PhoneStateListener {
+		@Override
+		public void onCallStateChanged(int state, String incomingNumber) {
+			// No articles to read right now means we dont care about state changes
+			if (currentArticle == null) {
+				return;
+			}
+			
+			// We got a notification about state change. If state is not idle we should pause reading
+			if (state != TelephonyManager.CALL_STATE_IDLE) {
+				pauseReading();
+			} else {
+				// Call is over now, so start reading
+				resumeReading();
+			}
+		}
 	}
 	
 	@Override
@@ -74,6 +121,7 @@ public class SpeechService extends Service implements OnUtteranceCompletedListen
 	private void showNotification(String text) {
 		// Cancel any previous notifications
 		notificationManager.cancel(NOTIFICATION_ID);
+		
 		int notificationIcon;
 		
 		if (pausedReading) {
@@ -94,7 +142,7 @@ public class SpeechService extends Service implements OnUtteranceCompletedListen
 		PendingIntent contentIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
 		
 		notification.setLatestEventInfo(this.getApplicationContext(), 
-										"Plaudible", text, contentIntent);
+										"NewsSpeak", text, contentIntent);
 		
 		notificationManager.notify(NOTIFICATION_ID, notification);
 		startForeground(NOTIFICATION_ID, notification);
@@ -102,20 +150,29 @@ public class SpeechService extends Service implements OnUtteranceCompletedListen
 	
 	public void setTTSEngine(TextToSpeech ttsEngine) {
 		this.ttsEngine = ttsEngine;
-	
 		this.ttsEngine.setOnUtteranceCompletedListener(this);
-		this.ttsEngine.setSpeechRate((float) 1);
     }
 	
 	public void readArticle(Article article, String newsSource) {
+		
+		// Check if a call is on
+		if (!checkCallStatus()) {
+			return;
+		}
+		
+		// Select preferences for TTS Engine
+		setTTSPreferences();
+		
+		// Clean up state
 		this.currentArticle = article;
 		this.chunkIndex = 0;
 		this.chunks = null;
 		this.currentNewsSource = newsSource;
 		
+		// Show a notification
 		showNotification(currentArticle.getTitle());
 		
-		ttsEngine.speak("Plaudible will now read " + currentArticle.getTitle(), TextToSpeech.QUEUE_FLUSH, null);
+		ttsEngine.speak("NewsSpeak will now read " + currentArticle.getTitle(), TextToSpeech.QUEUE_FLUSH, null);
 		ttsEngine.playSilence(silenceInterval, TextToSpeech.QUEUE_ADD, null);
 		
 		pausedReading = false;
@@ -123,6 +180,23 @@ public class SpeechService extends Service implements OnUtteranceCompletedListen
 		// Create chunks of the article and read each chunk after the other
 		prepareChunks();
 		readCurrentChunk();
+	}
+	
+	// Set the TTS preferences
+	private void setTTSPreferences()
+	{
+		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+		String language = prefs.getString("languagePref", "US");
+		if (language.equalsIgnoreCase("UK") &&
+				(ttsEngine.isLanguageAvailable(Locale.UK) != TextToSpeech.LANG_NOT_SUPPORTED) &&
+				(ttsEngine.isLanguageAvailable(Locale.UK) != TextToSpeech.LANG_MISSING_DATA)) {
+			ttsEngine.setLanguage(Locale.UK);
+		} else {
+			ttsEngine.setLanguage(Locale.US);
+		}
+		
+		String speed = prefs.getString("speedPref", "1.0");
+		ttsEngine.setSpeechRate(Float.parseFloat(speed));
 	}
 	
 	// Return the state of the service. If reading then return the article index it is reading currently
@@ -141,7 +215,7 @@ public class SpeechService extends Service implements OnUtteranceCompletedListen
 	
 	// Return the currently read news source
 	public String getCurrentNewsSource() {
-		return this.currentNewsSource;
+		return currentNewsSource;
 	}
 	
 	// Split the article's content into sentences
@@ -193,7 +267,10 @@ public class SpeechService extends Service implements OnUtteranceCompletedListen
 				currentArticle = null;
 				
 				// Finished reading the article.
-				ttsEngine.speak("Plaudible finished reading the article.", TextToSpeech.QUEUE_ADD, null);
+				ttsEngine.speak("NewsSpeak finished reading the article.", TextToSpeech.QUEUE_ADD, null);
+				
+				// Cancel the notification
+				notificationManager.cancel(NOTIFICATION_ID);
 			} else if (!pausedReading){
 				// Read the next chunk
 				readNextChunk();

@@ -2,7 +2,6 @@ package com.vn.plaudible;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Locale;
 
 import org.xmlpull.v1.XmlPullParserException;
 
@@ -13,30 +12,27 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.res.Configuration;
 import android.content.res.XmlResourceParser;
+import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.speech.tts.TextToSpeech;
-import android.view.KeyEvent;
+import android.telephony.TelephonyManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
-public class Logos extends ListActivity implements TextToSpeech.OnInitListener {
+public class Logos extends ListActivity {
 	
 	private ArrayList<NewsSource> sources;
-	private LogosAdapter adapter;
-	private TextToSpeech ttsEngine;	
+	private LogosAdapter adapter;	
 	private SpeechService mSpeechService;
-	
-	private static final int TTS_INSTALLED_CHECK_CODE = 1;
 	
 	static class ViewHolder {
 		ImageView image;
 		TextView text;
-		
 		Integer position;
 	}
 	
@@ -59,25 +55,30 @@ public class Logos extends ListActivity implements TextToSpeech.OnInitListener {
         setListAdapter(adapter);
         
         bindSpeechService();
-        checkAndInstallTTSEngine();
     }
 	
-	@Override
-	protected void onDestroy() {
-		ttsEngine.stop();
-    	ttsEngine.shutdown();
-    	
-    	unBindSpeechService();
-    	super.onDestroy();
+	// Show a toast and return data status
+	private boolean checkDataConnectivity() {
+		TelephonyManager telephonyManager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
+		WifiManager wifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
+		
+		int dataState = telephonyManager.getDataState();
+		int wifiState = wifiManager.getWifiState();
+		
+		if (dataState != TelephonyManager.DATA_CONNECTED && wifiState != WifiManager.WIFI_STATE_ENABLED) {
+			Toast butterToast = Toast.makeText(this, "No connection available", Toast.LENGTH_SHORT);
+			butterToast.show();
+			return false;
+		}
+		
+		return true;
 	}
 	
 	@Override
-	public boolean onKeyDown(int keyCode, KeyEvent event) {
-	    if (keyCode == KeyEvent.KEYCODE_BACK) {
-	        moveTaskToBack(true);
-	        return true;
-	    }
-	    return super.onKeyDown(keyCode, event);
+	protected void onDestroy() {
+		unBindSpeechService();
+
+		super.onDestroy();
 	}
 	
     // Listen for configuration changes and this is bascially to prevent the 
@@ -86,44 +87,7 @@ public class Logos extends ListActivity implements TextToSpeech.OnInitListener {
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
     }
-    
-    // Check for presence of a TTSEngine and install if not found
-    protected void checkAndInstallTTSEngine() {
-	    Intent checkIntent = new Intent();
-	    checkIntent.setAction(TextToSpeech.Engine.ACTION_CHECK_TTS_DATA);
-	    startActivityForResult(checkIntent, TTS_INSTALLED_CHECK_CODE);
-    }
-    
-    // Called for the intent which checks if TTS was installed and starts TTS up
-    protected void onActivityResult(
-            int requestCode, int resultCode, Intent data) {
-        if (requestCode == TTS_INSTALLED_CHECK_CODE) {
-            if (resultCode == TextToSpeech.Engine.CHECK_VOICE_DATA_PASS) {
-                // success, create the TTS instance
-                ttsEngine = new TextToSpeech(this, this);
-            } else {
-                // missing data, install it
-                Intent installIntent = new Intent();
-                installIntent.setAction(
-                    TextToSpeech.Engine.ACTION_INSTALL_TTS_DATA);
-                startActivity(installIntent);
-            }
-        }
-    }
-    
-    // OnInitListener for TTSEngine initialization
-    // Check if the Service is bound and if it is then we can set the TTS Engine it should use
-	@Override
-	public void onInit(int status) {
-		if (status == TextToSpeech.SUCCESS) {
-	           ttsEngine.setLanguage(Locale.US);	            
-	           
-	           if (mSpeechService != null) {
-	        	   mSpeechService.setTTSEngine(this.ttsEngine);
-	           }
-		}
-	}
-	
+
 	private void populateSourcesFromXML() throws XmlPullParserException, IOException {
 		XmlResourceParser parser = getResources().getXml(R.xml.newssourcesdata);	
 		NewsSource source = null;
@@ -211,6 +175,11 @@ public class Logos extends ListActivity implements TextToSpeech.OnInitListener {
 
 		@Override
 		public void onClick(View view) {
+			// If no data link then just don't open Plaudible activity. Best to stop it here.
+			if (!checkDataConnectivity()) {
+				return;
+			}
+			
 			ViewHolder holder = (ViewHolder) view.getTag();
 			NewsSource source = getItem(holder.position);
 			

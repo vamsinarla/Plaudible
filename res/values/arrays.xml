@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="language">
+        <item>US English</item>
+        <item>UK English</item>
+    </string-array>
+    <string-array name="language_values">
+        <item>US</item>
+        <item>UK</item>
+    </string-array>
+    
+    <string-array name="readingSpeed">
+        <item>Slow (0.75x)</item>
+        <item>Normal (1x)</item>
+        <item>Fast (1.5x)</item>
+        <item>Super fast (1.75x)</item>
+    </string-array>
+    <string-array name="readingSpeed_values">
+        <item>0.75</item>
+        <item>1</item>
+        <item>1.5</item>
+        <item>1.75</item>
+    </string-array>
+</resources>

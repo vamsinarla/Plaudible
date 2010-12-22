@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+  xmlns:android="http://schemas.android.com/apk/res/android"
+  android:layout_width="fill_parent"
+  android:layout_height="fill_parent"
+  android:orientation="vertical"
+  android:background="#ffffff">
+  
+  <ImageView
+  android:src="@drawable/newsspeakicon"
+  android:layout_width="fill_parent"
+  android:layout_height="wrap_content"
+  android:layout_gravity="center_horizontal"
+  android:paddingTop="50sp"/>
+  
+  <TextView
+  android:layout_width="wrap_content"
+  android:layout_height="wrap_content"
+  android:textSize="18sp"
+  android:textColor="#333333"
+  android:textStyle="bold"
+  android:typeface="sans" 
+  android:paddingBottom="10sp"
+  android:layout_gravity="center_horizontal"
+  android:text="Get your news to speak out"/>
+
+  <ImageButton
+  android:id="@+id/getNewsButton"
+  android:layout_width="wrap_content"
+  android:layout_height="wrap_content"
+  android:layout_gravity="center"
+  android:src="@drawable/getnews"
+  android:background="@android:color/transparent"
+  android:padding="10sp"/>
+
+  <TextView
+  android:layout_width="wrap_content"
+  android:layout_height="wrap_content"
+  android:textSize="12sp"
+  android:textColor="#333333"
+  android:textStyle="bold"
+  android:typeface="sans" 
+  android:paddingTop="20sp"
+  android:paddingBottom="10sp"
+  android:layout_gravity="center_horizontal"
+  android:gravity="center"
+  android:text="If you like NewsSpeak, share it with friends. Also, send us your requests or just leave us some feedback."/>
+  
+  <LinearLayout
+  android:layout_width="fill_parent"
+  android:layout_height="fill_parent"
+  android:layout_gravity="center_horizontal"
+  android:gravity="bottom|center_horizontal"
+  android:orientation="horizontal"
+  android:paddingBottom="20sp">
+  
+  <ImageButton
+  android:id="@+id/shareButton"
+  android:layout_width="wrap_content"
+  android:layout_height="wrap_content"
+  android:padding="10sp"/>
+  
+  <ImageButton
+  android:id="@+id/feedbackButton"
+  android:layout_width="wrap_content"
+  android:layout_height="wrap_content"
+  android:padding="10sp"/>
+  
+  <ImageButton
+  android:id="@+id/settingsButton"
+  android:layout_width="wrap_content"
+  android:layout_height="wrap_content"
+  android:padding="10sp"/>
+  
+  <ImageButton
+  android:id="@+id/helpButton"
+  android:layout_width="wrap_content"
+  android:layout_height="wrap_content"
+  android:padding="10sp"/>
+  
+  </LinearLayout>
+  
+</LinearLayout>
