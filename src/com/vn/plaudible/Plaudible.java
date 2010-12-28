@@ -1,6 +1,7 @@
 package com.vn.plaudible;
 
 import java.util.ArrayList;
+import java.util.concurrent.ExecutionException;
 
 import android.app.ListActivity;
 import android.app.ProgressDialog;
@@ -11,6 +12,7 @@ import android.content.ServiceConnection;
 import android.content.res.Configuration;
 import android.media.AudioManager;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.IBinder;
@@ -23,7 +25,11 @@ import android.widget.TextView;
 
 public class Plaudible extends ListActivity {
 	
-	// ViewHolder pattern for efficient ListAdapter usage
+	/**
+	 *  ViewHolder pattern for efficient ListAdapter usage
+	 * @author vamsi
+	 *
+	 */
 	static class ViewHolder {
         TextView title;
         TextView description;
@@ -83,14 +89,19 @@ public class Plaudible extends ListActivity {
     	super.onDestroy();
     }
     
-    // Listen for configuration changes and this is basically to prevent the 
-    // activity from being restarted. Do nothing here.
+    /**
+     *  Listen for configuration changes and this is basically to prevent the 
+     *  activity from being restarted. Do nothing here.
+     */ 
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
     }
     
-   // Used by the AsyncTask to update the set of articles
+   /**
+    *  Used by the AsyncTask to update the set of articles
+    * @param articles
+    */
    public void setArticles(ArrayList<Article> articles) {
 	   this.articles = articles;   
 	   this.adapter.notifyDataSetChanged();
@@ -100,6 +111,11 @@ public class Plaudible extends ListActivity {
 	   }
    }
    
+   /**
+    * ArrayList adapter
+    * @author vamsi
+    *
+    */
    private class ArticleListAdapter extends ArrayAdapter<Article> implements View.OnClickListener {
 	   
 	   ArrayList<Article> articles;
@@ -111,6 +127,9 @@ public class Plaudible extends ListActivity {
 		   this.setNotifyOnChange(true);
 	   }
 	   
+	   /**
+	    * Item's View
+	    */
 	   @Override
 	   public View getView(int position, View convertView, ViewGroup parent) {
 		   ViewHolder holder;
@@ -155,9 +174,33 @@ public class Plaudible extends ListActivity {
 					Integer position = (Integer) v.getTag();
 					
 					// Start the browser with the URI of the article
-					Uri uri = Uri.parse(getItem(position).getUrl());
+					/*Uri uri = Uri.parse(getItem(position).getUrl());
 					Intent webViewIntent = new Intent(Intent.ACTION_VIEW, uri);
-					startActivity(Intent.createChooser(webViewIntent, "Open this article in"));
+					startActivity(Intent.createChooser(webViewIntent, "Open this article in"));*/
+					if (!articles.get(position).isDownloaded()) {
+						// Start AsyncTask for downloading article
+						AsyncTask task = new PlaudibleAsyncTask().execute(
+								   new PlaudibleAsyncTask.Payload(
+										   PlaudibleAsyncTask.ARTICLE_DOWNLOADER_TASK,
+										   new Object[] { Plaudible.this,
+												   			position,
+												   			articles,
+												   			currentNewsSource }));
+						
+						try {
+							task.get();
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						} catch (ExecutionException e) {
+							e.printStackTrace();
+						}
+						
+						Intent listArticlesInFeed = new Intent();
+						listArticlesInFeed.setClass(getContext(), ArticleViewer.class);
+						listArticlesInFeed.putExtra("content", articles.get(position).getContent());
+						
+						startActivity(listArticlesInFeed);
+					}
 				}
 		   });
 		   
@@ -238,7 +281,9 @@ public class Plaudible extends ListActivity {
 		   return position;
 	   }
 
-	    // Open the browser when the user clicks on the article
+	    /**
+	     *  Open the browser when the user clicks on the article
+	     */
 		@Override
 		public void onClick(View view) {
 			ViewHolder holder = (ViewHolder) view.getTag();
@@ -250,29 +295,45 @@ public class Plaudible extends ListActivity {
 		}
    }
 	
-	// Send an article to the service so it can begin reading
+	/**
+	 *  Send an article to the service so it can begin reading
+	 * @param article
+	 * @param newsSource
+	 */
 	public void sendArticleForReading(Article article, String newsSource) {
 		if (mSpeechService != null) {
 			mSpeechService.readArticle(article, newsSource);
 		}
 	}
 	
+	/**
+	 * Timer for the progress dialog
+	 * @author vamsi
+	 *
+	 */
 	public class ProgressDialogTimer extends CountDownTimer {
 		public ProgressDialogTimer(long millisInFuture, long countDownInterval) {
 			super(millisInFuture, countDownInterval);
 		}
-		// Suspend the spinning wheel after some time.
+		/**
+		 *  Suspend the spinning wheel after some time.
+		 */
 		public void onFinish() {
 		   if (spinningWheel.isShowing()) {
 			   spinningWheel.cancel();
 		   }
 		}
-		// Do nothing here
+		/**
+		 *  Do nothing here
+		 */
 		public void onTick(long millisUntilFinished) {
 			
 		}
 	}
 	
+	/**
+	 * Connection to the Service. All Activities must have this.
+	 */
 	private ServiceConnection mConnection = new ServiceConnection() {
 		@Override
 		public void onServiceConnected(ComponentName name, IBinder service) {
@@ -285,10 +346,16 @@ public class Plaudible extends ListActivity {
 		}	
 	};
 	
+	/**
+	 * Bind to the Speech Service. Called from onCreate() on this activity
+	 */
 	void bindSpeechService() {
 		this.bindService(new Intent(Plaudible.this, SpeechService.class), mConnection, Context.BIND_AUTO_CREATE);
 	}
 	
+	/**
+	 * Unbind from the Speech Service. Called from onDestroy() on this activity
+	 */
 	void unBindSpeechService() {
 		if (mSpeechService != null) {
 			this.unbindService(mConnection);

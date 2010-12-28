@@ -54,6 +54,7 @@ public final class R {
         public static final int analytics_id=0x7f060006;
         public static final int app_desc=0x7f060004;
         public static final int app_name=0x7f060000;
+        public static final int appengine_url=0x7f060007;
         public static final int feedback_subject=0x7f060003;
         public static final int help=0x7f060005;
         public static final int share_body=0x7f060002;

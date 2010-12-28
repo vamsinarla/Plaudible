@@ -6,6 +6,11 @@ import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
+/**
+ * Handler - SAX implementation for handling the XML returned by the FeedServlet on AppEngine
+ * @author vamsi
+ *
+ */
 public class FeedHandler extends DefaultHandler {
 	
 	private ArrayList<Article> articles;
@@ -17,6 +22,10 @@ public class FeedHandler extends DefaultHandler {
 	private String itemTag;
 	private String linkTag;
 	
+	/**
+	 * Ctor. Supply the articles arraylist which initially has no elements
+	 * @param articles
+	 */
 	FeedHandler(ArrayList<Article> articles) {
 		itemTag = "item";
 		titleTag = "title";
@@ -26,6 +35,9 @@ public class FeedHandler extends DefaultHandler {
 		this.articles = articles;
 	}
 		
+	/** 
+	 * Collecting all characters. Use string builder for efficiency
+	 */
 	@Override
 	public void characters(char[] ch, int start, int length)
 			throws SAXException {
@@ -46,8 +58,10 @@ public class FeedHandler extends DefaultHandler {
 			} else if (localName.equalsIgnoreCase(linkTag)) {
 				currentArticle.setUrl(builder.toString().trim());
 			} else if (localName.equalsIgnoreCase(itemTag)) {
+				
 				// Set the id of the article which is basically its index
 				currentArticle.setId(articles.size());
+				
 				// Add to the array list
 				articles.add(currentArticle);
 			}

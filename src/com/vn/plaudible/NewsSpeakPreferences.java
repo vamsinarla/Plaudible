@@ -3,6 +3,11 @@ package com.vn.plaudible;
 import android.os.Bundle;
 import android.preference.PreferenceActivity;
 
+/**
+ * Settings page
+ * @author vamsi
+ *
+ */
 public class NewsSpeakPreferences extends PreferenceActivity {
 
 	@Override
@@ -10,7 +15,6 @@ public class NewsSpeakPreferences extends PreferenceActivity {
 		super.onCreate(savedInstanceState);
 		
 		addPreferencesFromResource(R.xml.preferences);
-		
 		setTitle("NewsSpeak preferences");
 	}
 }

@@ -22,14 +22,28 @@ import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.widget.Toast;
 
+/**
+ * The service that speaks
+ * @author vamsi
+ *
+ */
 public class SpeechService extends Service implements OnUtteranceCompletedListener {
 
+	/**
+	 * System services for notifications and incoming call statuses
+	 */
 	private NotificationManager notificationManager;
 	private TelephonyManager telephonyManager;
 	
+	/**
+	 * TTS stuff. HashMap used for putting in a synthesis completion listener
+	 */
 	private TextToSpeech ttsEngine;
 	private HashMap<String, String> speechHash;
 	
+	/**
+	 * Needed to keep the phone from turning the service off
+	 */
 	private WakeLock lock;
 	
 	private Article currentArticle;
@@ -43,6 +57,11 @@ public class SpeechService extends Service implements OnUtteranceCompletedListen
 	
 	public static final int NOT_SPEAKING = -1;
 	
+	/**
+	 * Mechanism for the activities to talk to service
+	 * @author vamsi
+	 *
+	 */
 	public class SpeechBinder extends Binder {
 		SpeechService getService() {
 			return SpeechService.this;
@@ -73,7 +92,10 @@ public class SpeechService extends Service implements OnUtteranceCompletedListen
 		telephonyManager.listen(new CallListener(), PhoneStateListener.LISTEN_CALL_STATE);
 	}
 
-	// Call status checking
+	/**
+	 *  Call status checking
+	 * @return
+	 */
 	private boolean checkCallStatus() {
 		int dataState = telephonyManager.getCallState();
 		
@@ -86,7 +108,11 @@ public class SpeechService extends Service implements OnUtteranceCompletedListen
 		return true;
 	}
 	
-	// Listener class to respond to call state changes
+	/**
+	 *  Listener class to respond to call state changes
+	 * @author vamsi
+	 *
+	 */
 	private class CallListener extends PhoneStateListener {
 		@Override
 		public void onCallStateChanged(int state, String incomingNumber) {
@@ -118,6 +144,10 @@ public class SpeechService extends Service implements OnUtteranceCompletedListen
 	
 	private final IBinder mBinder = new SpeechBinder();
 	
+	/**
+	 * Notifications
+	 * @param text
+	 */
 	private void showNotification(String text) {
 		// Cancel any previous notifications
 		notificationManager.cancel(NOTIFICATION_ID);
@@ -182,7 +212,9 @@ public class SpeechService extends Service implements OnUtteranceCompletedListen
 		readCurrentChunk();
 	}
 	
-	// Set the TTS preferences
+	/**
+	 *  Set the TTS preferences
+	 */
 	private void setTTSPreferences()
 	{
 		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
@@ -199,12 +231,18 @@ public class SpeechService extends Service implements OnUtteranceCompletedListen
 		ttsEngine.setSpeechRate(Float.parseFloat(speed));
 	}
 	
-	// Return the state of the service. If reading then return the article index it is reading currently
+	/**
+	 *  Return the state of the service. If reading then return the article index it is reading currently
+	 * @return
+	 */
 	public boolean isReading() {
 		return !pausedReading;
 	}
 	
-	// Return the index of the currently read article
+	/**
+	 *  Return the index of the currently read article
+	 * @return
+	 */
 	public Integer getCurrentlyReadArticle() {
 		if (currentArticle != null) {
 			return currentArticle.getId();
@@ -213,19 +251,26 @@ public class SpeechService extends Service implements OnUtteranceCompletedListen
 		}
 	}
 	
-	// Return the currently read news source
+	/**
+	 *  Return the currently read news source
+	 * @return
+	 */
 	public String getCurrentNewsSource() {
 		return currentNewsSource;
 	}
 	
-	// Split the article's content into sentences
+	/**
+	 *  Split the article's content into sentences
+	 */
 	private void prepareChunks() {
 		String chunk = currentArticle.getContent();
 		chunks = chunk.split("\\.");
 		chunkIndex = 0;
 	}
 
-	// Read the current chunk
+	/**
+	 *  Read the current chunk
+	 */
 	private void readCurrentChunk() {
 		if (chunkIndex < chunks.length && !pausedReading) {
 			// Add the current chunk to the queue. The queue must have only 1 chunk at a time
@@ -236,21 +281,27 @@ public class SpeechService extends Service implements OnUtteranceCompletedListen
 		}
 	}
 	
-	// Read the next chunk
+	/**
+	 *  Read the next chunk
+	 */
 	private void readNextChunk() {
 		pausedReading = false;
 		++chunkIndex;
 		readCurrentChunk();
 	}
 	
-	// Pause the reading. There should only be this one chunk in the TTS queue
+	/**
+	 *  Pause the reading. There should only be this one chunk in the TTS queue
+	 */
 	public void pauseReading() {
 		pausedReading = true;
 		showNotification(currentArticle.getTitle());
 		ttsEngine.stop();
 	}
 
-	// Resume reading the same chunk where we left off
+	/**
+	 *  Resume reading the same chunk where we left off
+	 */
 	public void resumeReading() {
 		pausedReading = false;
 		readCurrentChunk();

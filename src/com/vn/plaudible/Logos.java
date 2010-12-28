@@ -24,6 +24,11 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+/**
+ * The Screen that displays the list of all newspapers and blogs
+ * @author vamsi
+ *
+ */
 public class Logos extends ListActivity {
 	
 	private ArrayList<NewsSource> sources;
@@ -36,6 +41,9 @@ public class Logos extends ListActivity {
 		Integer position;
 	}
 	
+	/**
+	 * Called on activity creation
+	 */
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -57,7 +65,10 @@ public class Logos extends ListActivity {
         bindSpeechService();
     }
 	
-	// Show a toast and return data status
+	/**
+	 * Return the status of data connectivity
+	 * @return boolean
+	 */
 	private boolean checkDataConnectivity() {
 		ConnectivityManager conMan = (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
 		NetworkInfo networkInfo = conMan.getActiveNetworkInfo();
@@ -75,13 +86,20 @@ public class Logos extends ListActivity {
 		super.onDestroy();
 	}
 	
-    // Listen for configuration changes and this is bascially to prevent the 
-    // activity from being restarted. Do nothing here.
+    /**
+     *  Listen for configuration changes and this is basically to prevent the 
+     *	activity from being restarted. Do nothing here.
+     */
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
     }
 
+    /**
+     * Read XML resources in order to populate list of blogs and newspapers that we support
+     * @throws XmlPullParserException
+     * @throws IOException
+     */
 	private void populateSourcesFromXML() throws XmlPullParserException, IOException {
 		XmlResourceParser parser = getResources().getXml(R.xml.newssourcesdata);	
 		NewsSource source = null;
@@ -111,6 +129,11 @@ public class Logos extends ListActivity {
 	         }
 	}
 	
+	/**
+	 * Array adapter class for the listView
+	 * @author vamsi
+	 *
+	 */
 	private class LogosAdapter extends ArrayAdapter<NewsSource> implements View.OnClickListener {
 			
 		private ArrayList<NewsSource> sources;
@@ -123,6 +146,9 @@ public class Logos extends ListActivity {
 			this.context = context;
 		}
 	
+		/**
+		 * Get item's View
+		 */
 		@Override
 		public View getView(int position, View convertView, ViewGroup parent) {
 			ViewHolder holder;
@@ -143,6 +169,8 @@ public class Logos extends ListActivity {
 			
 			holder.position = position;
 			holder.text.setText(source.getTitle());
+			
+			// Decide on the appropriate icon
 			if (source.getType() == NewsSource.SourceType.NEWSPAPER) {
 				holder.image.setImageResource(R.drawable.news);
 			} else if (source.getType() == NewsSource.SourceType.BLOG) {
@@ -165,6 +193,9 @@ public class Logos extends ListActivity {
 			return position;
 		}
 
+		/**
+		 * The onClick method, which starts Plaudible
+		 */
 		@Override
 		public void onClick(View view) {
 			// If no data link then just don't open Plaudible activity. Best to stop it here.
@@ -185,6 +216,9 @@ public class Logos extends ListActivity {
 		}
 	}
 	
+	/**
+	 * Connection to the Service. All Activities must have this.
+	 */
 	private ServiceConnection mConnection = new ServiceConnection() {
 		@Override
 		public void onServiceConnected(ComponentName name, IBinder service) {
@@ -197,14 +231,19 @@ public class Logos extends ListActivity {
 		}
 	};
 	
+	/**
+	 * Bind to the Speech Service. Called from onCreate() on this activity
+	 */
 	void bindSpeechService() {
 		this.bindService(new Intent(Logos.this, SpeechService.class), mConnection, Context.BIND_AUTO_CREATE);
 	}
 	
+	/**
+	 * Unbind from the Speech Service. Called from onDestroy() on this activity
+	 */
 	void unBindSpeechService() {
 		if (mSpeechService != null) {
 			this.unbindService(mConnection);
 		}
-	}
-	
+	}	
 }

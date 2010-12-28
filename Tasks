@@ -1,0 +1,16 @@
+TASKS
+------
+
+- Add tracker support
+    
+- Modify newsspeak server to serve just text and html rendering for articleViewer
+
+- Change play pause mechanism
+
+- Change post execute method of async task into not sending articles for reading
+
+- Move app engine URL to strings, Move constants to proper places
+
+- Add loads of comments
+
+- Download all articles in one go ?

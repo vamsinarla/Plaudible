@@ -18,6 +18,11 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.ImageButton;
 
+/**
+ * The Starting screen of NewsSpeak
+ * @author vamsi
+ *
+ */
 public class HomePage extends Activity implements TextToSpeech.OnInitListener {
 	
 	private TextToSpeech ttsEngine;
@@ -25,7 +30,9 @@ public class HomePage extends Activity implements TextToSpeech.OnInitListener {
 	
 	private static final int TTS_INSTALLED_CHECK_CODE = 1;
 	
-	/** Called when the activity is first created. */
+	/**
+	 *  Called when the activity is first created.  
+	 */
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -111,17 +118,20 @@ public class HomePage extends Activity implements TextToSpeech.OnInitListener {
         
         bindSpeechService();
         checkAndInstallTTSEngine();
-        
-        // Done!
     }
     
-    // Listen for configuration changes and this is bascially to prevent the 
-    // activity from being restarted. Do nothing here.
+    /**
+     *  Listen for configuration changes and this is basically to prevent the 
+     *  activity from being restarted. Do nothing here.
+     */
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
     }
     
+    /**
+     * Make the behaviour of the back button same as the Home Button
+     */
 	@Override
 	public boolean onKeyDown(int keyCode, KeyEvent event) {
 	    if (keyCode == KeyEvent.KEYCODE_BACK) {
@@ -140,14 +150,18 @@ public class HomePage extends Activity implements TextToSpeech.OnInitListener {
     	super.onDestroy();
     }
     
-    // Check for presence of a TTSEngine and install if not found
+    /**
+     *  Check for presence of a TTSEngine and install if not found
+     */
     protected void checkAndInstallTTSEngine() {
 	    Intent checkIntent = new Intent();
 	    checkIntent.setAction(TextToSpeech.Engine.ACTION_CHECK_TTS_DATA);
 	    startActivityForResult(checkIntent, TTS_INSTALLED_CHECK_CODE);
     }
     
-    // Called for the intent which checks if TTS was installed and starts TTS up
+    /**
+     *  Called for the intent which checks if TTS was installed and starts TTS up
+     */
     protected void onActivityResult(
             int requestCode, int resultCode, Intent data) {
         if (requestCode == TTS_INSTALLED_CHECK_CODE) {
@@ -164,8 +178,10 @@ public class HomePage extends Activity implements TextToSpeech.OnInitListener {
         }
     }
     
-    // OnInitListener for TTSEngine initialization
-    // Check if the Service is bound and if it is then we can set the TTS Engine it should use
+    /**
+     *  OnInitListener for TTSEngine initialization
+     *  Check if the Service is bound and if it is then we can set the TTS Engine it should use
+     */
 	@Override
 	public void onInit(int status) {
 		if (status == TextToSpeech.SUCCESS) {
@@ -177,7 +193,9 @@ public class HomePage extends Activity implements TextToSpeech.OnInitListener {
 		}
 	}
 	
-    
+	/**
+	 * Connection to the Service. All Activities must have this.
+	 */
 	private ServiceConnection mConnection = new ServiceConnection() {
 		@Override
 		public void onServiceConnected(ComponentName name, IBinder service) {
@@ -190,10 +208,16 @@ public class HomePage extends Activity implements TextToSpeech.OnInitListener {
 		}
 	};
 	
+	/**
+	 * Bind to the Speech Service. Called from onCreate() on this activity
+	 */
 	void bindSpeechService() {
 		this.bindService(new Intent(HomePage.this, SpeechService.class), mConnection, Context.BIND_AUTO_CREATE);
 	}
 	
+	/**
+	 * Unbind from the Speech Service. Called from onDestroy() on this activity
+	 */
 	void unBindSpeechService() {
 		if (mSpeechService != null) {
 			this.unbindService(mConnection);

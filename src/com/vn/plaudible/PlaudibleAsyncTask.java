@@ -21,6 +21,9 @@ public class PlaudibleAsyncTask extends AsyncTask<PlaudibleAsyncTask.Payload, Ar
 	
 	@SuppressWarnings("unchecked")
 	@Override
+	/**
+	 * Post execution stuff for the AsyncTasks
+	 */
 	protected void onPostExecute(PlaudibleAsyncTask.Payload payload) {
 		if (payload.result != null) {
 			Plaudible activity = (Plaudible) payload.data[0];
@@ -42,10 +45,14 @@ public class PlaudibleAsyncTask extends AsyncTask<PlaudibleAsyncTask.Payload, Ar
 	
 	@SuppressWarnings("unchecked")
 	@Override
+	/**
+	 * Main AsynTask work horse. Feed and Article downloading are done in this
+	 */
 	protected PlaudibleAsyncTask.Payload doInBackground(PlaudibleAsyncTask.Payload... params) {
 		
 		SAXParserFactory factory = SAXParserFactory.newInstance();
 		PlaudibleAsyncTask.Payload payload = params[0];
+		Plaudible activity = (Plaudible) payload.data[0];
 		ArrayList<Article> articles;
 		String source;
 		
@@ -63,15 +70,20 @@ public class PlaudibleAsyncTask extends AsyncTask<PlaudibleAsyncTask.Payload, Ar
 				articles = (ArrayList<Article>) payload.data[2];
 				source = (String) payload.data[1];
 				
+				// encode the source into UTF 8
 				source = URLEncoder.encode(source, "UTF-8");
-				source = "http://evecal.appspot.com/feed?newspaper=" + source;
 				
+				// Construct the URL for calling the FeedServlet on AppEngine. Latest version of
+				// app engine URL must be in strings.xml
+				source = activity.getString(R.string.appengine_url) + "/feed?newspaper=" + source;
+				
+				// Construct the FeedHandler(SAXParser) and parse the response from AppEngine
 				URL feedUrl = new URL(source);
 				FeedHandler feedHandler = new FeedHandler(articles);
 				responseStream = feedUrl.openConnection().getInputStream();
-				
 				parser.parse(responseStream, feedHandler);
 				
+				// Write Success
 				payload.result = new String("Success");
 				break;
 			case ARTICLE_DOWNLOADER_TASK:
@@ -82,11 +94,18 @@ public class PlaudibleAsyncTask extends AsyncTask<PlaudibleAsyncTask.Payload, Ar
 				
 				for (int index = position; /*index < articles.size()*/ index <= position; ++index) {
 				// for (int index = 0; index < articles.size() /*index <= position*/; ++index) {
+					
 					// Download the article only if it hasn't been till yet
 					if (articles.get(index).isDownloaded() == false) {
-						source = "http://evecal.appspot.com/article?source=" + URLEncoder.encode(source, "UTF-8");
+					
+						// encode the source into UTF 8
+						source = URLEncoder.encode(source, "UTF-8");
+						
+						// Construct the AppEngine URL for the ArticleServlet
+						source = activity.getString(R.string.appengine_url) + "/article?source=" + source;
 						source += "&link=" + articles.get(position).getUrl();
 						
+						// Get the response from AppEngine
 						URL articleUrl = new URL(source);
 						responseStream = articleUrl.openConnection().getInputStream();
 						reader = new BufferedReader(new InputStreamReader(responseStream));
@@ -97,6 +116,7 @@ public class PlaudibleAsyncTask extends AsyncTask<PlaudibleAsyncTask.Payload, Ar
 						}
 						reader.close();
 						
+						// Set the params for the article and mark as downloaded
 						articles.get(index).setContent(builder.toString());
 						articles.get(index).setDownloaded(true);
 						payload.result = new String("Downloaded");
@@ -116,6 +136,11 @@ public class PlaudibleAsyncTask extends AsyncTask<PlaudibleAsyncTask.Payload, Ar
 		return payload;
 	}
 
+	/**
+	 * Payload pattern for efficient and simple use of AsyncTasks
+	 * @author vamsi
+	 *
+	 */
 	public static class Payload {
 		public int taskType;
 		public Object[] data;
