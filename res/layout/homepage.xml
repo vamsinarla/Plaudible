@@ -44,7 +44,7 @@
   android:paddingBottom="10sp"
   android:layout_gravity="center_horizontal"
   android:gravity="center"
-  android:text="If you like NewsSpeak, share it with friends. Also, send us your requests or just leave us some feedback."/>
+  android:text="Share NewsSpeak. Also, send us your requests or just leave us some feedback."/>
   
   <LinearLayout
   android:layout_width="fill_parent"

@@ -1,6 +1,6 @@
 package com.vn.plaudible;
 
-public class Article extends Object {
+public class Article {
 	
 	private String title;
 	private String description;
@@ -8,6 +8,18 @@ public class Article extends Object {
 	private String url;
 	private boolean isDownloaded;
 	private int id;
+	
+	public Article() {
+		this.title = this.description = this.content = null;
+		this.isDownloaded = false;
+	}
+	
+	public Article(String title, String description, String url) {
+		this.title = title;
+		this.description = description;
+		this.url = url;		
+		this.isDownloaded = false;		
+	}
 	
 	public String getContent() {
 		return content;
@@ -31,19 +43,6 @@ public class Article extends Object {
 
 	public void setId(int id) {
 		this.id = id;
-	}
-
-	public Article(String title, String description, String url) {
-		this.title = title;
-		this.description = description;
-		this.url = url;
-		
-		this.isDownloaded = false;		
-	}
-	
-	public Article() {
-		this.title = this.description = this.content = null;
-		this.isDownloaded = false;
 	}
 
 	public String getUrl() {

@@ -18,35 +18,40 @@ public final class R {
     }
     public static final class drawable {
         public static final int blog=0x7f020000;
-        public static final int getnews=0x7f020001;
-        public static final int getnewsbuttonnormal=0x7f020002;
-        public static final int getnewsbuttonpressed=0x7f020003;
-        public static final int news=0x7f020004;
-        public static final int newsspeakicon=0x7f020005;
-        public static final int pause64=0x7f020006;
-        public static final int play64=0x7f020007;
-        public static final int podcast=0x7f020008;
+        public static final int browser=0x7f020001;
+        public static final int getnews=0x7f020002;
+        public static final int getnewsbuttonnormal=0x7f020003;
+        public static final int getnewsbuttonpressed=0x7f020004;
+        public static final int news=0x7f020005;
+        public static final int newsspeakicon=0x7f020006;
+        public static final int pause64=0x7f020007;
+        public static final int play64=0x7f020008;
+        public static final int podcast=0x7f020009;
     }
     public static final class id {
-        public static final int ArticleDescription=0x7f070002;
-        public static final int ArticlePlay=0x7f070000;
-        public static final int ArticleTitle=0x7f070001;
-        public static final int NewsPaperTitle=0x7f070009;
-        public static final int feedbackButton=0x7f070005;
-        public static final int getNewsButton=0x7f070003;
-        public static final int helpButton=0x7f070007;
-        public static final int newsPaperImages=0x7f070008;
-        public static final int settingsButton=0x7f070006;
-        public static final int shareButton=0x7f070004;
+        public static final int ArticleDescription=0x7f070004;
+        public static final int ArticlePlay=0x7f070001;
+        public static final int ArticleText=0x7f070000;
+        public static final int ArticleTitle=0x7f070003;
+        public static final int BrowserButton=0x7f070002;
+        public static final int NewsPaperTitle=0x7f07000b;
+        public static final int feedbackButton=0x7f070007;
+        public static final int getNewsButton=0x7f070005;
+        public static final int helpButton=0x7f070009;
+        public static final int newsPaperImages=0x7f07000a;
+        public static final int settingsButton=0x7f070008;
+        public static final int shareButton=0x7f070006;
     }
     public static final class layout {
-        public static final int articles_list=0x7f030000;
-        public static final int articles_list_item=0x7f030001;
-        public static final int homepage=0x7f030002;
-        public static final int main_page=0x7f030003;
-        public static final int main_page_list_item=0x7f030004;
+        public static final int article_viewer=0x7f030000;
+        public static final int articles_list=0x7f030001;
+        public static final int articles_list_item=0x7f030002;
+        public static final int homepage=0x7f030003;
+        public static final int main_page=0x7f030004;
+        public static final int main_page_list_item=0x7f030005;
     }
     public static final class string {
+        public static final int analytics_id=0x7f060006;
         public static final int app_desc=0x7f060004;
         public static final int app_name=0x7f060000;
         public static final int feedback_subject=0x7f060003;

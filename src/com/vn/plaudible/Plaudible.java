@@ -28,6 +28,7 @@ public class Plaudible extends ListActivity {
         TextView title;
         TextView description;
         ImageButton playButton;
+        ImageButton browserButton;
         
         int position;
     }
@@ -41,7 +42,7 @@ public class Plaudible extends ListActivity {
 	
 	private static final int TIMEOUT = 10000;
 	
-    /** Called when the activity is first created. */
+	/** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -73,7 +74,6 @@ public class Plaudible extends ListActivity {
         				new Object[] { Plaudible.this,
         								currentNewsSource,
         								articles }));
-        
         bindSpeechService();
     }
 	
@@ -83,7 +83,7 @@ public class Plaudible extends ListActivity {
     	super.onDestroy();
     }
     
-    // Listen for configuration changes and this is bascially to prevent the 
+    // Listen for configuration changes and this is basically to prevent the 
     // activity from being restarted. Do nothing here.
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
@@ -124,6 +124,7 @@ public class Plaudible extends ListActivity {
 			   holder.title = (TextView) convertView.findViewById(R.id.ArticleTitle);
 			   holder.description = (TextView) convertView.findViewById(R.id.ArticleDescription);
 			   holder.playButton = (ImageButton) convertView.findViewById(R.id.ArticlePlay);
+			   holder.browserButton = (ImageButton) convertView.findViewById(R.id.BrowserButton);
 			   
 			   // Decide the drawable for this button
 			   Integer articleBeingRead = mSpeechService.getCurrentlyReadArticle();
@@ -146,6 +147,20 @@ public class Plaudible extends ListActivity {
 		   holder.title.setText(articles.get(position).getTitle());
 		   holder.description.setText(articles.get(position).getDescription());
 
+		   // Set the tag for the browser button and set its click listener
+		   holder.browserButton.setTag((Integer)position);
+		   holder.browserButton.setOnClickListener(new View.OnClickListener() {
+				@Override
+				public void onClick(View v) {
+					Integer position = (Integer) v.getTag();
+					
+					// Start the browser with the URI of the article
+					Uri uri = Uri.parse(getItem(position).getUrl());
+					Intent webViewIntent = new Intent(Intent.ACTION_VIEW, uri);
+					startActivity(Intent.createChooser(webViewIntent, "Open this article in"));
+				}
+		   });
+		   
 		   // Set the tag for the button as the index
 		   holder.playButton.setTag((Integer)position);
 		   holder.position = position;
@@ -158,7 +173,8 @@ public class Plaudible extends ListActivity {
 				   ImageButton view = (ImageButton) v;
 				   Integer articleBeingRead = mSpeechService.getCurrentlyReadArticle();
 				   boolean isSpeechServiceReading = mSpeechService.isReading();
-				   
+	
+				   // State checking
 				   if (isSpeechServiceReading) {
 					   // Case I: Speech service is speaking
 					   // Case a. Current newspaper is the one being read

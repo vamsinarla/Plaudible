@@ -7,6 +7,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.util.ArrayList;
+
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
@@ -68,6 +69,7 @@ public class PlaudibleAsyncTask extends AsyncTask<PlaudibleAsyncTask.Payload, Ar
 				URL feedUrl = new URL(source);
 				FeedHandler feedHandler = new FeedHandler(articles);
 				responseStream = feedUrl.openConnection().getInputStream();
+				
 				parser.parse(responseStream, feedHandler);
 				
 				payload.result = new String("Success");
@@ -79,6 +81,7 @@ public class PlaudibleAsyncTask extends AsyncTask<PlaudibleAsyncTask.Payload, Ar
 				source = (String) payload.data[3];
 				
 				for (int index = position; /*index < articles.size()*/ index <= position; ++index) {
+				// for (int index = 0; index < articles.size() /*index <= position*/; ++index) {
 					// Download the article only if it hasn't been till yet
 					if (articles.get(index).isDownloaded() == false) {
 						source = "http://evecal.appspot.com/article?source=" + URLEncoder.encode(source, "UTF-8");
@@ -96,9 +99,8 @@ public class PlaudibleAsyncTask extends AsyncTask<PlaudibleAsyncTask.Payload, Ar
 						
 						articles.get(index).setContent(builder.toString());
 						articles.get(index).setDownloaded(true);
-						
 						payload.result = new String("Downloaded");
-		            }
+					}
 				}
 				break;
 			}

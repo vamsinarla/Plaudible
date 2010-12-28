@@ -6,16 +6,26 @@
 
     <ImageButton android:id="@+id/ArticlePlay"
         android:layout_width="wrap_content"
-        android:layout_height="fill_parent"
+        android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
         android:layout_marginLeft="3sp"
         android:layout_marginTop="3sp"
         android:maxWidth="15sp"
         android:maxHeight="15sp"
         android:adjustViewBounds="false"
-        android:layout_centerVertical="true"
-        android:src="@drawable/play64"
-        />
+        android:src="@drawable/play64"/>
+        
+   <ImageButton android:id="@+id/BrowserButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_marginLeft="3sp"
+        android:maxWidth="15sp"
+        android:maxHeight="15sp"
+        android:adjustViewBounds="false"
+        android:background="@android:color/transparent"
+        android:layout_below="@id/ArticlePlay"
+        android:src="@drawable/browser"/>
         
     <TextView android:id="@+id/ArticleTitle"
         android:layout_width="fill_parent"
@@ -31,10 +41,9 @@
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:textSize="15sp"
-        android:maxHeight="36sp"
+        android:maxHeight="58sp"
         android:textColor="#333333"
         android:typeface="serif"
-        android:ellipsize="end"
         android:layout_toRightOf="@id/ArticlePlay"
         android:layout_below="@id/ArticleTitle"/>
 

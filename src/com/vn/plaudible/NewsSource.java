@@ -4,16 +4,14 @@ public class NewsSource {
 	public enum SourceType { NEWSPAPER, BLOG };
 	
 	private String title;
-	private String url;
 	private SourceType type;
 	
 	public NewsSource() {
-		this.title = this.url = null;
+		this.title = null;
 	}
 	
 	public NewsSource(String title, String url, SourceType type) {
 		this.title = title;
-		this.url = url;
 		this.type = type;
 	}
 	
@@ -41,11 +39,5 @@ public class NewsSource {
 	public void setTitle(String title) {
 		this.title = title;
 	}
-	
-	public String getUrl() {
-		return url;
-	}
-	public void setUrl(String url) {
-		this.url = url;
-	}
+
 }

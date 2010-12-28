@@ -12,10 +12,10 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.res.Configuration;
 import android.content.res.XmlResourceParser;
-import android.net.wifi.WifiManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.telephony.TelephonyManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -59,19 +59,13 @@ public class Logos extends ListActivity {
 	
 	// Show a toast and return data status
 	private boolean checkDataConnectivity() {
-		TelephonyManager telephonyManager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
-		WifiManager wifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
+		ConnectivityManager conMan = (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
+		NetworkInfo networkInfo = conMan.getActiveNetworkInfo();
 		
-		int dataState = telephonyManager.getDataState();
-		int wifiState = wifiManager.getWifiState();
-		
-		if (dataState != TelephonyManager.DATA_CONNECTED && wifiState != WifiManager.WIFI_STATE_ENABLED) {
-			Toast butterToast = Toast.makeText(this, "No connection available", Toast.LENGTH_SHORT);
-			butterToast.show();
-			return false;
+		if(networkInfo != null && networkInfo.isConnected()){
+			return true;
 		}
-		
-		return true;
+		return false;
 	}
 	
 	@Override
@@ -105,9 +99,7 @@ public class Logos extends ListActivity {
 	        		  source.setTitle(parser.nextText());
 	        	  } else if (parser.getName().equalsIgnoreCase("Type")) {
 	        		  source.setType(NewsSource.getType(parser.nextText()));
-	        	  } else if (parser.getName().equalsIgnoreCase("URL")) {
-	        		  source.setUrl(parser.nextText());
-	        	  }  
+	        	  } 
 	          } else if(eventType == XmlResourceParser.END_TAG) {
 	              if (parser.getName().equalsIgnoreCase("Item")) {
 	            	  sources.add(source);
@@ -177,6 +169,8 @@ public class Logos extends ListActivity {
 		public void onClick(View view) {
 			// If no data link then just don't open Plaudible activity. Best to stop it here.
 			if (!checkDataConnectivity()) {
+				Toast butterToast = Toast.makeText(this.getContext(), "No connection available", Toast.LENGTH_SHORT);
+				butterToast.show();
 				return;
 			}
 			
@@ -185,9 +179,7 @@ public class Logos extends ListActivity {
 			
 			Intent listArticlesInFeed = new Intent();
 			listArticlesInFeed.setClass(context, Plaudible.class);
-			
 			listArticlesInFeed.putExtra("Source", source.getTitle());
-			listArticlesInFeed.putExtra("URL", source.getUrl());
 			
 			context.startActivity(listArticlesInFeed);
 		}

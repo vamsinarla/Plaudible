@@ -7,5 +7,7 @@
 <string name="share_body">I use NewsSpeak on Android which reads out articles from my favorite news sources! Yes, it speaks!  </string>
 <string name="feedback_subject">I have a comment/request</string>
 <string name="app_desc">Let the news speak out to you</string>
-<string name="help">You can use NewsSpeak to read out articles to you. Click on a new source and it will display their featured articles. Click on play to let NewsSpeak read or you can just click on the article to open it in a browser. You can select reading options from the settings page.</string>
+<string name="help">You can use NewsSpeak to speak out articles to you. Click on a new source and it will display their featured articles. Click on play to let NewsSpeak speak or you can just click on the browser icon/article to read it yourself in a browser. You can select reading options from the settings page.</string>
+<string name="analytics_id">UA-20432863-1
+</string>
 </resources>
