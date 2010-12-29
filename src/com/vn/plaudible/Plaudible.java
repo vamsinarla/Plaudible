@@ -22,6 +22,7 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class Plaudible extends ListActivity {
 	
@@ -42,7 +43,6 @@ public class Plaudible extends ListActivity {
 	private ArrayList<Article> articles;
 	private ArticleListAdapter adapter;
 	private String currentNewsSource;
-	private ImageButton currentPlayButtonView;
 	private SpeechService mSpeechService;
 	private ProgressDialog spinningWheel;
 	
@@ -56,7 +56,7 @@ public class Plaudible extends ListActivity {
  
         // Show the spinning wheel and the counter, which suspends the wheel in TIMEOUT seconds
         ProgressDialogTimer timer = new  ProgressDialogTimer(TIMEOUT, TIMEOUT);
-        spinningWheel = ProgressDialog.show(Plaudible.this, "", "Loading articles ...", true);
+        showSpinningWheel();
         timer.start();
         
         // Get the intent and the related extras
@@ -68,7 +68,8 @@ public class Plaudible extends ListActivity {
         
         // Set the volume control to media. So that when user presses volume button it adjusts the media volume
         this.setVolumeControlStream(AudioManager.STREAM_MUSIC);
-        
+
+        // Arraylist adapter
         articles = new ArrayList<Article>();
         adapter = new ArticleListAdapter(this, R.layout.articles_list_item, articles);
         
@@ -106,9 +107,11 @@ public class Plaudible extends ListActivity {
 	   this.articles = articles;   
 	   this.adapter.notifyDataSetChanged();
 	   
-	   if (spinningWheel.isShowing()) {
-		   spinningWheel.cancel();
-	   }
+	   // Articles were fetched so we can suspend the wheel
+	   suspendSpinningWheel();
+	   
+	   // Bottom bar
+	   displayBottomBar();
    }
    
    /**
@@ -145,17 +148,6 @@ public class Plaudible extends ListActivity {
 			   holder.playButton = (ImageButton) convertView.findViewById(R.id.ArticlePlay);
 			   holder.browserButton = (ImageButton) convertView.findViewById(R.id.BrowserButton);
 			   
-			   // Decide the drawable for this button
-			   Integer articleBeingRead = mSpeechService.getCurrentlyReadArticle();
-			   boolean isSpeechServiceReading = mSpeechService.isReading();
-			   
-			   // if we return to the same news source then see if any article needs to be on play.
-			   // Set the currentPlayButtonView appropriately
-			   if (isSpeechServiceReading && articleBeingRead == position &&
-					   currentNewsSource.equalsIgnoreCase(mSpeechService.getCurrentNewsSource())) {
-				   currentPlayButtonView = holder.playButton;
-				   holder.playButton.setImageResource(R.drawable.pause64);
-			   }
 			   convertView.setTag(holder);
 		    } else {
 			   holder = (ViewHolder) convertView.getTag();
@@ -173,12 +165,18 @@ public class Plaudible extends ListActivity {
 				public void onClick(View v) {
 					Integer position = (Integer) v.getTag();
 					
+					/*
 					// Start the browser with the URI of the article
-					/*Uri uri = Uri.parse(getItem(position).getUrl());
+					Uri uri = Uri.parse(getItem(position).getUrl());
 					Intent webViewIntent = new Intent(Intent.ACTION_VIEW, uri);
-					startActivity(Intent.createChooser(webViewIntent, "Open this article in"));*/
+					startActivity(Intent.createChooser(webViewIntent, "Open this article in")); 
+					*/
 					if (!articles.get(position).isDownloaded()) {
+						// Spinning wheel to show while the article is being downloaded
+						showSpinningWheel();
+						
 						// Start AsyncTask for downloading article
+						@SuppressWarnings("rawtypes")
 						AsyncTask task = new PlaudibleAsyncTask().execute(
 								   new PlaudibleAsyncTask.Payload(
 										   PlaudibleAsyncTask.ARTICLE_DOWNLOADER_TASK,
@@ -186,15 +184,19 @@ public class Plaudible extends ListActivity {
 												   			position,
 												   			articles,
 												   			currentNewsSource }));
-						
+						// Wait on the task to get completed
 						try {
 							task.get();
 						} catch (InterruptedException e) {
-							e.printStackTrace();
+							showToast("Downloading error");
 						} catch (ExecutionException e) {
-							e.printStackTrace();
+							showToast("Downloading error");
 						}
 						
+						// Suspend the spinning wheel
+						suspendSpinningWheel();
+						
+						// Start the ArticleViewer activity
 						Intent listArticlesInFeed = new Intent();
 						listArticlesInFeed.setClass(getContext(), ArticleViewer.class);
 						listArticlesInFeed.putExtra("content", articles.get(position).getContent());
@@ -213,56 +215,35 @@ public class Plaudible extends ListActivity {
 			   @Override
 			   public void onClick(View v) {
 				   Integer position = (Integer) v.getTag();
-				   ImageButton view = (ImageButton) v;
-				   Integer articleBeingRead = mSpeechService.getCurrentlyReadArticle();
-				   boolean isSpeechServiceReading = mSpeechService.isReading();
-	
-				   // State checking
-				   if (isSpeechServiceReading) {
-					   // Case I: Speech service is speaking
-					   // Case a. Current newspaper is the one being read
-					   if (currentNewsSource.equalsIgnoreCase(mSpeechService.getCurrentNewsSource())) {
-						   // Case 1. User clicked to pause reading the current article
-						   if (articleBeingRead == position) {
-							   view.setImageResource(R.drawable.play64);
-							   mSpeechService.pauseReading();
-							   return;
-						   } else {
-							   // Speech service was reading another article and user clicked a different one to read out
-							   // Set the button image of the old article to play
-							   if (currentPlayButtonView != null) {
-								   // Could be null when we return back to the same news source 
-								   currentPlayButtonView.setImageResource(R.drawable.play64);
-							   }
-						   }
-					   }
-				   } else {
-					   // Case II: Speech Service is not speaking
-					   // Case a. Click is for resuming or starting to read the current article.
-					   // 	      Here we just want to resume reading so do not enter here if article needs to start reading.
-					   if (articleBeingRead == position && articles.get(position).isDownloaded()) {
-						   view.setImageResource(R.drawable.pause64);
-						   mSpeechService.resumeReading();
-						   return;
-					   }
-				   }
 				   
 				   if (!articles.get(position).isDownloaded()) {
-					   // Set the button to pause and start the AsyncTask to download the article
-					   view.setImageResource(R.drawable.pause64);
-					   currentPlayButtonView = view;
-					   new PlaudibleAsyncTask().execute(
+					   // Spinning wheel to show while the article is being downloaded
+					   showSpinningWheel();
+					   // Start the article download
+					   @SuppressWarnings("rawtypes")
+					   AsyncTask task = new PlaudibleAsyncTask().execute(
 							   new PlaudibleAsyncTask.Payload(
 									   PlaudibleAsyncTask.ARTICLE_DOWNLOADER_TASK,
 									   new Object[] { Plaudible.this,
 											   			position,
 											   			articles,
 											   			currentNewsSource }));
-				   } else {
-					   view.setImageResource(R.drawable.pause64);
-					   currentPlayButtonView = view;
-					   sendArticleForReading(articles.get(position), currentNewsSource);
-				   }
+					   	// Wait on the task to get completed
+						try {
+							task.get();
+						} catch (InterruptedException e) {
+							showToast("Downloading error");
+						} catch (ExecutionException e) {
+							showToast("Downloading error");
+						}
+						// Suspend the spinning wheel
+						suspendSpinningWheel();
+				   	}
+					// Send the article for reading
+					sendArticleForReading(articles.get(position), currentNewsSource);
+					
+					// Display the bottom bar
+					displayBottomBar();
 			   }
 		   });
 		   
@@ -289,11 +270,38 @@ public class Plaudible extends ListActivity {
 			ViewHolder holder = (ViewHolder) view.getTag();
 			
 			// Start the browser with the URI of the article
-			Uri uri = Uri.parse(getItem(holder.position).getUrl());
+			/*Uri uri = Uri.parse(getItem(holder.position).getUrl());
 			Intent webViewIntent = new Intent(Intent.ACTION_VIEW, uri);
-			startActivity(Intent.createChooser(webViewIntent, "Open this article in"));
+			startActivity(Intent.createChooser(webViewIntent, "Open this article in"));*/
+			View bottomBar = view.findViewById(R.id.chaitali);
+        	bottomBar.setVisibility(View.VISIBLE);
 		}
    }
+   
+	/**
+	 * Show the spinning wheel
+	 */
+   public void showSpinningWheel() {
+	   spinningWheel = ProgressDialog.show(Plaudible.this, "", "Loading articles ...", true);
+   }
+   
+   /**
+    * Suspend the spinning wheel
+    */
+   	public void suspendSpinningWheel() {
+	   if (spinningWheel.isShowing()) {
+		   spinningWheel.cancel();
+	   }
+   	}
+   
+   	/**
+    * Show the toast for error messages
+    * @param toastText
+    */
+   	public void showToast(String toastText) {
+	   Toast burntToast = Toast.makeText(getBaseContext(), toastText, Toast.LENGTH_SHORT);
+	   burntToast.show();
+   	}
 	
 	/**
 	 *  Send an article to the service so it can begin reading
@@ -304,6 +312,47 @@ public class Plaudible extends ListActivity {
 		if (mSpeechService != null) {
 			mSpeechService.readArticle(article, newsSource);
 		}
+	}
+	
+	/**
+	 * Display the bottom bar which contains the pause/play button
+	 */
+	public void displayBottomBar() {
+		Article article;
+		
+		// See if an article is with the SpeechService (paused or not) doesn't matter
+		if (mSpeechService != null && (article = mSpeechService.getCurrentlyReadArticle()) != null) {
+        	View bottomBar = findViewById(R.id.articlelistbottombar);
+        	bottomBar.setVisibility(View.VISIBLE);
+        	
+        	// Set the text on the bottom bar
+        	TextView bottomBarText = (TextView) findViewById(R.id.articleListBottomBarText);
+        	String text = mSpeechService.getCurrentNewsSource() + " - " + article.getTitle();
+         	bottomBarText.setText(text);
+        	
+        	// Set the correct icon on the bottom bar
+        	ImageButton bottomBarIcon = (ImageButton) findViewById(R.id.articleListBottomBarIcon);
+        	if (mSpeechService.isReading()) {
+        		bottomBarIcon.setImageResource(R.drawable.pause64);
+            } else {
+            	bottomBarIcon.setImageResource(R.drawable.play64);
+        	}
+        	
+        	bottomBarIcon.setOnClickListener(new View.OnClickListener() {
+				@Override
+				public void onClick(View v) {
+					ImageButton button = (ImageButton) v;
+					if (mSpeechService.isReading()) {
+						button.setImageResource(R.drawable.play64);
+		        		mSpeechService.pauseReading();
+		            } else {
+		            	button.setImageResource(R.drawable.pause64);
+		            	mSpeechService.resumeReading();
+		        	}
+				}
+			});
+        }
+		
 	}
 	
 	/**
@@ -319,9 +368,8 @@ public class Plaudible extends ListActivity {
 		 *  Suspend the spinning wheel after some time.
 		 */
 		public void onFinish() {
-		   if (spinningWheel.isShowing()) {
-			   spinningWheel.cancel();
-		   }
+			suspendSpinningWheel();
+			displayBottomBar();
 		}
 		/**
 		 *  Do nothing here

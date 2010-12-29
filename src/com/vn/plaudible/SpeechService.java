@@ -76,6 +76,14 @@ public class SpeechService extends Service implements OnUtteranceCompletedListen
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Override
 	public void onCreate() {
+		
+		// Init state
+		pausedReading = true;
+		currentArticle = null;
+		chunkIndex = 0;
+		chunks = null;
+		currentNewsSource = null;
+		
 		notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
 		telephonyManager = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
 		
@@ -153,10 +161,13 @@ public class SpeechService extends Service implements OnUtteranceCompletedListen
 		notificationManager.cancel(NOTIFICATION_ID);
 		
 		int notificationIcon;
+		String notificationTitle;
 		
 		if (pausedReading) {
 			notificationIcon = R.drawable.pause64;
+			notificationTitle = "NewsSpeak is paused";
 		} else {
+			notificationTitle = "NewsSpeak is reading";
 			notificationIcon = R.drawable.play64;
 		}
 		
@@ -169,12 +180,13 @@ public class SpeechService extends Service implements OnUtteranceCompletedListen
 		notificationIntent.putExtra("Source", currentNewsSource);
 		notificationIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
 		
+		// Set the intent in the notification
 		PendingIntent contentIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
-		
-		notification.setLatestEventInfo(this.getApplicationContext(), 
-										"NewsSpeak", text, contentIntent);
+		notification.setLatestEventInfo(this.getApplicationContext(), notificationTitle, text, contentIntent);
 		
 		notificationManager.notify(NOTIFICATION_ID, notification);
+		
+		// Keep the service in the foreground so the OS does not kill it for freeing resources
 		startForeground(NOTIFICATION_ID, notification);
 	}
 	
@@ -194,18 +206,17 @@ public class SpeechService extends Service implements OnUtteranceCompletedListen
 		setTTSPreferences();
 		
 		// Clean up state
-		this.currentArticle = article;
-		this.chunkIndex = 0;
-		this.chunks = null;
-		this.currentNewsSource = newsSource;
+		currentArticle = article;
+		chunkIndex = 0;
+		chunks = null;
+		currentNewsSource = newsSource;
+		pausedReading = false;
 		
 		// Show a notification
 		showNotification(currentArticle.getTitle());
 		
 		ttsEngine.speak("NewsSpeak will now read " + currentArticle.getTitle(), TextToSpeech.QUEUE_FLUSH, null);
 		ttsEngine.playSilence(silenceInterval, TextToSpeech.QUEUE_ADD, null);
-		
-		pausedReading = false;
 		
 		// Create chunks of the article and read each chunk after the other
 		prepareChunks();
@@ -243,12 +254,8 @@ public class SpeechService extends Service implements OnUtteranceCompletedListen
 	 *  Return the index of the currently read article
 	 * @return
 	 */
-	public Integer getCurrentlyReadArticle() {
-		if (currentArticle != null) {
-			return currentArticle.getId();
-		} else {
-			return NOT_SPEAKING;
-		}
+	public Article getCurrentlyReadArticle() {
+		return currentArticle;
 	}
 	
 	/**
@@ -304,6 +311,7 @@ public class SpeechService extends Service implements OnUtteranceCompletedListen
 	 */
 	public void resumeReading() {
 		pausedReading = false;
+		showNotification(currentArticle.getTitle());
 		readCurrentChunk();
 	}
 	

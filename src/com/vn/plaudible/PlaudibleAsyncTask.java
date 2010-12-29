@@ -14,6 +14,11 @@ import javax.xml.parsers.SAXParserFactory;
 import android.os.AsyncTask;
 import android.util.Log;
 
+/**
+ * AsyncTask which takes care of all downloading , feeds and articles.
+ * @author vamsi
+ *
+ */
 public class PlaudibleAsyncTask extends AsyncTask<PlaudibleAsyncTask.Payload, Article, PlaudibleAsyncTask.Payload> {
 
 	public static final int FEED_DOWNLOADER_TASK = 1001;
@@ -33,11 +38,6 @@ public class PlaudibleAsyncTask extends AsyncTask<PlaudibleAsyncTask.Payload, Ar
 				activity.setArticles((ArrayList<Article>) payload.data[2]);
 				break;
 			case ARTICLE_DOWNLOADER_TASK:
-				Integer index = (Integer) payload.data[1];
-				ArrayList<Article> articles = (ArrayList<Article>) payload.data[2];
-				String source = (String) payload.data[3];
-				
-				activity.sendArticleForReading(articles.get(index), source);
 				break;
 			}
 		}

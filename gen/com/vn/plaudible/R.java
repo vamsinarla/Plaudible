@@ -29,18 +29,22 @@ public final class R {
         public static final int podcast=0x7f020009;
     }
     public static final class id {
-        public static final int ArticleDescription=0x7f070004;
-        public static final int ArticlePlay=0x7f070001;
+        public static final int ArticleDescription=0x7f070007;
+        public static final int ArticlePlay=0x7f070004;
         public static final int ArticleText=0x7f070000;
-        public static final int ArticleTitle=0x7f070003;
-        public static final int BrowserButton=0x7f070002;
-        public static final int NewsPaperTitle=0x7f07000b;
-        public static final int feedbackButton=0x7f070007;
-        public static final int getNewsButton=0x7f070005;
-        public static final int helpButton=0x7f070009;
-        public static final int newsPaperImages=0x7f07000a;
-        public static final int settingsButton=0x7f070008;
-        public static final int shareButton=0x7f070006;
+        public static final int ArticleTitle=0x7f070006;
+        public static final int BrowserButton=0x7f070005;
+        public static final int NewsPaperTitle=0x7f07000f;
+        public static final int articleListBottomBarIcon=0x7f070002;
+        public static final int articleListBottomBarText=0x7f070003;
+        public static final int articlelistbottombar=0x7f070001;
+        public static final int chaitali=0x7f070008;
+        public static final int feedbackButton=0x7f07000b;
+        public static final int getNewsButton=0x7f070009;
+        public static final int helpButton=0x7f07000d;
+        public static final int newsPaperImages=0x7f07000e;
+        public static final int settingsButton=0x7f07000c;
+        public static final int shareButton=0x7f07000a;
     }
     public static final class layout {
         public static final int article_viewer=0x7f030000;

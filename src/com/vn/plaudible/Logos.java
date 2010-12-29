@@ -208,6 +208,7 @@ public class Logos extends ListActivity {
 			ViewHolder holder = (ViewHolder) view.getTag();
 			NewsSource source = getItem(holder.position);
 			
+			// Start Plaudible
 			Intent listArticlesInFeed = new Intent();
 			listArticlesInFeed.setClass(context, Plaudible.class);
 			listArticlesInFeed.putExtra("Source", source.getTitle());
