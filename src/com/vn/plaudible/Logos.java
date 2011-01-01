@@ -2,6 +2,8 @@ package com.vn.plaudible;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.xmlpull.v1.XmlPullParserException;
 
@@ -16,10 +18,15 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.EditText;
+import android.widget.Filter;
+import android.widget.Filterable;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -31,9 +38,11 @@ import android.widget.Toast;
  */
 public class Logos extends ListActivity {
 	
-	private ArrayList<NewsSource> sources;
+	private ArrayList<NewsSource> allSources;
+	
 	private LogosAdapter adapter;	
 	private SpeechService mSpeechService;
+	private EditText filterText;
 	
 	static class ViewHolder {
 		ImageView image;
@@ -49,7 +58,7 @@ public class Logos extends ListActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main_page);
         
-        sources = new ArrayList<NewsSource>();
+        allSources = new ArrayList<NewsSource>();
         
         try {
 			populateSourcesFromXML();
@@ -59,8 +68,13 @@ public class Logos extends ListActivity {
 			e.printStackTrace();
 		}
         
-        adapter = new LogosAdapter(this, R.layout.main_page_list_item, sources);
+        adapter = new LogosAdapter(this, R.layout.main_page_list_item, allSources);
         setListAdapter(adapter);
+        
+        this.getListView().setTextFilterEnabled(true);
+        
+        filterText = (EditText) findViewById(R.id.search_box);
+        filterText.addTextChangedListener(filterTextWatcher);
         
         bindSpeechService();
     }
@@ -80,8 +94,16 @@ public class Logos extends ListActivity {
 	}
 	
 	@Override
+	protected void onResume() {
+		super.onResume();
+		
+		filterText.setText("");
+	}
+	
+	@Override
 	protected void onDestroy() {
 		unBindSpeechService();
+		filterText.removeTextChangedListener(filterTextWatcher);
 
 		super.onDestroy();
 	}
@@ -120,7 +142,7 @@ public class Logos extends ListActivity {
 	        	  } 
 	          } else if(eventType == XmlResourceParser.END_TAG) {
 	              if (parser.getName().equalsIgnoreCase("Item")) {
-	            	  sources.add(source);
+	            	  allSources.add(source);
 	              }
 	          } else if(eventType == XmlResourceParser.TEXT) {
 	              System.out.println("Text " + parser.getText());
@@ -134,16 +156,29 @@ public class Logos extends ListActivity {
 	 * @author vamsi
 	 *
 	 */
-	private class LogosAdapter extends ArrayAdapter<NewsSource> implements View.OnClickListener {
+	private class LogosAdapter extends ArrayAdapter<NewsSource> implements View.OnClickListener, Filterable {
 			
-		private ArrayList<NewsSource> sources;
+		private ArrayList<NewsSource> filteredSources;
 		private Context context;
+		private NewsSourcesFilter sourcesFilter;
 		
-		public LogosAdapter(Context context, int viewResourceId, ArrayList<NewsSource> icons) {
-			super(context, viewResourceId, icons);
+		public LogosAdapter(Context context, int viewResourceId, ArrayList<NewsSource> newssources) {
+			super(context, viewResourceId, newssources);
 			
-			this.sources = icons;
+			this.filteredSources = newssources;
 			this.context = context;
+		}
+		
+		/**
+		 * Create a custom filter
+		 */
+		@Override
+		public Filter getFilter() {
+			if (sourcesFilter == null) {
+				sourcesFilter = new NewsSourcesFilter();
+			}
+			
+			return sourcesFilter;
 		}
 	
 		/**
@@ -181,12 +216,18 @@ public class Logos extends ListActivity {
 			return convertView;
 		}
 		
+		/**
+		 * Return the count of the filtered items
+		 */
 		public int getCount() {
-			return sources.size();
+			return filteredSources.size();
 		}
 		
+		/**
+		 * Get item from the filtered sources
+		 */
 		public NewsSource getItem(int position) {
-			return sources.get(position);
+			return filteredSources.get(position);
 		}
 		
 		public long getItemId(int position) {
@@ -215,7 +256,85 @@ public class Logos extends ListActivity {
 			
 			context.startActivity(listArticlesInFeed);
 		}
+		
+		/**
+		 * Class to implement filter on the array adapter we use to 
+		 * show the news sources. We need a custom implementation
+		 * since Articles are 'complex'.
+		 * @author vamsi
+		 *
+		 */
+		private class NewsSourcesFilter extends Filter {
+
+			/**
+			 * Called on UI thread, to perform the filtering.
+			 * @param constraint
+			 * @return
+			 */
+			@Override
+			protected FilterResults performFiltering(CharSequence constraint) {
+				FilterResults results = new FilterResults();
+				ArrayList<NewsSource> subSources = new ArrayList<NewsSource>();
+				
+				// Only if constraint string is not empty
+				if (constraint != null && constraint.toString().length() > 0) {
+					Pattern regex = Pattern.compile((String) constraint, Pattern.CASE_INSENSITIVE);
+					
+					// Go through 'all' the sources and perform filtering
+					for (int index = 0; index < allSources.size(); ++index) {
+						NewsSource source = allSources.get(index);
+						Matcher m = regex.matcher(source.getTitle());
+						if (m.find()) {
+							subSources.add(source);
+						}
+					}
+					// Adding into the result set
+					results.values = subSources;
+					results.count = subSources.size();
+				} else {
+					// If no constraint then results must be same as all the sources
+					synchronized (allSources){
+						results.values = allSources;
+						results.count = allSources.size();
+					}
+				}
+				return results;
+			}
+
+			/**
+			 * Publish the results to the array adapter
+			 * @param constraint
+			 * @param results
+			 */
+			@SuppressWarnings("unchecked")
+			@Override
+			protected void publishResults(CharSequence constraint, FilterResults results) {
+				filteredSources = (ArrayList<NewsSource>) results.values;
+				adapter.notifyDataSetChanged();
+			}
+		}
 	}
+	
+	/**
+	 * Listener for edit text changes to perform filtering
+	 */
+	private TextWatcher filterTextWatcher = new TextWatcher() {
+
+	    public void afterTextChanged(Editable s) {
+	    }
+
+	    public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+	    }
+
+	    /**
+	     * Listen for character by character updates and call filtering and notify the adapter
+	     */
+	    public void onTextChanged(CharSequence s, int start, int before, int count) {
+	        adapter.getFilter().filter(s);
+	        adapter.setNotifyOnChange(true);
+	    }
+	};
+	
 	
 	/**
 	 * Connection to the Service. All Activities must have this.

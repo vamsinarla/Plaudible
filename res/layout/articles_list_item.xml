@@ -4,63 +4,61 @@
     android:layout_width="fill_parent"
     android:layout_height="fill_parent">
 
-    <ImageButton android:id="@+id/ArticlePlay"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_marginLeft="3sp"
-        android:layout_marginTop="3sp"
-        android:maxWidth="15sp"
-        android:maxHeight="15sp"
-        android:adjustViewBounds="false"
-        android:src="@drawable/play64"/>
-        
-   <ImageButton android:id="@+id/BrowserButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_marginLeft="3sp"
-        android:maxWidth="15sp"
-        android:maxHeight="15sp"
-        android:adjustViewBounds="false"
-        android:background="@android:color/transparent"
-        android:layout_below="@id/ArticlePlay"
-        android:src="@drawable/browser"/>
-        
     <TextView android:id="@+id/ArticleTitle"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
+        android:padding="3sp"
         android:textStyle="bold"
         android:textColor="#3366aa"
         android:textSize="16sp"
-        android:maxHeight="40sp"
-        android:typeface="serif"
-        android:layout_toRightOf="@id/ArticlePlay"/>
+        android:maxHeight="46sp"
+        android:typeface="serif"/>
        
     <TextView android:id="@+id/ArticleDescription"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
+        android:paddingLeft="3sp"
+        android:paddingRight="3sp"
         android:textSize="15sp"
-        android:maxHeight="58sp"
+        android:maxHeight="62sp"
+        android:maxLines="3"
         android:textColor="#333333"
         android:typeface="serif"
-        android:layout_toRightOf="@id/ArticlePlay"
         android:layout_below="@id/ArticleTitle"/>
         
-    <RelativeLayout android:id="@+id/chaitali"
+    <LinearLayout android:id="@+id/dropDownBar"
     android:layout_width="fill_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
-    android:background="@android:drawable/bottom_bar"
+    android:gravity="center_horizontal"
+    android:background="#ffffff"
     android:layout_below="@id/ArticleDescription"
     android:visibility="gone">
     
-        <TextView 
-        android:layout_width="wrap_content"
-        android:layout_height="fill_parent"
-        android:textSize="16sp"
-        android:textColor="#000000"/>
+        <ImageButton android:id="@+id/speakButton"
+        android:layout_width="fill_parent"
+        android:layout_weight="1"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="3sp"
+        android:maxHeight="15sp"
+        android:src="@drawable/speech"/>
+        
+        <ImageButton android:id="@+id/textOnlyButton"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:layout_marginLeft="3sp"
+        android:maxHeight="15sp"
+        android:src="@drawable/textonly"/>
+        
+        <ImageButton android:id="@+id/browserButton"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:layout_marginLeft="3sp"
+        android:maxHeight="15sp"
+        android:src="@drawable/browser"/>
                 
-    </RelativeLayout>
+    </LinearLayout>
 
 </RelativeLayout>

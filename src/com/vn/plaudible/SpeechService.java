@@ -229,7 +229,7 @@ public class SpeechService extends Service implements OnUtteranceCompletedListen
 	private void setTTSPreferences()
 	{
 		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-		String language = prefs.getString("languagePref", "US");
+		String language = prefs.getString("languagePref", "UK");
 		if (language.equalsIgnoreCase("UK") &&
 				(ttsEngine.isLanguageAvailable(Locale.UK) != TextToSpeech.LANG_NOT_SUPPORTED) &&
 				(ttsEngine.isLanguageAvailable(Locale.UK) != TextToSpeech.LANG_MISSING_DATA)) {
@@ -284,6 +284,9 @@ public class SpeechService extends Service implements OnUtteranceCompletedListen
 			// Trim the string here to remove extraneous spaces.
 			ttsEngine.speak(chunks[chunkIndex].trim(), TextToSpeech.QUEUE_ADD, speechHash);
 		} else {
+			// Finished reading the article.
+			ttsEngine.speak("NewsSpeak finished reading the article.", TextToSpeech.QUEUE_ADD, speechHash);
+			
 			Log.d("SpeechService::readCurrentChunk", "Article is finished. No more chunks to read.");
 		}
 	}
@@ -324,9 +327,6 @@ public class SpeechService extends Service implements OnUtteranceCompletedListen
 				chunkIndex = 0;
 				chunks = null;
 				currentArticle = null;
-				
-				// Finished reading the article.
-				ttsEngine.speak("NewsSpeak finished reading the article.", TextToSpeech.QUEUE_ADD, null);
 				
 				// Cancel the notification
 				notificationManager.cancel(NOTIFICATION_ID);

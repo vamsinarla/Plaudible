@@ -13,15 +13,11 @@
         <Type>newspaper</Type>
     </Item>
     <Item>
+        <Title>CNN US</Title>
+        <type>blog</type>
+    </Item>
+    <Item>
         <Title>Los Angeles Times</Title>
-        <Type>newspaper</Type>
-    </Item>
-    <Item>
-        <Title>NY Daily News</Title>
-        <Type>newspaper</Type>
-    </Item>
-    <Item>
-        <Title>Washington Post</Title>
         <Type>newspaper</Type>
     </Item>
     <Item>
@@ -34,6 +30,22 @@
     </Item>
     <Item>
         <Title>Mashable</Title>
+        <type>blog</type>
+    </Item>
+    <Item>
+        <Title>Daily Beast</Title>
+        <type>blog</type>
+    </Item>
+    <Item>
+        <Title>NY Daily News</Title>
+        <Type>newspaper</Type>
+    </Item>
+    <Item>
+        <Title>Washington Post</Title>
+        <Type>newspaper</Type>
+    </Item>
+    <Item>
+        <Title>Read Write Web</Title>
         <type>blog</type>
     </Item>
 </Sources>

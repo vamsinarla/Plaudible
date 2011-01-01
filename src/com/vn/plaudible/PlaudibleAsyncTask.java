@@ -104,6 +104,7 @@ public class PlaudibleAsyncTask extends AsyncTask<PlaudibleAsyncTask.Payload, Ar
 						// Construct the AppEngine URL for the ArticleServlet
 						source = activity.getString(R.string.appengine_url) + "/article?source=" + source;
 						source += "&link=" + articles.get(position).getUrl();
+						source += "&type=text"; // We want only text for reading
 						
 						// Get the response from AppEngine
 						URL articleUrl = new URL(source);

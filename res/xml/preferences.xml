@@ -2,7 +2,7 @@
 <PreferenceScreen
   xmlns:android="http://schemas.android.com/apk/res/android">
   
-  <ListPreference
+    <ListPreference
            android:title="Language preference"
            android:summary="Select the style of English you would like to hear articles in"
            android:key="languagePref"

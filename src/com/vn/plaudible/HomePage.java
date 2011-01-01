@@ -116,6 +116,17 @@ public class HomePage extends Activity implements TextToSpeech.OnInitListener {
         	}
         });
         
+        // ShutDown button
+        ImageButton offButton = (ImageButton) this.findViewById(R.id.shutDownButton);
+        offButton.setImageResource(android.R.drawable.ic_lock_power_off);
+        offButton.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				// Finish the activity
+				finish();
+			}
+		});
+        
         bindSpeechService();
         checkAndInstallTTSEngine();
     }

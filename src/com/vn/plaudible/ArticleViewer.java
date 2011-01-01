@@ -1,7 +1,9 @@
 package com.vn.plaudible;
 
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.content.Intent;
+import android.media.AudioManager;
 import android.os.Bundle;
 import android.webkit.WebView;
 
@@ -12,24 +14,52 @@ import android.webkit.WebView;
  */
 public class ArticleViewer extends Activity {
 
-	private String articleText;
+	private String articleUrl;
+	private String title;
+	private ProgressDialog spinningWheel;
 	
 	/** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // setContentView(R.layout.article_viewer);
+        
+        // Set the volume control to media. So that when user presses volume button it adjusts the media volume
+        this.setVolumeControlStream(AudioManager.STREAM_MUSIC);
+
+        // Show progress dialog
+        showSpinningWheel();
         
         WebView webview = new WebView(this);
         setContentView(webview);
         
         // Get the intent and the related extras
         Intent intent = this.getIntent();
-        articleText = intent.getStringExtra("content");
+        articleUrl = intent.getStringExtra("articleUrl");
+        title = intent.getStringExtra("articleTitle");
         
-        /*TextView articleTextView = (TextView) this.findViewById(R.id.ArticleText);
-        articleTextView.setText(articleText);*/
+        // Set the title
+        setTitle(title);
         
-        webview.loadData(articleText, "text/html", "utf-8");
+        // Load the page
+        webview.loadUrl(articleUrl);
+        
+        // Suspend progress dialog
+        suspendSpinningWheel();
     }
+    
+    /**
+	 * Show the spinning wheel
+	 */
+   public void showSpinningWheel() {
+	   spinningWheel = ProgressDialog.show(ArticleViewer.this, "", "Loading article ...", true);
+   }
+   
+   /**
+    * Suspend the spinning wheel
+    */
+   	public void suspendSpinningWheel() {
+	   if (spinningWheel.isShowing()) {
+		   spinningWheel.cancel();
+	   }
+   	}
 }

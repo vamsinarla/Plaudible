@@ -24,6 +24,8 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.apps.analytics.GoogleAnalyticsTracker;
+
 public class Plaudible extends ListActivity {
 	
 	/**
@@ -34,19 +36,23 @@ public class Plaudible extends ListActivity {
 	static class ViewHolder {
         TextView title;
         TextView description;
-        ImageButton playButton;
-        ImageButton browserButton;
         
         int position;
     }
 
+	/**
+	 * Google Analytics
+	 */
+	GoogleAnalyticsTracker tracker;
+	
 	private ArrayList<Article> articles;
 	private ArticleListAdapter adapter;
 	private String currentNewsSource;
 	private SpeechService mSpeechService;
 	private ProgressDialog spinningWheel;
 	
-	private static final int TIMEOUT = 10000;
+	private static final int DOWNLOADING_TIMEOUT = 10000;
+	private static final int DROPDOWNBAR_TIMEOUT = 7000;
 	
 	/** Called when the activity is first created. */
     @Override
@@ -54,14 +60,23 @@ public class Plaudible extends ListActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.articles_list);
  
-        // Show the spinning wheel and the counter, which suspends the wheel in TIMEOUT seconds
-        ProgressDialogTimer timer = new  ProgressDialogTimer(TIMEOUT, TIMEOUT);
+        // Get the analytics tracker instance
+        tracker = GoogleAnalyticsTracker.getInstance();
+        
+        // Start the tracker in auto dispatch mode to update every 60 seconds
+        tracker.start(getString(R.string.analytics_id), 60, this);
+        
+        // Show the spinning wheel and the counter, which suspends the wheel in TIMEOUT milli-seconds
+        ProgressDialogTimer timer = new  ProgressDialogTimer(DOWNLOADING_TIMEOUT, DOWNLOADING_TIMEOUT);
         showSpinningWheel();
         timer.start();
         
         // Get the intent and the related extras
-        Intent intent = this.getIntent();
+        Intent intent = getIntent();
         currentNewsSource = intent.getStringExtra("Source");
+        
+        // Track this news source being opened
+        tracker.trackPageView("/news/" + currentNewsSource);
         
         // Set the title
         this.setTitle(currentNewsSource);
@@ -145,8 +160,6 @@ public class Plaudible extends ListActivity {
 			   holder = new ViewHolder();
 			   holder.title = (TextView) convertView.findViewById(R.id.ArticleTitle);
 			   holder.description = (TextView) convertView.findViewById(R.id.ArticleDescription);
-			   holder.playButton = (ImageButton) convertView.findViewById(R.id.ArticlePlay);
-			   holder.browserButton = (ImageButton) convertView.findViewById(R.id.BrowserButton);
 			   
 			   convertView.setTag(holder);
 		    } else {
@@ -157,96 +170,8 @@ public class Plaudible extends ListActivity {
 		   
 		   holder.title.setText(articles.get(position).getTitle());
 		   holder.description.setText(articles.get(position).getDescription());
-
-		   // Set the tag for the browser button and set its click listener
-		   holder.browserButton.setTag((Integer)position);
-		   holder.browserButton.setOnClickListener(new View.OnClickListener() {
-				@Override
-				public void onClick(View v) {
-					Integer position = (Integer) v.getTag();
-					
-					/*
-					// Start the browser with the URI of the article
-					Uri uri = Uri.parse(getItem(position).getUrl());
-					Intent webViewIntent = new Intent(Intent.ACTION_VIEW, uri);
-					startActivity(Intent.createChooser(webViewIntent, "Open this article in")); 
-					*/
-					if (!articles.get(position).isDownloaded()) {
-						// Spinning wheel to show while the article is being downloaded
-						showSpinningWheel();
-						
-						// Start AsyncTask for downloading article
-						@SuppressWarnings("rawtypes")
-						AsyncTask task = new PlaudibleAsyncTask().execute(
-								   new PlaudibleAsyncTask.Payload(
-										   PlaudibleAsyncTask.ARTICLE_DOWNLOADER_TASK,
-										   new Object[] { Plaudible.this,
-												   			position,
-												   			articles,
-												   			currentNewsSource }));
-						// Wait on the task to get completed
-						try {
-							task.get();
-						} catch (InterruptedException e) {
-							showToast("Downloading error");
-						} catch (ExecutionException e) {
-							showToast("Downloading error");
-						}
-						
-						// Suspend the spinning wheel
-						suspendSpinningWheel();
-						
-						// Start the ArticleViewer activity
-						Intent listArticlesInFeed = new Intent();
-						listArticlesInFeed.setClass(getContext(), ArticleViewer.class);
-						listArticlesInFeed.putExtra("content", articles.get(position).getContent());
-						
-						startActivity(listArticlesInFeed);
-					}
-				}
-		   });
-		   
-		   // Set the tag for the button as the index
-		   holder.playButton.setTag((Integer)position);
 		   holder.position = position;
-		   
-		   // Set the listener on the play button
-		   holder.playButton.setOnClickListener(new View.OnClickListener() {
-			   @Override
-			   public void onClick(View v) {
-				   Integer position = (Integer) v.getTag();
-				   
-				   if (!articles.get(position).isDownloaded()) {
-					   // Spinning wheel to show while the article is being downloaded
-					   showSpinningWheel();
-					   // Start the article download
-					   @SuppressWarnings("rawtypes")
-					   AsyncTask task = new PlaudibleAsyncTask().execute(
-							   new PlaudibleAsyncTask.Payload(
-									   PlaudibleAsyncTask.ARTICLE_DOWNLOADER_TASK,
-									   new Object[] { Plaudible.this,
-											   			position,
-											   			articles,
-											   			currentNewsSource }));
-					   	// Wait on the task to get completed
-						try {
-							task.get();
-						} catch (InterruptedException e) {
-							showToast("Downloading error");
-						} catch (ExecutionException e) {
-							showToast("Downloading error");
-						}
-						// Suspend the spinning wheel
-						suspendSpinningWheel();
-				   	}
-					// Send the article for reading
-					sendArticleForReading(articles.get(position), currentNewsSource);
-					
-					// Display the bottom bar
-					displayBottomBar();
-			   }
-		   });
-		   
+
 		   return convertView;
 	   }
 
@@ -268,13 +193,103 @@ public class Plaudible extends ListActivity {
 		@Override
 		public void onClick(View view) {
 			ViewHolder holder = (ViewHolder) view.getTag();
-			
-			// Start the browser with the URI of the article
-			/*Uri uri = Uri.parse(getItem(holder.position).getUrl());
-			Intent webViewIntent = new Intent(Intent.ACTION_VIEW, uri);
-			startActivity(Intent.createChooser(webViewIntent, "Open this article in"));*/
-			View bottomBar = view.findViewById(R.id.chaitali);
-        	bottomBar.setVisibility(View.VISIBLE);
+
+			View dropDownBar = view.findViewById(R.id.dropDownBar);
+			dropDownBar.setVisibility(View.VISIBLE);
+        	
+        	// Set a timer to make the drop down bar go away after a few seconds
+        	DropDownBarTimer timer = new DropDownBarTimer(DROPDOWNBAR_TIMEOUT, DROPDOWNBAR_TIMEOUT, dropDownBar);
+        	timer.start();
+        	
+        	// Set the functionality of the drop down bar
+        	// The browser button
+        	ImageButton browserButton = (ImageButton) dropDownBar.findViewById(R.id.browserButton);
+        	browserButton.setTag(holder.position);
+        	browserButton.setOnClickListener(new View.OnClickListener() {
+				@Override
+				public void onClick(View v) {
+					Integer position = (Integer) v.getTag();
+					
+					// Track the event of browser being opened to read
+					tracker.trackEvent("article", "browser", currentNewsSource, 0);
+			        
+					Uri uri = Uri.parse(adapter.getItem(position).getUrl());
+					Intent webViewIntent = new Intent(Intent.ACTION_VIEW, uri);
+					startActivity(Intent.createChooser(webViewIntent, "Open this article in"));
+				}
+			});
+        	
+        	// The speak button
+        	ImageButton speakButton = (ImageButton) dropDownBar.findViewById(R.id.speakButton);
+        	speakButton.setTag(holder.position);
+        	speakButton.setOnClickListener(new View.OnClickListener() {
+				@Override
+				public void onClick(View v) {
+					Integer position = (Integer) v.getTag();
+					if (!articles.get(position).isDownloaded()) {
+						   // Spinning wheel to show while the article is being downloaded
+						   showSpinningWheel();
+						   
+						   // Start the article download
+						   @SuppressWarnings("rawtypes")
+						   AsyncTask task = new PlaudibleAsyncTask().execute(
+								   new PlaudibleAsyncTask.Payload(
+										   PlaudibleAsyncTask.ARTICLE_DOWNLOADER_TASK,
+										   new Object[] { Plaudible.this,
+												   			position,
+												   			articles,
+												   			currentNewsSource }));
+						    
+						    // Track the event of article being spoken out
+							tracker.trackEvent("article", "speak", currentNewsSource, 0);
+					        
+						    // Wait on the task to get completed
+							try {
+								task.get();
+							} catch (InterruptedException e) {
+								showToast("Downloading error");
+							} catch (ExecutionException e) {
+								showToast("Downloading error");
+							}
+							// Suspend the spinning wheel
+							suspendSpinningWheel();
+					   	}
+						// Send the article for reading
+						sendArticleForReading(articles.get(position), currentNewsSource);
+						
+						// Display the bottom bar
+						displayBottomBar();
+				}
+			});
+        	
+        	
+        	// The text only button
+        	ImageButton textOnlyButton = (ImageButton) dropDownBar.findViewById(R.id.textOnlyButton);
+        	textOnlyButton.setTag(holder.position);
+        	textOnlyButton.setOnClickListener(new View.OnClickListener() {
+				@Override
+				public void onClick(View v) {
+					Integer position = (Integer) v.getTag();
+					
+					// Track the event of article being read in text only
+					tracker.trackEvent("article", "textonly", currentNewsSource, 0);
+			        
+					// Construct the AppEngine URL for the ArticleServlet
+					String articleUrl = getString(R.string.appengine_url) + "/article?source=" + currentNewsSource;
+					articleUrl += "&link=" + articles.get(position).getUrl();
+					articleUrl += "&type=html"; // We want HTML for the WebView
+					
+					// Start the ArticleViewer activity
+					Intent listArticlesInFeed = new Intent();
+					listArticlesInFeed.setClass(getContext(), ArticleViewer.class);
+					listArticlesInFeed.putExtra("articleUrl", articleUrl);
+					listArticlesInFeed.putExtra("articleTitle", articles.get(position).getTitle());
+					
+					startActivity(listArticlesInFeed);
+				}
+			});
+        	
+        	// End of onClick stuff
 		}
    }
    
@@ -370,6 +385,39 @@ public class Plaudible extends ListActivity {
 		public void onFinish() {
 			suspendSpinningWheel();
 			displayBottomBar();
+		}
+		/**
+		 *  Do nothing here
+		 */
+		public void onTick(long millisUntilFinished) {
+			
+		}
+	}
+	
+	/**
+	 * Timer for the drop down bar shown on the item view
+	 * @author vamsi
+	 *
+	 */
+	public class DropDownBarTimer extends CountDownTimer {
+		/**
+		 * The view of the drop down bar
+		 */
+		private View view;
+		
+		public DropDownBarTimer(long millisInFuture, long countDownInterval) {
+			super(millisInFuture, countDownInterval);
+		}
+		
+		public DropDownBarTimer(long millisInFuture, long countDownInterval, View v) {
+			super(millisInFuture, countDownInterval);
+			view = v;
+		}
+		/**
+		 *  Remove the drop down bar now
+		 */
+		public void onFinish() {
+			view.setVisibility(View.GONE);
 		}
 		/**
 		 *  Do nothing here

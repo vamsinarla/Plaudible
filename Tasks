@@ -1,8 +1,63 @@
-TASKS
-------
-
-- Add tracker support
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent">
+   
+    <SlidingDrawer android:id="@+id/categorySlideDrawer"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:handle="@+id/categorySlideDrawerHandle"
+    android:content="@+id/catgeorySlideDrawerContent">
+       
+        <ImageView android:id="@id/categorySlideDrawerHandle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@android:drawable/arrow_down_float"/>
+        
+        <ListView android:id="@id/catgeorySlideDrawerContent"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"/>
     
-- Modify newsspeak server to serve just text and html rendering for articleViewer
-
-- Add layout animation
+    </SlidingDrawer>
+    
+    <ListView android:id="@android:id/list"
+    android:layout_width="fill_parent" 
+    android:layout_height="wrap_content"
+    android:layout_weight="1"
+    android:background="#ffffff"
+    android:cacheColorHint="#ffffff"/>
+    
+    <TextView android:id="@id/android:empty"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:layout_weight="1"
+    android:background="#000000"
+    android:gravity="center"
+    android:textSize="20sp"
+    android:text="No articles to show"/>
+    
+    <LinearLayout android:id="@+id/articlelistbottombar"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:background="@android:drawable/bottom_bar"
+    android:gravity="bottom"
+    android:visibility="gone">
+    
+        <ImageButton android:id="@+id/articleListBottomBarIcon"
+         android:layout_width="wrap_content" 
+         android:layout_height="fill_parent"
+         android:background="@android:color/transparent"
+         android:layout_gravity="center"
+         android:src="@drawable/play64"/>
+ 
+        <TextView android:id="@+id/articleListBottomBarText"
+        android:layout_width="wrap_content"
+        android:layout_height="fill_parent"
+        android:textSize="16sp"
+        android:textColor="#000000"/>
+                
+    </LinearLayout>
+        
+</RelativeLayout>
