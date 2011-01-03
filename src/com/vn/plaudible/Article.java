@@ -1,6 +1,19 @@
 package com.vn.plaudible;
 
-public class Article {
+import java.io.Serializable;
+
+/**
+ * Class for representing Article
+ * Implements Serializable to allow passing as intent extras
+ * @author vamsi
+ *
+ */
+public class Article implements Serializable {
+	
+	/**
+	 * UID for Serializable
+	 */
+	private static final long serialVersionUID = 1L;
 	
 	private String title;
 	private String description;

@@ -139,6 +139,8 @@ public class Logos extends ListActivity {
 	        		  source.setTitle(parser.nextText());
 	        	  } else if (parser.getName().equalsIgnoreCase("Type")) {
 	        		  source.setType(NewsSource.getType(parser.nextText()));
+	        	  } else if (parser.getName().equalsIgnoreCase("Categories")) {
+	        		  source.setHasCategories(parser.nextText().equalsIgnoreCase("true") ? true : false);
 	        	  } 
 	          } else if(eventType == XmlResourceParser.END_TAG) {
 	              if (parser.getName().equalsIgnoreCase("Item")) {
@@ -252,7 +254,7 @@ public class Logos extends ListActivity {
 			// Start Plaudible
 			Intent listArticlesInFeed = new Intent();
 			listArticlesInFeed.setClass(context, Plaudible.class);
-			listArticlesInFeed.putExtra("Source", source.getTitle());
+			listArticlesInFeed.putExtra("NewsSource", source);
 			
 			context.startActivity(listArticlesInFeed);
 		}

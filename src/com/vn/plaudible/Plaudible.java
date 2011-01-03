@@ -21,6 +21,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
+import android.widget.ListView;
+import android.widget.SlidingDrawer;
+import android.widget.SlidingDrawer.OnDrawerCloseListener;
+import android.widget.SlidingDrawer.OnDrawerOpenListener;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -47,9 +51,12 @@ public class Plaudible extends ListActivity {
 	
 	private ArrayList<Article> articles;
 	private ArticleListAdapter adapter;
-	private String currentNewsSource;
+	private NewsSource currentNewsSource;
 	private SpeechService mSpeechService;
 	private ProgressDialog spinningWheel;
+	
+	private SlidingDrawer slidingDrawer;
+	private ImageButton slideHandleButton;
 	
 	private static final int DOWNLOADING_TIMEOUT = 10000;
 	private static final int DROPDOWNBAR_TIMEOUT = 7000;
@@ -58,13 +65,15 @@ public class Plaudible extends ListActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        
+        // Set view related stuff
         setContentView(R.layout.articles_list);
  
         // Get the analytics tracker instance
         tracker = GoogleAnalyticsTracker.getInstance();
         
         // Start the tracker in auto dispatch mode to update every 60 seconds
-        tracker.start(getString(R.string.analytics_id), 60, this);
+        // tracker.start(getString(R.string.analytics_id), 60, this);
         
         // Show the spinning wheel and the counter, which suspends the wheel in TIMEOUT milli-seconds
         ProgressDialogTimer timer = new  ProgressDialogTimer(DOWNLOADING_TIMEOUT, DOWNLOADING_TIMEOUT);
@@ -73,13 +82,22 @@ public class Plaudible extends ListActivity {
         
         // Get the intent and the related extras
         Intent intent = getIntent();
-        currentNewsSource = intent.getStringExtra("Source");
+        currentNewsSource = (NewsSource) intent.getSerializableExtra("NewsSource");
         
         // Track this news source being opened
-        tracker.trackPageView("/news/" + currentNewsSource);
+        // tracker.trackPageView("/news/" + currentNewsSource);
+        
+        // Enable the sliding drawer if there are categories for this source
+        slidingDrawer = (SlidingDrawer) findViewById(R.id.SlidingDrawer);
+        slideHandleButton = (ImageButton) findViewById(R.id.slideHandleButton);
+    	
+    	if (currentNewsSource.isHasCategories()) {
+    		// Setup sliding drawer with a listview with the categories
+            setupSlidingDrawer();
+    	}
         
         // Set the title
-        this.setTitle(currentNewsSource);
+        this.setTitle(currentNewsSource.getTitle());
         
         // Set the volume control to media. So that when user presses volume button it adjusts the media volume
         this.setVolumeControlStream(AudioManager.STREAM_MUSIC);
@@ -94,7 +112,8 @@ public class Plaudible extends ListActivity {
         		new PlaudibleAsyncTask.Payload(
         				PlaudibleAsyncTask.FEED_DOWNLOADER_TASK,
         				new Object[] { Plaudible.this,
-        								currentNewsSource,
+        								currentNewsSource.getTitle(),
+        								null, // When the feed loads the first time we always show the default
         								articles }));
         bindSpeechService();
     }
@@ -120,7 +139,7 @@ public class Plaudible extends ListActivity {
     */
    public void setArticles(ArrayList<Article> articles) {
 	   this.articles = articles;   
-	   this.adapter.notifyDataSetChanged();
+	   adapter.notifyDataSetChanged();
 	   
 	   // Articles were fetched so we can suspend the wheel
 	   suspendSpinningWheel();
@@ -130,7 +149,102 @@ public class Plaudible extends ListActivity {
    }
    
    /**
-    * ArrayList adapter
+    * Setup the sliding drawer to show categories
+    */
+   private void setupSlidingDrawer() {
+	   	// Make it visible
+		slidingDrawer.setVisibility(View.VISIBLE);
+	    
+   		slidingDrawer.setOnDrawerOpenListener(new OnDrawerOpenListener() {
+	    	@Override
+	    	public void onDrawerOpened() {
+	    		slideHandleButton.setImageResource(R.drawable.arrowleft);
+	    	}
+	   	});
+	   	slidingDrawer.setOnDrawerCloseListener(new OnDrawerCloseListener() {
+	    	@Override
+	    	public void onDrawerClosed() {
+	    		slideHandleButton.setImageResource(R.drawable.arrowright);
+	    	}
+		});
+	   	
+	   	ListView categoriesListView = (ListView) findViewById(R.id.categoriesListView);
+	   	categoriesListView.setAdapter(new CategoryListAdapter(Plaudible.this, 
+	   											R.layout.categories_list_item, 
+												currentNewsSource.getCategories()));
+   }
+   
+   /**
+    * ArrayList adapter for categories shown in sliding drawer
+    * @author vamsi
+    *
+    */
+   private class CategoryListAdapter extends ArrayAdapter<String> implements View.OnClickListener {
+
+	   private ArrayList<String> categories;
+	   public CategoryListAdapter(Context context, int textViewResourceId, ArrayList<String> objects) {
+		   super(context, textViewResourceId, objects);
+		   this.categories = objects;
+	   }
+	   
+	   /**
+	    * Item's View
+	    */
+	   @Override
+	   public View getView(int position, View convertView, ViewGroup parent) {
+		   ViewHolder holder;
+
+		   // First time creating the holder. Inflate the views only once with this pattern.
+		   if (convertView == null) {
+			   LayoutInflater inflater = (LayoutInflater)getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+			   convertView = inflater.inflate(R.layout.categories_list_item, null);
+
+			   holder = new ViewHolder();
+			   holder.title = (TextView) convertView.findViewById(R.id.categoryTitle);
+			   convertView.setTag(holder);
+		   } else {
+			   holder = (ViewHolder) convertView.getTag();
+		   }
+		   convertView.setOnClickListener(this);
+		   
+		   holder.title.setText(categories.get(position));
+		   holder.position = position;
+		   
+		   return convertView;
+	   }
+	   
+	   /**
+	    * When the user clicks on the category reload the feed by setting up a new
+	    * AsyncTask and then refresh the Article list
+	    */
+	   @Override
+	   public void onClick(View v) {
+		   ViewHolder holder = (ViewHolder) v.getTag();
+		   
+		   // Close the drawer
+		   slidingDrawer.animateClose();
+		   
+	       // Show the spinning wheel and the counter, which suspends the wheel in TIMEOUT milli-seconds
+	       ProgressDialogTimer timer = new  ProgressDialogTimer(DOWNLOADING_TIMEOUT, DOWNLOADING_TIMEOUT);
+	       showSpinningWheel();
+	       timer.start();
+	        
+	       // Clear old articles
+	       articles.clear();
+	       
+	       new PlaudibleAsyncTask().execute(
+	        		new PlaudibleAsyncTask.Payload(
+	        				PlaudibleAsyncTask.FEED_DOWNLOADER_TASK,
+	        				new Object[] { Plaudible.this,
+	        								currentNewsSource.getTitle(),
+	        								(currentNewsSource.isHasCategories() ? // Check category existence
+	        								 categories.get(holder.position) : null),
+	        								 articles }));
+	   }
+   }
+   
+   /**
+    * ArrayList adapter for Articles
     * @author vamsi
     *
     */
@@ -142,7 +256,7 @@ public class Plaudible extends ListActivity {
 		   super(context, textViewResourceId, articles);
 		   
 		   this.articles = articles;
-		   this.setNotifyOnChange(true);
+		   setNotifyOnChange(true);
 	   }
 	   
 	   /**
@@ -194,6 +308,7 @@ public class Plaudible extends ListActivity {
 		public void onClick(View view) {
 			ViewHolder holder = (ViewHolder) view.getTag();
 
+			// Make the drop down bar visible
 			View dropDownBar = view.findViewById(R.id.dropDownBar);
 			dropDownBar.setVisibility(View.VISIBLE);
         	
@@ -211,7 +326,7 @@ public class Plaudible extends ListActivity {
 					Integer position = (Integer) v.getTag();
 					
 					// Track the event of browser being opened to read
-					tracker.trackEvent("article", "browser", currentNewsSource, 0);
+					tracker.trackEvent("article", "browser", currentNewsSource.getTitle(), 0);
 			        
 					Uri uri = Uri.parse(adapter.getItem(position).getUrl());
 					Intent webViewIntent = new Intent(Intent.ACTION_VIEW, uri);
@@ -238,10 +353,10 @@ public class Plaudible extends ListActivity {
 										   new Object[] { Plaudible.this,
 												   			position,
 												   			articles,
-												   			currentNewsSource }));
+												   			currentNewsSource.getTitle() }));
 						    
 						    // Track the event of article being spoken out
-							tracker.trackEvent("article", "speak", currentNewsSource, 0);
+							// tracker.trackEvent("article", "speak", currentNewsSource, 0);
 					        
 						    // Wait on the task to get completed
 							try {
@@ -255,7 +370,7 @@ public class Plaudible extends ListActivity {
 							suspendSpinningWheel();
 					   	}
 						// Send the article for reading
-						sendArticleForReading(articles.get(position), currentNewsSource);
+						sendArticleForReading(articles.get(position), currentNewsSource.getTitle());
 						
 						// Display the bottom bar
 						displayBottomBar();
@@ -272,23 +387,22 @@ public class Plaudible extends ListActivity {
 					Integer position = (Integer) v.getTag();
 					
 					// Track the event of article being read in text only
-					tracker.trackEvent("article", "textonly", currentNewsSource, 0);
+					tracker.trackEvent("article", "textonly", currentNewsSource.getTitle(), 0);
 			        
 					// Construct the AppEngine URL for the ArticleServlet
-					String articleUrl = getString(R.string.appengine_url) + "/article?source=" + currentNewsSource;
+					String articleUrl = getString(R.string.appengine_url) + "/article?source=" + 
+													currentNewsSource.getTitle();
 					articleUrl += "&link=" + articles.get(position).getUrl();
 					articleUrl += "&type=html"; // We want HTML for the WebView
 					
 					// Start the ArticleViewer activity
 					Intent listArticlesInFeed = new Intent();
 					listArticlesInFeed.setClass(getContext(), ArticleViewer.class);
-					listArticlesInFeed.putExtra("articleUrl", articleUrl);
-					listArticlesInFeed.putExtra("articleTitle", articles.get(position).getTitle());
+					listArticlesInFeed.putExtra("Article", articles.get(position));
 					
 					startActivity(listArticlesInFeed);
 				}
 			});
-        	
         	// End of onClick stuff
 		}
    }
@@ -423,7 +537,6 @@ public class Plaudible extends ListActivity {
 		 *  Do nothing here
 		 */
 		public void onTick(long millisUntilFinished) {
-			
 		}
 	}
 	

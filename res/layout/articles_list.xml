@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent">
@@ -7,6 +7,8 @@
     <ListView android:id="@android:id/list"
     android:layout_width="fill_parent" 
     android:layout_height="wrap_content"
+    android:layout_alignWithParentIfMissing="true"
+    android:layout_above="@+id/articlelistbottombar"
     android:layout_weight="1"
     android:background="#ffffff"
     android:cacheColorHint="#ffffff"/>
@@ -20,10 +22,11 @@
     android:textSize="20sp"
     android:text="No articles to show"/>
     
-    <LinearLayout android:id="@+id/articlelistbottombar"
+    <LinearLayout android:id="@id/articlelistbottombar"
     android:layout_width="fill_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
+    android:layout_alignParentBottom="true"
     android:background="@android:drawable/bottom_bar"
     android:visibility="gone">
     
@@ -41,5 +44,38 @@
 	    android:textColor="#000000"/>
 	            
     </LinearLayout>
+     
+     
+   <SlidingDrawer android:id="@+id/SlidingDrawer" 
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:handle="@+id/slideHandleButton" 
+    android:content="@+id/contentLayout" 
+    android:padding="10dip" 
+    android:orientation="horizontal"
+    android:allowSingleTap="true"
+    android:visibility="gone">
+    
+        <ImageButton android:layout_width="wrap_content" 
+        android:layout_height="wrap_content" 
+        android:id="@+id/slideHandleButton" 
+        android:background="@drawable/trayhandle"
+        android:src="@drawable/arrowright"/>
         
-</LinearLayout>
+        <LinearLayout android:layout_width="fill_parent"
+        android:id="@+id/contentLayout" 
+        android:orientation="vertical" 
+        android:gravity="center|top"
+        android:background="#ffffff"
+        android:layout_height="fill_parent">
+           
+           <ListView android:id="@+id/categoriesListView"
+           android:layout_width="fill_parent"
+           android:layout_height="fill_parent"
+           android:background="#ffffff"
+           android:cacheColorHint="#ffffff"/>
+            
+        </LinearLayout>
+    </SlidingDrawer>
+       
+</RelativeLayout>

@@ -14,8 +14,7 @@ import android.webkit.WebView;
  */
 public class ArticleViewer extends Activity {
 
-	private String articleUrl;
-	private String title;
+	private Article article;
 	private ProgressDialog spinningWheel;
 	
 	/** Called when the activity is first created. */
@@ -34,14 +33,13 @@ public class ArticleViewer extends Activity {
         
         // Get the intent and the related extras
         Intent intent = this.getIntent();
-        articleUrl = intent.getStringExtra("articleUrl");
-        title = intent.getStringExtra("articleTitle");
+        article = (Article) intent.getSerializableExtra("Article");
         
         // Set the title
-        setTitle(title);
+        setTitle(article.getTitle());
         
         // Load the page
-        webview.loadUrl(articleUrl);
+        webview.loadUrl(article.getUrl());
         
         // Suspend progress dialog
         suspendSpinningWheel();

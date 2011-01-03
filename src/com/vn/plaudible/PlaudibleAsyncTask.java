@@ -35,7 +35,7 @@ public class PlaudibleAsyncTask extends AsyncTask<PlaudibleAsyncTask.Payload, Ar
 			
 			switch (payload.taskType) {
 			case FEED_DOWNLOADER_TASK:
-				activity.setArticles((ArrayList<Article>) payload.data[2]);
+				activity.setArticles((ArrayList<Article>) payload.data[3]);
 				break;
 			case ARTICLE_DOWNLOADER_TASK:
 				break;
@@ -55,6 +55,7 @@ public class PlaudibleAsyncTask extends AsyncTask<PlaudibleAsyncTask.Payload, Ar
 		Plaudible activity = (Plaudible) payload.data[0];
 		ArrayList<Article> articles;
 		String source;
+		String category;
 		
 		InputStream responseStream;
 		BufferedReader reader;
@@ -67,8 +68,9 @@ public class PlaudibleAsyncTask extends AsyncTask<PlaudibleAsyncTask.Payload, Ar
 			switch (payload.taskType) {
 			case FEED_DOWNLOADER_TASK:
 				// Extract the URL and arraylist of articles from the payload data
-				articles = (ArrayList<Article>) payload.data[2];
 				source = (String) payload.data[1];
+				category = (String) payload.data[2];
+				articles = (ArrayList<Article>) payload.data[3];
 				
 				// encode the source into UTF 8
 				source = URLEncoder.encode(source, "UTF-8");
@@ -76,6 +78,12 @@ public class PlaudibleAsyncTask extends AsyncTask<PlaudibleAsyncTask.Payload, Ar
 				// Construct the URL for calling the FeedServlet on AppEngine. Latest version of
 				// app engine URL must be in strings.xml
 				source = activity.getString(R.string.appengine_url) + "/feed?newspaper=" + source;
+				
+				// Add the category param
+				if (category != null) {
+					// add category
+					source += "&category=" + category;
+				}
 				
 				// Construct the FeedHandler(SAXParser) and parse the response from AppEngine
 				URL feedUrl = new URL(source);

@@ -3,49 +3,61 @@
     <Item>
         <Title>New York Times</Title>
         <Type>newspaper</Type>
+        <Categories>true</Categories>
     </Item>
     <Item>
         <Title>Wall Street Journal</Title>
         <Type>newspaper</Type>
+        <Categories>true</Categories>
     </Item>
     <Item>
         <Title>USA Today</Title>
         <Type>newspaper</Type>
+        <Categories>true</Categories>
     </Item>
     <Item>
         <Title>CNN US</Title>
         <type>blog</type>
+        <Categories>false</Categories>
     </Item>
     <Item>
         <Title>Los Angeles Times</Title>
         <Type>newspaper</Type>
+        <Categories>true</Categories>
     </Item>
     <Item>
         <Title>Huffington Post</Title>
         <Type>blog</Type>
+        <Categories>false</Categories>
     </Item>
     <Item>
         <Title>TechCrunch</Title>
         <type>blog</type>
+        <Categories>false</Categories>
     </Item>
     <Item>
         <Title>Mashable</Title>
         <type>blog</type>
+        <Categories>false</Categories>
     </Item>
     <Item>
         <Title>Daily Beast</Title>
         <type>blog</type>
+        <Categories>false</Categories>
     </Item>
     <Item>
         <Title>NY Daily News</Title>
         <Type>newspaper</Type>
+        <Categories>false</Categories>
     </Item>
     <Item>
         <Title>Washington Post</Title>
         <Type>newspaper</Type>
+        <Categories>false</Categories>
     </Item>
     <Item>
         <Title>Read Write Web</Title>
         <type>blog</type>
+        <Categories>false</Categories>
     </Item>
 </Sources>
