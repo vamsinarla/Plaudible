@@ -47,7 +47,7 @@ public class SpeechService extends Service implements OnUtteranceCompletedListen
 	private WakeLock lock;
 	
 	private Article currentArticle;
-	private String currentNewsSource;
+	private NewsSource currentNewsSource;
 	private String[] chunks;
 	private Integer chunkIndex;
 	private boolean pausedReading;
@@ -177,7 +177,7 @@ public class SpeechService extends Service implements OnUtteranceCompletedListen
 		notification.flags |= Notification.FLAG_NO_CLEAR;
 		
 		Intent notificationIntent = new Intent(this, Plaudible.class);
-		notificationIntent.putExtra("Source", currentNewsSource);
+		notificationIntent.putExtra("NewsSource", currentNewsSource);
 		notificationIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
 		
 		// Set the intent in the notification
@@ -195,7 +195,7 @@ public class SpeechService extends Service implements OnUtteranceCompletedListen
 		this.ttsEngine.setOnUtteranceCompletedListener(this);
     }
 	
-	public void readArticle(Article article, String newsSource) {
+	public void readArticle(Article article, NewsSource newsSource) {
 		
 		// Check if a call is on
 		if (!checkCallStatus()) {
@@ -262,7 +262,7 @@ public class SpeechService extends Service implements OnUtteranceCompletedListen
 	 *  Return the currently read news source
 	 * @return
 	 */
-	public String getCurrentNewsSource() {
+	public NewsSource getCurrentNewsSource() {
 		return currentNewsSource;
 	}
 	
@@ -286,7 +286,6 @@ public class SpeechService extends Service implements OnUtteranceCompletedListen
 		} else {
 			// Finished reading the article.
 			ttsEngine.speak("NewsSpeak finished reading the article.", TextToSpeech.QUEUE_ADD, speechHash);
-			
 			Log.d("SpeechService::readCurrentChunk", "Article is finished. No more chunks to read.");
 		}
 	}

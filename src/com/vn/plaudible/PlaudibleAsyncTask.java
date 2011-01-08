@@ -79,7 +79,7 @@ public class PlaudibleAsyncTask extends AsyncTask<PlaudibleAsyncTask.Payload, Ar
 				// app engine URL must be in strings.xml
 				source = activity.getString(R.string.appengine_url) + "/feed?newspaper=" + source;
 				
-				// Add the category param
+				// Add the category param, be very very cautious here
 				if (category != null) {
 					// add category
 					source += "&category=" + category;
@@ -101,7 +101,6 @@ public class PlaudibleAsyncTask extends AsyncTask<PlaudibleAsyncTask.Payload, Ar
 				source = (String) payload.data[3];
 				
 				for (int index = position; /*index < articles.size()*/ index <= position; ++index) {
-				// for (int index = 0; index < articles.size() /*index <= position*/; ++index) {
 					
 					// Download the article only if it hasn't been till yet
 					if (articles.get(index).isDownloaded() == false) {

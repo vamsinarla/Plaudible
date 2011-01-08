@@ -15,29 +15,14 @@ public class NewsSource implements Serializable {
 	 * UID for Serializable
 	 */
 	private static final long serialVersionUID = 1L;
+	public static final Integer NO_CATEGORIES = -1;
 
 	/**
 	 * Types
 	 * @author vamsi
 	 *
 	 */
-	public enum SourceType { NEWSPAPER, BLOG };
-	
-	/**
-	 * Pre defined standard sources shared across all sources with categories
-	 */
-	static ArrayList<String> categories = new ArrayList<String>();
-		
-	static {
-		categories.add("US");
-		categories.add("World"); 
-		categories.add("Business");
-		categories.add("Politics"); 
-		categories.add("Sports"); 
-		categories.add("Technology"); 
-		categories.add("Health"); 
-		categories.add("Opinion");
-	}
+	public enum SourceType { INVALID, NEWSPAPER, BLOG };
 	
 	/**
 	 * Newspaper attributes
@@ -45,17 +30,43 @@ public class NewsSource implements Serializable {
 	private String title;
 	private SourceType type;
 	private boolean hasCategories;
+	private Integer currentCategory;
+	private boolean displayed;
+	private boolean subscribed;
+	private Integer displayIndex;
+	private boolean preferred;
+	private String defaultUrl;
+	private ArrayList<String> categoryUrls;
+	private ArrayList<String> categories;
 	
 	public NewsSource() {
-		title = null;
 	}
 	
 	public NewsSource(String title, String url, SourceType type, boolean hasCategories) {
 		this.title = title;
 		this.type = type;
 		this.hasCategories = hasCategories;
+		this.currentCategory = 0;
 	}
 	
+	public String getCurrentCategoryName() {
+		if (isHasCategories()) {
+			return categories.get(currentCategory);
+		}
+		return "";
+	}
+	
+	public Integer getCurrentCategoryIndex() {
+		if (isHasCategories()) {
+			return currentCategory;
+		}
+		return NO_CATEGORIES;
+	}
+
+	public void setCurrentCategoryIndex(Integer currentCategory) {
+		this.currentCategory = currentCategory;
+	}
+
 	/**
 	 * Get Type enum
 	 * @param type
@@ -68,14 +79,6 @@ public class NewsSource implements Serializable {
 			return SourceType.BLOG;
 		}
 		return SourceType.NEWSPAPER;
-	}
-	
-	/**
-	 * Get Type
-	 * @return
-	 */
-	public SourceType getType() {
-		return type;
 	}
 
 	/**
@@ -120,4 +123,67 @@ public class NewsSource implements Serializable {
 		return null;
 	}
 	
+	public Integer getCurrentCategory() {
+		return currentCategory;
+	}
+
+	public void setCurrentCategory(Integer currentCategory) {
+		this.currentCategory = currentCategory;
+	}
+
+	public boolean isDisplayed() {
+		return displayed;
+	}
+
+	public void setDisplayed(boolean displayed) {
+		this.displayed = displayed;
+	}
+
+	public Integer getDisplayIndex() {
+		return displayIndex;
+	}
+
+	public void setDisplayIndex(Integer displayIndex) {
+		this.displayIndex = displayIndex;
+	}
+
+	public boolean isPreferred() {
+		return preferred;
+	}
+
+	public void setPreferred(boolean preferred) {
+		this.preferred = preferred;
+	}
+
+	public String getDefaultUrl() {
+		return defaultUrl;
+	}
+
+	public void setDefaultUrl(String defaultUrl) {
+		this.defaultUrl = defaultUrl;
+	}
+
+	public ArrayList<String> getCategoryUrls() {
+		return categoryUrls;
+	}
+
+	public void setCategoryUrls(ArrayList<String> categoryUrls) {
+		this.categoryUrls = categoryUrls;
+	}
+
+	public void setCategories(ArrayList<String> categories) {
+		this.categories = categories;
+	}
+
+	public SourceType getType() {
+		return type;
+	}
+
+	public boolean isSubscribed() {
+		return subscribed;
+	}
+	
+	public void setSubscribed(boolean subscribed) {
+		this.subscribed = subscribed;
+	}
 }

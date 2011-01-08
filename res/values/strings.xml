@@ -9,5 +9,6 @@
 <string name="app_desc">Let the news speak out to you</string>
 <string name="help">You can use NewsSpeak to speak out articles to you. Click on a new source and it will display their featured articles. Click on play to let NewsSpeak speak or you can just click on the browser icon/article to read it yourself in a browser. You can select reading options from the settings page.</string>
 <string name="analytics_id">UA-20432863-1</string>
-<string name="appengine_url">http://3.latest.evecal.appspot.com/</string>
+<string name="appengine_url">http://2.latest.evecal.appspot.com/</string>
+<string name="article_share_subject">Shared via NewsSpeak on Android</string>
 </resources>
