@@ -6,11 +6,13 @@ import java.util.Collections;
 import android.app.ListActivity;
 import android.content.Context;
 import android.database.SQLException;
+import android.database.sqlite.SQLiteException;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListAdapter;
 import android.widget.ListView;
@@ -25,12 +27,14 @@ import com.vn.plaudible.dragdrop.RemoveListener;
 public class ReorderNewsSourcesPage extends ListActivity {
 
     static class ViewHolder {
-        TextView text;
+        TextView itemTitle;
+        ImageButton removeButton;
     }
 
     private ArrayList<NewsSource> allSources;
 	private boolean changesWereMade;
-	private NewsSpeakDBAdapter mDBAdapter;
+	private NewsSpeakDBAdapter mDbAdapter;
+	private DragNDropAdapter adapter;
 	
 	/** Called when the activity is first created. */
 	@Override
@@ -41,19 +45,11 @@ public class ReorderNewsSourcesPage extends ListActivity {
 	  
 	    changesWereMade = false;
 	  
-	    mDBAdapter = new NewsSpeakDBAdapter(this);
-	    mDBAdapter.open(NewsSpeakDBAdapter.READ_WRITE);
-		
-	    try {
-	    	populateSubscribedSourcesFromDB();
-	    } catch (SQLException exception) {
-	    	exception.printStackTrace();
-	    }
+	    allSources = new ArrayList<NewsSource>();
+	    adapter = new DragNDropAdapter(this, R.layout.dragitem, allSources);
 	    
-	    // Sort the sources as per the display index
-	    Collections.sort(allSources, NewsSource.DISPLAYINDEX_ORDER);
+	    setListAdapter(adapter);
 	    
-	    setListAdapter(new DragNDropAdapter(this, R.layout.dragitem, allSources));
 	    ListView listView = getListView();
 	    
 	    if (listView instanceof DragNDropListView) {
@@ -64,8 +60,38 @@ public class ReorderNewsSourcesPage extends ListActivity {
 	}
 
 	@Override
+	protected void onResume() {
+		super.onResume();
+		
+		if (mDbAdapter == null) {
+			mDbAdapter = new NewsSpeakDBAdapter(this);
+		    mDbAdapter.open(NewsSpeakDBAdapter.READ_WRITE);
+		}
+		
+		// Reset changes tracker
+		changesWereMade = false;
+		
+		// Clear the adapter data first
+		allSources.clear();
+		
+		try {
+	    	populateSubscribedSourcesFromDB();
+	    } catch (SQLException exception) {
+	    	exception.printStackTrace();
+	    }
+	    
+	    // Sort the sources as per the display index
+	    Collections.sort(allSources, NewsSource.DISPLAYINDEX_ORDER);
+	    
+	    // Notify change
+	    adapter.notifyDataSetChanged();
+	}
+	
+	@Override
 	protected void onDestroy() {
-		mDBAdapter.close();
+		if (mDbAdapter != null) {
+			mDbAdapter.close();
+		}
 		super.onDestroy();
 	}
 
@@ -83,10 +109,14 @@ public class ReorderNewsSourcesPage extends ListActivity {
 	/**
 	 * Commit the DB changes
 	 */
-	private void commitChanges() throws SQLException {
+	private void commitChanges() {
 		// TODO: Optimize updating records
-		for (int index = 0; index < allSources.size(); ++index) {
-			mDBAdapter.modifyNewsSourceDisplayIndex(allSources.get(index));
+		try {
+			for (int index = 0; index < allSources.size(); ++index) {
+				mDbAdapter.modifyNewsSourceDisplayIndex(allSources.get(index));
+			}
+		} catch (SQLiteException e) {
+			e.printStackTrace();
 		}
 	}
 	
@@ -94,7 +124,7 @@ public class ReorderNewsSourcesPage extends ListActivity {
 	 * Populate the sources from the DB
 	 */
 	private void populateSubscribedSourcesFromDB() throws SQLException {
-		allSources = mDBAdapter.fetchAllNewsPapers(true); // Get only NewsSources we have subscribed to	
+		mDbAdapter.fetchAllNewsPapers(allSources, true); // Get only NewsSources we have subscribed to	
 	}
 	
 	/**
@@ -172,6 +202,8 @@ public class ReorderNewsSourcesPage extends ListActivity {
         	super(context, resource, objects);
         	mContent = objects;
         	mContext = context;
+        	
+        	setNotifyOnChange(true);
         }
         
         /**
@@ -232,7 +264,8 @@ public class ReorderNewsSourcesPage extends ListActivity {
                 // Creates a ViewHolder and store references to the two children views
                 // we want to bind data to.
                 holder = new ViewHolder();
-                holder.text = (TextView) convertView.findViewById(R.id.itemText);
+                holder.itemTitle = (TextView) convertView.findViewById(R.id.itemText);
+                holder.removeButton = (ImageButton) convertView.findViewById(R.id.removeItem);
 
                 convertView.setTag(holder);
             } else {
@@ -241,11 +274,38 @@ public class ReorderNewsSourcesPage extends ListActivity {
                 holder = (ViewHolder) convertView.getTag();
             }
 
-            // Bind the data efficiently with the holder.
-            holder.text.setText(mContent.get(position).getTitle());
-            holder.text.setOnClickListener(this);
+            // Bind the data efficiently with the holder. Set the text
+            holder.itemTitle.setText(mContent.get(position).getTitle());
+            holder.itemTitle.setOnClickListener(this);
+            
+            // Set the remove functionality
+            holder.removeButton.setTag((Integer) position);
+            holder.removeButton.setOnClickListener(new View.OnClickListener() {
+				@Override
+				public void onClick(View v) {
+					Integer position = (Integer) v.getTag();
+					// Remove the item from the list and the DB
+					mDbAdapter.removeNewsSource(mContent.get(position));
+					onRemove(position);
+					
+					// After removing the item adjust the display indices of all items
+					modifyDisplayIndices(0, mContent.size() - 1);
 
+					// Notify dataset change
+					notifyDataSetChanged();
+				}
+			});
+            
             return convertView;
+        }
+        
+        /**
+         * Modify the display indexes from 'from' to 'to' position in the list
+         */
+        private void modifyDisplayIndices(int from, int to) {
+        	for (int index = from; index <= to; ++index) {
+        		mContent.get(index).setDisplayIndex(index);
+        	}
         }
 
         /**
@@ -260,16 +320,19 @@ public class ReorderNewsSourcesPage extends ListActivity {
     	 * Swap items
     	 */
     	public void onDrop(int from, int to) {
-    		// First swap the display indices of the two items
-    		Integer tempIndex = mContent.get(from).getDisplayIndex();
-    		mContent.get(from).setDisplayIndex(mContent.get(to).getDisplayIndex());
-    		mContent.get(to).setDisplayIndex(tempIndex);
-    		
     		// Swap the items in the adapter
     		NewsSource temp = mContent.get(from);
     		mContent.remove(from);
     		mContent.add(to,temp);
     		
+    		// Recalculate the display indices correctly for all the items
+    		// Moving an item down the list
+    		// Basically the index of the item in the list should be its displayIndex
+    		if (from < to) {
+    			modifyDisplayIndices(from, to);
+    		} else { // Moving an item up the list
+    			modifyDisplayIndices(to, from);
+    		}
     		changesWereMade = true;
     	}
     }

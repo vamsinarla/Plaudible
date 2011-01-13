@@ -42,7 +42,8 @@ public class NewsSourcesPage extends ListActivity {
 	
 	private ArrayList<NewsSource> allSources;
 	
-	private NewsSourcesAdapter adapter;	
+	private NewsSourcesAdapter adapter;
+	private NewsSpeakDBAdapter mDbAdapter;
 	private SpeechService mSpeechService;
 	private EditText filterText;
 	
@@ -61,16 +62,6 @@ public class NewsSourcesPage extends ListActivity {
         setContentView(R.layout.main_page);
         
         allSources = new ArrayList<NewsSource>();
-       
-        try {
-        	populateSubscribedSourcesFromDB();
-        } catch (SQLException exception) {
-        	exception.printStackTrace();
-        }
-        
-        // Sort the sources as per the display index
-	    Collections.sort(allSources, NewsSource.DISPLAYINDEX_ORDER);
-	    
         adapter = new NewsSourcesAdapter(this, R.layout.main_page_list_item, allSources);
         setListAdapter(adapter);
         
@@ -81,7 +72,7 @@ public class NewsSourcesPage extends ListActivity {
         
         bindSpeechService();
     }
-	
+		
 	/**
 	 * Return the status of data connectivity
 	 * @return boolean
@@ -100,6 +91,24 @@ public class NewsSourcesPage extends ListActivity {
 	protected void onResume() {
 		super.onResume();
 		
+		if (mDbAdapter == null) {
+			mDbAdapter = new NewsSpeakDBAdapter(this);
+		    mDbAdapter.open(NewsSpeakDBAdapter.READ_WRITE);
+		}
+		
+		// Clear the adapter data first
+		allSources.clear();
+		
+        try {
+        	populateSubscribedSourcesFromDB();
+        } catch (SQLException exception) {
+        	exception.printStackTrace();
+        }
+        
+        // Sort the sources as per the display index
+	    Collections.sort(allSources, NewsSource.DISPLAYINDEX_ORDER);
+	    adapter.notifyDataSetChanged();
+	    
 		filterText.setText("");
 	}
 	
@@ -108,6 +117,9 @@ public class NewsSourcesPage extends ListActivity {
 		unBindSpeechService();
 		filterText.removeTextChangedListener(filterTextWatcher);
 
+		if (mDbAdapter != null) {
+			mDbAdapter.close();
+		}
 		super.onDestroy();
 	}
 	
@@ -160,11 +172,7 @@ public class NewsSourcesPage extends ListActivity {
 	 * Populate the sources from the DB
 	 */
 	private void populateSubscribedSourcesFromDB() throws SQLException {
-		NewsSpeakDBAdapter adapter = new NewsSpeakDBAdapter(this);
-		adapter.open(NewsSpeakDBAdapter.READ_WRITE);
-		
-		allSources = adapter.fetchAllNewsPapers(true); // Get only NewsSources we have subscribed to	
-		adapter.close();		
+		mDbAdapter.fetchAllNewsPapers(allSources, true); // Get only NewsSources we have subscribed to			
 	}
 	
 	/**
@@ -183,6 +191,8 @@ public class NewsSourcesPage extends ListActivity {
 			
 			this.filteredSources = newssources;
 			this.context = context;
+			
+			setNotifyOnChange(true);
 		}
 		
 		/**

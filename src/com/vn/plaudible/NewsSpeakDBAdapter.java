@@ -142,7 +142,7 @@ public class NewsSpeakDBAdapter {
     /**
      * Fetch all newspapers.
      */
-    public ArrayList<NewsSource> fetchAllNewsPapers(boolean subscribedFilter) {
+    public void fetchAllNewsPapers(ArrayList<NewsSource> sources, boolean subscribedFilter) {
     	// TODO: Order by display order index and dont filter on columns since we need to
     	// use the newssource object (in entirety) as intent to the Plaudible class for example.
     	Cursor cursor = mDb.rawQuery("SELECT * FROM " +
@@ -151,7 +151,6 @@ public class NewsSpeakDBAdapter {
     								" ORDER BY DISPLAYINDEX ASC",
     								new String[] { "0" });
 
-    	ArrayList<NewsSource> sources = new ArrayList<NewsSource>();
     	NewsSource source;
     	
     	// Iterate over the NewsSources and append to list.
@@ -167,9 +166,9 @@ public class NewsSpeakDBAdapter {
     				// Get all the categories belonging to the newssource and in the same 
     				// order they were inserted into the DB. That is the order we want them
     				// displayed, not have them sorted lexicographically.
-    				String query = "SELECT * FROM " + CATEGORIES_TABLE_NAME + " WHERE NAME = '" + 
-    								source.getTitle() + "' ORDER BY ROWID";
-    				Cursor categoryCursor = mDb.rawQuery(query, null);
+    				String query = "SELECT * FROM " + CATEGORIES_TABLE_NAME + " WHERE NAME = ? ORDER BY ROWID";
+    				
+    				Cursor categoryCursor = mDb.rawQuery(query, new String[] { source.getTitle() });
     				ArrayList <String> names = new ArrayList<String>();
     				ArrayList <String> urls = new ArrayList<String>();
     				
@@ -186,7 +185,6 @@ public class NewsSpeakDBAdapter {
     		}
         }
     	cursor.close();
-        return sources;
     }
     
     /**
@@ -226,10 +224,17 @@ public class NewsSpeakDBAdapter {
      * @return Returns if an update was successful
      */
     public boolean modifyNewsSourceDisplayIndex(NewsSource source) {
-    	String query = "UPDATE " + NEWSPAPERS_TABLE_NAME + " SET DISPLAYINDEX='" + source.getDisplayIndex() +
-    					"' WHERE NAME='" + source.getTitle() + "'";
-    	Cursor cursor = mDb.rawQuery(query, null);
-    	cursor.close();
+    	ContentValues values = new ContentValues();
+    	values.put("DISPLAYINDEX", source.getDisplayIndex());
+    	mDb.update(NEWSPAPERS_TABLE_NAME, values, "NAME = ?", new String[]{source.getTitle()});
     	return true;
     }
+
+    /**
+     * Remove a particular NewsSource
+     * @param newsSource
+     */
+	public int removeNewsSource(NewsSource newsSource) {
+		return mDb.delete(NEWSPAPERS_TABLE_NAME, "NAME = ?", new String[]{newsSource.getTitle()});
+	}
 }
