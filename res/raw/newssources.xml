@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<sources>
+<source>
+    <name>New York Times</name>
+    <hascategories>true</hascategories>
+    <categories>
+        <title>US</title>
+        <title>Business</title>
+        <title>World</title>
+        <title>Politics</title>
+        <title>Sports</title>
+        <title>Technology</title>
+        <title>Health</title>
+        <title>Opinion</title>
+    </categories>
+    <categoryUrls>
+        <link>http://feeds.nytimes.com/nyt/rss/HomePage</link>
+        <link>http://feeds.nytimes.com/nyt/rss/Business</link>
+        <link>http://feeds.nytimes.com/nyt/rss/World</link>
+        <link>http://feeds.nytimes.com/nyt/rss/Politics</link>
+        <link>http://feeds1.nytimes.com/nyt/rss/Sports</link>
+        <link>http://feeds.nytimes.com/nyt/rss/Technology</link>
+        <link>http://feeds.nytimes.com/nyt/rss/Health</link>
+        <link>http://feeds.nytimes.com/nyt/rss/Opinion</link>
+    </categoryUrls>
+    <defaultLink>http://feeds.nytimes.com/nyt/rss/HomePage</defaultLink>
+</source>
+
+
+</sources>

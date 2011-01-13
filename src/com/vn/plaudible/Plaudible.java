@@ -296,13 +296,15 @@ public class Plaudible extends ListActivity {
 		@Override
 		public void onClick(View view) {
 			ViewHolder holder = (ViewHolder) view.getTag();
-
-			// Make the drop down bar visible
+						
+			// Get the View of the dropDownBar
 			View dropDownBar = view.findViewById(R.id.dropDownBar);
-			dropDownBar.setVisibility(View.VISIBLE);
-        	
+			
+			// On Click we show a DropDownBar and remove it after a few seconds
+			// First we remove the bottom drawable of the description textview
+			// Enable visibility on the bottom bar and then
         	// Set a timer to make the drop down bar go away after a few seconds
-        	DropDownBarTimer timer = new DropDownBarTimer(DROPDOWNBAR_TIMEOUT, DROPDOWNBAR_TIMEOUT, dropDownBar);
+        	DropDownBarTimer timer = new DropDownBarTimer(DROPDOWNBAR_TIMEOUT, DROPDOWNBAR_TIMEOUT, view);
         	timer.start();
         	
         	// Set the functionality of the drop down bar
@@ -505,9 +507,11 @@ public class Plaudible extends ListActivity {
 	 */
 	public class DropDownBarTimer extends CountDownTimer {
 		/**
-		 * The view of the drop down bar
+		 * The view of the drop down bar, the article item
 		 */
 		private View view;
+		private ViewHolder holder;
+		private View dropDownBar;
 		
 		public DropDownBarTimer(long millisInFuture, long countDownInterval) {
 			super(millisInFuture, countDownInterval);
@@ -515,13 +519,27 @@ public class Plaudible extends ListActivity {
 		
 		public DropDownBarTimer(long millisInFuture, long countDownInterval, View v) {
 			super(millisInFuture, countDownInterval);
+
+			// The view of the article item on which click was received 
 			view = v;
-		}
+			holder = (ViewHolder) v.getTag();
+			
+			// Remove the bottom drawable of the TextView for description
+			holder.description.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0);
+			
+			// Make the drop down bar visible
+			dropDownBar = view.findViewById(R.id.dropDownBar);
+			dropDownBar.setVisibility(View.VISIBLE);
+ 		}
 		/**
 		 *  Remove the drop down bar now
 		 */
 		public void onFinish() {
-			view.setVisibility(View.GONE);
+			// Put back the down arrow drawable for description TextView
+			holder.description.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, android.R.drawable.arrow_down_float);
+			
+			// Remove the dropDownBar
+			dropDownBar.setVisibility(View.GONE);
 		}
 		/**
 		 *  Do nothing here

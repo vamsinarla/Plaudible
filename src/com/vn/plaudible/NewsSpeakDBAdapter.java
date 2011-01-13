@@ -29,22 +29,22 @@ public class NewsSpeakDBAdapter {
                 "NAME " + " TEXT PRIMARY KEY, " +
                 "TYPE " + " TEXT, " +
                 "DEFAULTURL " + " TEXT NOT NULL, " +
-                "HASCATEGORIES " + " BOOLEAN NOT NULL" +
-                "DISPLAYED " + "BOOLEAN NOT NULL" +
-                "SUBSCRIBED " + "BOOLEAN NOT NULL" +
-                "DISPLAYINDEX " + "INTEGER" +
+                "HASCATEGORIES " + " BOOLEAN NOT NULL, " +
+                "SUBSCRIBED " + "BOOLEAN NOT NULL, " +
+                "DISPLAYINDEX " + "INTEGER, " +
                 "PREFERRED " + "BOOLEAN" +
                 ");";
     private static final String CATEGORIES_TABLE_NAME = "CATEGORIES";
     private static final String CATEGORIES_TABLE_CREATE = 
     			"CREATE TABLE " + CATEGORIES_TABLE_NAME + " (" +
     			"CATEGORY " + "TEXT NOT NULL, " +
-    			"NEWSPAPER " + "TEXT NOT NULL, " +
+    			"NAME " + "TEXT NOT NULL, " +
     			"LINK " + "TEXT NOT NULL, " +
-    			"FOREIGNKEY(NEWSPAPER) REFERENCES NEWSPAPERS(NAME), " +
-    			"PRIMARY KEY(NEWSPAPER, CATEGORY)" +
+    			"FOREIGN KEY(NAME) REFERENCES " + 
+    			NEWSPAPERS_TABLE_NAME + "(NAME), " +
+    			"PRIMARY KEY(NAME, CATEGORY)" +
     			");";
-    
+	
 	private class NewsSpeakDBHelper extends SQLiteOpenHelper {
 		public NewsSpeakDBHelper(Context context) {
 			super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -80,8 +80,8 @@ public class NewsSpeakDBAdapter {
         mContext = ctx;
     }
     
-    /**
-     * Open the notes database. If it cannot be opened, try to create a new
+	/**
+     * Open the database. If it cannot be opened, try to create a new
      * instance of the database. If it cannot be created, throw an exception to
      * signal the failure
      * 
@@ -113,12 +113,11 @@ public class NewsSpeakDBAdapter {
     public long createNewsSource(NewsSource source) {
     	ContentValues values = new ContentValues();
     	values.put("NAME", source.getTitle());
-    	values.put("DEFAULTURL", source.getTitle());
     	values.put("TYPE", source.getType().toString());
+    	values.put("DEFAULTURL", source.getDefaultUrl());
     	values.put("HASCATEGORIES", source.isHasCategories());
-    	values.put("DISPLAYED", source.isDisplayed());
-    	values.put("SUBSCRIBED", source.isSubscribed());
-    	values.put("DISPLAYINDEX", source.getDisplayIndex());
+    	values.put("SUBSCRIBED", true); // When you create a NewsSource we automatically subscribe to it
+    	values.put("DISPLAYINDEX", source.getDisplayIndex()); // No display Index will be set the first time around
     	values.put("PREFERRED", source.isPreferred());
     	
     	long rowId;
@@ -132,7 +131,7 @@ public class NewsSpeakDBAdapter {
 	    		values = new ContentValues();
 	    		values.put("CATEGORY", categories.get(ii));
 	    		values.put("LINK", categoryUrls.get(ii));
-	    		values.put("NEWSPAPER", source.getTitle());
+	    		values.put("NAME", source.getTitle());
 	    		
 	    		rowId = mDb.insert(CATEGORIES_TABLE_NAME, null, values);
 			}
@@ -143,8 +142,79 @@ public class NewsSpeakDBAdapter {
     /**
      * Fetch all newspapers.
      */
-    public Cursor fetchAllNewsPapers() {
-    	Cursor cursor = mDb.query(NEWSPAPERS_TABLE_NAME, new String[] {"NAME"}, null, null, null, null, null);
+    public ArrayList<NewsSource> fetchAllNewsPapers(boolean subscribedFilter) {
+    	// TODO: Order by display order index and dont filter on columns since we need to
+    	// use the newssource object (in entirety) as intent to the Plaudible class for example.
+    	Cursor cursor = mDb.rawQuery("SELECT * FROM " +
+    								NEWSPAPERS_TABLE_NAME +
+    								" WHERE SUBSCRIBED <> ? " +
+    								" ORDER BY DISPLAYINDEX ASC",
+    								new String[] { "0" });
+
+    	ArrayList<NewsSource> sources = new ArrayList<NewsSource>();
+    	NewsSource source;
+    	
+    	// Iterate over the NewsSources and append to list.
+    	if (cursor != null && cursor.moveToFirst()) {
+    		while (cursor.isAfterLast() == false) {
+    			source = getNewsSourceFromCursor(cursor);
+    			sources.add(source);
+    			cursor.moveToNext();
+    			
+    			// Complete building the NewsSource object with categories
+    			// TODO: Optimize this to either be lazy or structure the Query acc.
+    			if (source.isHasCategories()) {
+    				// Get all the categories belonging to the newssource and in the same 
+    				// order they were inserted into the DB. That is the order we want them
+    				// displayed, not have them sorted lexicographically.
+    				String query = "SELECT * FROM " + CATEGORIES_TABLE_NAME + " WHERE NAME = '" + 
+    								source.getTitle() + "' ORDER BY ROWID";
+    				Cursor categoryCursor = mDb.rawQuery(query, null);
+    				ArrayList <String> names = new ArrayList<String>();
+    				ArrayList <String> urls = new ArrayList<String>();
+    				
+    				if (categoryCursor != null && categoryCursor.moveToFirst()) {
+    					while (categoryCursor.isAfterLast() == false) {
+    						names.add(categoryCursor.getString(0));
+    						urls.add(categoryCursor.getString(2));
+    						categoryCursor.moveToNext();
+    					}
+    					source.setCategories(names);
+    					source.setCategoryUrls(urls);
+    				}
+    			}
+    		}
+        }
+    	cursor.close();
+        return sources;
+    }
+    
+    /**
+     * Get a NewsSource object from a Cursor
+     * @param cursor
+     * @return
+     */
+    private NewsSource getNewsSourceFromCursor(Cursor cursor) {
+		NewsSource source = new NewsSource();
+		
+		source.setTitle(cursor.getString(0));
+		source.setType(NewsSource.getType(cursor.getString(1)));
+		source.setDefaultUrl(cursor.getString(2));
+		source.setHasCategories(cursor.getInt(3) != 0 ? true : false);
+		source.setSubscribed(cursor.getInt(4) != 0 ? true : false);
+		source.setDisplayIndex(cursor.getInt(5));
+		source.setPreferred(cursor.getInt(6) != 0 ? true : false);
+		
+		return source;
+	}
+
+	/**
+     * Fetch a newspaper
+     * @param name
+     * @turn
+     */
+    public Cursor fetchNewsPaper(String name) {
+    	Cursor cursor = mDb.query(NEWSPAPERS_TABLE_NAME, new String[] {"NAME"}, null, null, null, null, "NAME ASC");
     	if (cursor != null) {
     		cursor.moveToFirst();
         }
@@ -152,11 +222,14 @@ public class NewsSpeakDBAdapter {
     }
     
     /**
-     * Fetch a newspaper
-     * @param name
-     * @return
+     * Modify values of a record
+     * @return Returns if an update was successful
      */
-    public Cursor fetchNewsPaper(String name) {
-    	
+    public boolean modifyNewsSourceDisplayIndex(NewsSource source) {
+    	String query = "UPDATE " + NEWSPAPERS_TABLE_NAME + " SET DISPLAYINDEX='" + source.getDisplayIndex() +
+    					"' WHERE NAME='" + source.getTitle() + "'";
+    	Cursor cursor = mDb.rawQuery(query, null);
+    	cursor.close();
+    	return true;
     }
 }

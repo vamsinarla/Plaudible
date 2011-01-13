@@ -2,6 +2,7 @@ package com.vn.plaudible;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Comparator;
 
 /**
  * Class for representing a news source.
@@ -16,6 +17,7 @@ public class NewsSource implements Serializable {
 	 */
 	private static final long serialVersionUID = 1L;
 	public static final Integer NO_CATEGORIES = -1;
+	public static final Integer DISPLAYINDEX_NOTSET = -1;
 
 	/**
 	 * Types
@@ -25,13 +27,21 @@ public class NewsSource implements Serializable {
 	public enum SourceType { INVALID, NEWSPAPER, BLOG };
 	
 	/**
+	 * Static comparator for NewsSource
+	 */
+	static final Comparator<NewsSource> DISPLAYINDEX_ORDER = new Comparator<NewsSource>() {
+		public int compare(NewsSource n1, NewsSource n2) {
+			return n1.getDisplayIndex().compareTo(n2.getDisplayIndex());
+		}
+	};
+	
+	/**
 	 * Newspaper attributes
 	 */
 	private String title;
 	private SourceType type;
 	private boolean hasCategories;
 	private Integer currentCategory;
-	private boolean displayed;
 	private boolean subscribed;
 	private Integer displayIndex;
 	private boolean preferred;
@@ -40,20 +50,40 @@ public class NewsSource implements Serializable {
 	private ArrayList<String> categories;
 	
 	public NewsSource() {
+		this.title = null;
+		this.type = SourceType.INVALID;
+		this.hasCategories = false;
+		this.currentCategory = 0;
+		this.defaultUrl = null;
+		this.categoryUrls = null;
+		this.categories = null;
+		this.displayIndex = DISPLAYINDEX_NOTSET;
+		this.preferred = false;
+		this.subscribed = false;
 	}
 	
-	public NewsSource(String title, String url, SourceType type, boolean hasCategories) {
+	public NewsSource(String title, String type, boolean hasCategories, ArrayList<String> categories,
+			ArrayList<String> categoryURLs, String defaultUrl, boolean preferred, boolean subscribed,
+			Integer displayIndex) {
+		
 		this.title = title;
-		this.type = type;
+		this.type = getType(type);
 		this.hasCategories = hasCategories;
+		this.categories = categories;
+		this.categoryUrls = categoryURLs;
+		this.defaultUrl = defaultUrl;
+		this.preferred = preferred;
+		this.subscribed = subscribed;
+		this.displayIndex = displayIndex;
+		
 		this.currentCategory = 0;
 	}
-	
+
 	public String getCurrentCategoryName() {
 		if (isHasCategories()) {
 			return categories.get(currentCategory);
 		}
-		return "";
+		return null;
 	}
 	
 	public Integer getCurrentCategoryIndex() {
@@ -89,6 +119,19 @@ public class NewsSource implements Serializable {
 		this.type = type;
 	}
 
+	/**
+	 * Set type from String
+	 * @param string
+	 */
+	public void setType(String string) {
+		if (string.equalsIgnoreCase("newspaper")) {
+			this.setType(SourceType.NEWSPAPER);
+		} else if (string.equalsIgnoreCase("blog")) {
+			this.setType(SourceType.BLOG);
+		} else {
+			this.setType(SourceType.INVALID);
+		}
+	}
 	/**
 	 * Get title
 	 * @return
@@ -129,14 +172,6 @@ public class NewsSource implements Serializable {
 
 	public void setCurrentCategory(Integer currentCategory) {
 		this.currentCategory = currentCategory;
-	}
-
-	public boolean isDisplayed() {
-		return displayed;
-	}
-
-	public void setDisplayed(boolean displayed) {
-		this.displayed = displayed;
 	}
 
 	public Integer getDisplayIndex() {

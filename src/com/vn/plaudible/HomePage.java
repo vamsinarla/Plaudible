@@ -1,6 +1,12 @@
 package com.vn.plaudible;
 
+import java.io.InputStream;
+import java.net.URL;
+import java.util.ArrayList;
 import java.util.Locale;
+
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -9,9 +15,11 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.preference.PreferenceManager;
 import android.speech.tts.TextToSpeech;
 import android.view.KeyEvent;
 import android.view.View;
@@ -77,8 +85,15 @@ public class HomePage extends Activity implements TextToSpeech.OnInitListener {
         newsButton.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
+				
+				// Prepare the DB if this is the first run.
+				// Place a call to AppEngine to get the list of preferred NewsSources for this user
+				if (isFirstRun()) {
+					populateSourcesIntoDB();
+				}
+				
 				Intent getNewsIntent = new Intent();
-				getNewsIntent.setClass(HomePage.this, Logos.class);
+				getNewsIntent.setClass(HomePage.this, NewsSourcesTabActivity.class);
 				
 				startActivity(getNewsIntent);
 			}
@@ -132,6 +147,58 @@ public class HomePage extends Activity implements TextToSpeech.OnInitListener {
     }
     
     /**
+     * Populate NewsSources in the DB on first time usage
+     */
+    protected void populateSourcesIntoDB() {
+    	NewsSpeakDBAdapter dbAdapter = new NewsSpeakDBAdapter(this);
+    	dbAdapter.open(NewsSpeakDBAdapter.READ_WRITE);
+    	
+    	// Make a call to AppEngine and get the featured sources
+    	String link = getString(R.string.appengine_url) + "newssources.xml";
+
+    	try {
+        	URL feedUrl = new URL(link);
+
+	    	SAXParserFactory factory = SAXParserFactory.newInstance();
+			SAXParser parser = factory.newSAXParser();
+	    	
+			// Parse the response stream from AppEngine
+	    	ArrayList<NewsSource> sources = new ArrayList<NewsSource>();
+	    	NewsSourceHandler sourcesHandler = new NewsSourceHandler(sources);
+			InputStream responseStream = feedUrl.openConnection().getInputStream();
+			parser.parse(responseStream, sourcesHandler);
+			
+			// Insert the NewsSources into the localDB
+			for (int index = 0; index < sources.size(); ++index) {
+				// Set the display index
+				sources.get(index).setDisplayIndex(index);
+				
+				dbAdapter.createNewsSource(sources.get(index));
+			}
+			
+    	} catch (Exception e) {
+    		e.printStackTrace();
+    	} finally {
+    		dbAdapter.close();
+    	}
+    }
+
+	/**
+     * Find out if this is the first run of NewsSpeak
+     * @return
+     */
+    protected boolean isFirstRun() {
+    	SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+    	boolean result = prefs.getBoolean("FirstRun", true);
+    	if (result) {
+    		SharedPreferences.Editor editor = prefs.edit();
+    		editor.putBoolean("FirstRun", false);
+    		editor.commit();
+    	}
+     	return result;
+	}
+
+	/**
      *  Listen for configuration changes and this is basically to prevent the 
      *  activity from being restarted. Do nothing here.
      */
