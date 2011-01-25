@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+  xmlns:android="http://schemas.android.com/apk/res/android"
+  android:layout_width="wrap_content"
+  android:layout_height="wrap_content">
+  
+	<EditText android:id="@+id/custom_feed_title"
+	android:layout_width="fill_parent"
+	android:layout_height="wrap_content"
+	android:hint="@string/custom_feed_title_edittext_hint"/>
+        
+    <EditText android:id="@+id/custom_feed_url"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:layout_below="@id/custom_feed_title"
+    android:hint="@string/custom_feed_url_edittext_hint"/>
+    
+    <Button android:id="@+id/add_custom_feed"
+    android:layout_below="@id/custom_feed_url"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:text="Add"/>
+    
+    <Button android:id="@+id/cancel_dialog"
+    android:layout_below="@id/custom_feed_url"
+    android:layout_toRightOf="@id/add_custom_feed"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:text="Cancel"/>
+    
+</RelativeLayout>

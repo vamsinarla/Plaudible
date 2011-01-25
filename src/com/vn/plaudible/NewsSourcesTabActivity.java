@@ -28,16 +28,22 @@ public class NewsSourcesTabActivity extends TabActivity {
 	    // Create an Intent to launch the default tab to show the list of subscribed newssources
 	    intent = new Intent().setClass(this, NewsSourcesPage.class);
 	    // Define the tabspec for this activity
-	    spec = tabHost.newTabSpec("display").setIndicator(getString(R.string.subscribed_tab_title), res.getDrawable(R.drawable.textonly))
+	    spec = tabHost.newTabSpec("display").setIndicator(getString(R.string.subscribed_tab_title), res.getDrawable(R.drawable.subscribed_lists))
              			.setContent(intent);
 	    tabHost.addTab(spec);
 	    
-	    // Create an Intent to launch the default tab to show the list of subscribed newssources
+	    // Create an Intent to launch the manage tab to manage the list of subscribed newssources
 	    intent = new Intent().setClass(this, ReorderNewsSourcesPage.class);
 	    // Define the tabspec for this activity
-	    spec = tabHost.newTabSpec("manage").setIndicator(getString(R.string.manage_tab_title), res.getDrawable(android.R.drawable.ic_menu_manage))
+	    spec = tabHost.newTabSpec("manage").setIndicator(getString(R.string.manage_tab_title), res.getDrawable(R.drawable.settings))
              			.setContent(intent);
 	    tabHost.addTab(spec);
 	    
+	    // Create an Intent to launch the search tab to search
+	    intent = new Intent().setClass(this, SearchPage.class);
+	    // Define the tabspec for this activity
+	    spec = tabHost.newTabSpec("search").setIndicator(getString(R.string.search_tab_title), res.getDrawable(R.drawable.search))
+             			.setContent(intent);
+	    tabHost.addTab(spec);
 	 }
 }

@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+  xmlns:android="http://schemas.android.com/apk/res/android"
+  android:layout_width="fill_parent"
+  android:layout_height="fill_parent"
+  android:orientation="vertical"
+  android:background="#ffffff">
+	
+	<LinearLayout android:id="@+id/search_layout"
+	android:layout_width="fill_parent"
+	android:layout_height="wrap_content"
+	android:paddingTop="5dp"
+	android:orientation="horizontal">
+	
+	  <EditText android:id="@id/search_box" 
+	  android:layout_width="wrap_content"
+	  android:layout_height="wrap_content"
+	  android:hint="@string/search_page_search_box_caption"
+	  android:inputType="text"
+	  android:layout_weight="1"
+	  android:maxLines="1"/>
+	  
+	  <ImageButton android:id="@+id/search_button"
+	  android:layout_toRightOf="@id/search_box"
+	  android:layout_width="wrap_content"
+	  android:layout_height="wrap_content"
+	  android:layout_alignParentRight="true"
+	  android:layout_gravity="center_vertical"
+	  android:maxWidth="20sp"
+	  android:src="@drawable/search"/>
+	
+	</LinearLayout>
+    
+     <ListView android:id="@+id/results_list"
+		android:layout_width="fill_parent"
+		android:layout_height="wrap_content"
+		android:layout_below="@id/search_layout"
+		android:layout_above="@+id/bottom_buttons_search_page"
+		android:background="@drawable/gradient_line"
+		android:padding="5dp"
+		android:cacheColorHint="#ffffff"/>
+
+    <LinearLayout android:id="@id/bottom_buttons_search_page"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:layout_alignParentBottom="true"
+    android:orientation="horizontal">
+  
+	   <Button android:id="@+id/add_custom_source"
+	   android:layout_width="wrap_content"
+	   android:layout_height="wrap_content"
+	   android:layout_weight="1"
+	   android:drawableLeft="@drawable/add_custom_feed_icon"
+	   android:text="@string/add_custom_feed_text"/>
+
+       <Button android:id="@+id/suggest_feed"
+       android:layout_width="wrap_content"
+       android:layout_height="wrap_content"
+       android:layout_weight="1"
+       android:drawableLeft="@drawable/suggest_icon"
+       android:text="@string/suggest_custom_feed_text"/>
+
+    </LinearLayout>
+
+</RelativeLayout>
