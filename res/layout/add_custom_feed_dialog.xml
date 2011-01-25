@@ -2,11 +2,23 @@
 <RelativeLayout
   xmlns:android="http://schemas.android.com/apk/res/android"
   android:layout_width="wrap_content"
-  android:layout_height="wrap_content">
+  android:layout_height="wrap_content"
+  android:background="@android:color/white">
   
+  	<TextView android:id="@+id/custom_feed_dialog_title"
+  	android:layout_width="wrap_content"
+  	android:layout_height="wrap_content"
+  	android:padding="10sp"
+  	android:drawableBottom="@drawable/line"
+  	android:theme="@android:style/Theme.NoTitleBar"
+  	android:textColor="@android:color/black"
+  	android:textSize="20sp"
+  	android:text="@string/add_custom_feed_dialog_title"/>
+  	
 	<EditText android:id="@+id/custom_feed_title"
 	android:layout_width="fill_parent"
 	android:layout_height="wrap_content"
+	android:layout_below="@id/custom_feed_dialog_title"
 	android:hint="@string/custom_feed_title_edittext_hint"/>
         
     <EditText android:id="@+id/custom_feed_url"
@@ -19,11 +31,12 @@
     android:layout_below="@id/custom_feed_url"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
+    android:layout_alignParentRight="true"
     android:text="Add"/>
     
     <Button android:id="@+id/cancel_dialog"
     android:layout_below="@id/custom_feed_url"
-    android:layout_toRightOf="@id/add_custom_feed"
+    android:layout_toLeftOf="@id/add_custom_feed"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:text="Cancel"/>

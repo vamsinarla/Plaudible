@@ -24,4 +24,8 @@
 <string name="custom_feed_title_edittext_hint">Give a name</string>
 <string name="custom_feed_url_edittext_hint">URL for your custom feed</string>
 <string name="add_custom_feed_dialog_title">Add your feed</string>
+<string name="invalid_url_message">Not a valid URL</string>
+<string name="searching_spin_text">Searching ...</string>
+<string name="search_failed">Search failed</string>
+<string name="loading_articles">Loading articles ...</string>
 </resources>

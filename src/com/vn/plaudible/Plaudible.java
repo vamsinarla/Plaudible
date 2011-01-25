@@ -73,9 +73,7 @@ public class Plaudible extends ListActivity {
         tracker.start(getString(R.string.analytics_id), 60, this);
         
         // Show the spinning wheel and the counter, which suspends the wheel in TIMEOUT milli-seconds
-        ProgressDialogTimer timer = new  ProgressDialogTimer(DOWNLOADING_TIMEOUT, DOWNLOADING_TIMEOUT);
-        showSpinningWheel();
-        timer.start();
+        showSpinningWheel("", getString(R.string.loading_articles), DOWNLOADING_TIMEOUT);
         
         // Get the intent and the related extras
         Intent intent = getIntent();
@@ -210,9 +208,7 @@ public class Plaudible extends ListActivity {
 		   slidingDrawer.animateClose();
 		   
 	       // Show the spinning wheel and the counter, which suspends the wheel in TIMEOUT milli-seconds
-	       ProgressDialogTimer timer = new  ProgressDialogTimer(DOWNLOADING_TIMEOUT, DOWNLOADING_TIMEOUT);
-	       showSpinningWheel();
-	       timer.start();
+	       showSpinningWheel("", getString(R.string.loading_articles), DOWNLOADING_TIMEOUT);
 	       
 	       // Set the title and the category
 	       currentNewsSource.setCurrentCategoryIndex(holder.position);
@@ -334,7 +330,7 @@ public class Plaudible extends ListActivity {
 					Integer position = (Integer) v.getTag();
 					if (!articles.get(position).isDownloaded()) {
 						   // Spinning wheel to show while the article is being downloaded
-						   showSpinningWheel();
+						   showSpinningWheel("", getString(R.string.loading_articles), DOWNLOADING_TIMEOUT);
 						   
 						   // Start the article download
 						   @SuppressWarnings("rawtypes")
@@ -402,8 +398,10 @@ public class Plaudible extends ListActivity {
 	/**
 	 * Show the spinning wheel
 	 */
-   public void showSpinningWheel() {
-	   spinningWheel = ProgressDialog.show(Plaudible.this, "", "Loading articles ...", true);
+   public void showSpinningWheel(String title, String text, long timeout) {
+	   ProgressDialogTimer timer = new  ProgressDialogTimer(timeout, timeout);
+       spinningWheel = ProgressDialog.show(Plaudible.this, title, text, true);
+       timer.start();
    }
    
    /**
@@ -481,7 +479,7 @@ public class Plaudible extends ListActivity {
 	 * @author vamsi
 	 *
 	 */
-	public class ProgressDialogTimer extends CountDownTimer {
+	private class ProgressDialogTimer extends CountDownTimer {
 		public ProgressDialogTimer(long millisInFuture, long countDownInterval) {
 			super(millisInFuture, countDownInterval);
 		}
