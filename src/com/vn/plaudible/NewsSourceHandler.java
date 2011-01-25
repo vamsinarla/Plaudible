@@ -43,11 +43,11 @@ class NewsSourceHandler extends DefaultHandler {
 	public void startElement(String uri, String localName, String name,
 			Attributes attributes) throws SAXException {
 		super.startElement(uri, localName, name, attributes);
-		if (name.equalsIgnoreCase("source")){
+		if (localName.equalsIgnoreCase("source")){
 			source = new NewsSource();
-		} else if (name.equalsIgnoreCase("categories")) {
+		} else if (localName.equalsIgnoreCase("categories")) {
 			array = new ArrayList<String>();
-		}  else if (name.equalsIgnoreCase("categoryUrls")) {
+		}  else if (localName.equalsIgnoreCase("categoryUrls")) {
 			array = new ArrayList<String>();
 		}
 		builder.setLength(0);
@@ -59,25 +59,25 @@ class NewsSourceHandler extends DefaultHandler {
 		super.endElement(uri, localName, name);
 		
 		if (source != null){
-			if (name.equalsIgnoreCase("name")) {
+			if (localName.equalsIgnoreCase("name")) {
 				source.setTitle(builder.toString());
-			} else if (name.equalsIgnoreCase("type")) {
+			} else if (localName.equalsIgnoreCase("type")) {
 				source.setType(builder.toString());
-			} else if (name.equalsIgnoreCase("preferred")) {
+			} else if (localName.equalsIgnoreCase("preferred")) {
 				source.setPreferred(builder.toString().equalsIgnoreCase("true") ? true : false);
-			} else if (name.equalsIgnoreCase("hascategories")) {
+			} else if (localName.equalsIgnoreCase("hascategories")) {
 				source.setHasCategories(builder.toString().equalsIgnoreCase("true") ? true : false);
-			} else if (name.equalsIgnoreCase("defaultLink")) {
+			} else if (localName.equalsIgnoreCase("defaultLink")) {
 				source.setDefaultUrl(builder.toString());
-			} else if (name.equalsIgnoreCase("title")) {
+			} else if (localName.equalsIgnoreCase("title")) {
 				array.add(builder.toString());
-			} else if (name.equalsIgnoreCase("link")) {
+			} else if (localName.equalsIgnoreCase("link")) {
 				array.add(builder.toString());
-			} else if (name.equalsIgnoreCase("categoryUrls")) {
+			} else if (localName.equalsIgnoreCase("categoryUrls")) {
 				source.setCategoryUrls(array);
-			} else if (name.equalsIgnoreCase("categories")) {
+			} else if (localName.equalsIgnoreCase("categories")) {
 				source.setCategories(array);
-			} else if (name.equalsIgnoreCase("source")) {
+			} else if (localName.equalsIgnoreCase("source")) {
 				sources.add(source);
 			}
 			builder.setLength(0);	

@@ -195,7 +195,7 @@ public class HomePage extends Activity implements TextToSpeech.OnInitListener {
     		editor.putBoolean("FirstRun", false);
     		editor.commit();
     	}
-     	return result;
+     	return true;
 	}
 
 	/**
