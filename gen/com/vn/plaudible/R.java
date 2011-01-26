@@ -113,6 +113,7 @@ public final class R {
         public static final int custom_feed_url_edittext_hint=0x7f080010;
         public static final int feedback_subject=0x7f080003;
         public static final int help=0x7f080005;
+        public static final int invalid_title_message=0x7f080016;
         public static final int invalid_url_message=0x7f080012;
         public static final int loading_articles=0x7f080015;
         public static final int manage_tab_title=0x7f08000a;

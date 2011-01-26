@@ -154,8 +154,9 @@ public class HomePage extends Activity implements TextToSpeech.OnInitListener {
     	dbAdapter.open(NewsSpeakDBAdapter.READ_WRITE);
     	
     	// Make a call to AppEngine and get the featured sources
-    	String link = getString(R.string.appengine_url) + "newssources.xml";
-
+    	// String link = getString(R.string.appengine_url) + "newssources.xml";
+    	String link = getLocalizedURLForFeaturedSources();
+    	
     	try {
         	URL feedUrl = new URL(link);
 
@@ -182,6 +183,12 @@ public class HomePage extends Activity implements TextToSpeech.OnInitListener {
     		dbAdapter.close();
     	}
     }
+
+	private String getLocalizedURLForFeaturedSources() {
+		Locale currentLocale = Locale.getDefault();
+		String country = currentLocale.getCountry();
+		return country;
+	}
 
 	/**
      * Find out if this is the first run of NewsSpeak

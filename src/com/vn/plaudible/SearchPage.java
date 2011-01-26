@@ -3,12 +3,14 @@ package com.vn.plaudible;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Locale;
 
 import android.app.Activity;
 import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.database.SQLException;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.text.Editable;
@@ -20,6 +22,8 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.Toast;
+
+import com.vn.plaudible.NewsSource.SourceType;
 
 /**
  * Search Page 
@@ -103,14 +107,53 @@ public class SearchPage extends Activity {
 						EditText titleEditBox = (EditText) dialog.findViewById(R.id.custom_feed_title);
 						Editable customFeedTitle = titleEditBox.getText();
 						
+						// Edittext cannot be empty
+						if (titleEditBox.getText().toString().contentEquals("")) {
+							Toast.makeText(dialog.getContext(), R.string.invalid_title_message, Toast.LENGTH_SHORT)
+							.show();
+							return;
+						}
+						
 						// Verify the URL
 						EditText feedURLEditBox = (EditText) dialog.findViewById(R.id.custom_feed_url);
-						
 						try {
 							URL feedURL = new URL(feedURLEditBox.getText().toString());
 						} catch (MalformedURLException exception) {
-							Toast burntToast = Toast.makeText(dialog.getContext(), R.string.invalid_url_message, Toast.LENGTH_SHORT);
-						}	
+							Toast.makeText(dialog.getContext(), R.string.invalid_url_message, Toast.LENGTH_SHORT)
+								.show();
+							return;
+						}
+						
+						// Add to DB
+						NewsSpeakDBAdapter mDbAdapter = new NewsSpeakDBAdapter(SearchPage.this);
+						mDbAdapter.open(NewsSpeakDBAdapter.READ_WRITE);
+						
+						// Newspaper with that name already exists
+						if (mDbAdapter.getNewsPaper(titleEditBox.getText().toString()) != null) {
+							Toast.makeText(dialog.getContext(), R.string.invalid_title_message, Toast.LENGTH_SHORT)
+							.show();
+							return;
+						}
+						// Create a newsSource and then add it to the DB
+						NewsSource customSource = new NewsSource(titleEditBox.getText().toString(), 
+																	SourceType.BLOG.toString(),
+																	Locale.getDefault(),
+																	false,
+																	null,
+																	null,
+																	feedURLEditBox.getText().toString(),
+																	false,
+																	true,
+																	mDbAdapter.getNumberOfNewsSources()+ 1 // Should be last (?)
+																	); 
+						// Attempt to add the source to the DB
+						try {
+							mDbAdapter.createNewsSource(customSource);
+						} catch (SQLException exception) {
+							Toast.makeText(dialog.getContext(), R.string.invalid_title_message, Toast.LENGTH_SHORT)
+							.show();
+							return;
+						}
 					}
 				});
 				
@@ -167,8 +210,8 @@ public class SearchPage extends Activity {
 		 */
 		public void onFinish() {
 			suspendSpinningWheel();
-			Toast burntToast = Toast.makeText(SearchPage.this, getString(R.string.search_failed), Toast.LENGTH_SHORT);
-			burntToast.show();
+			Toast.makeText(SearchPage.this, getString(R.string.search_failed), Toast.LENGTH_SHORT)
+				.show();
 		}
 		/**
 		 *  Do nothing here
@@ -181,9 +224,10 @@ public class SearchPage extends Activity {
 	 * Show the spinning wheel
 	 */
    public void showSpinningWheel(String title, String text, long timeout) {
-	   ProgressDialogTimer timer = new  ProgressDialogTimer(timeout, timeout);
+	   // ProgressDialogTimer timer = new  ProgressDialogTimer(timeout, timeout);
        spinningWheel = ProgressDialog.show(SearchPage.this, title, text, true);
-       timer.start();
+       new  ProgressDialogTimer(timeout, timeout)
+       		.start();
    }
    
    /**

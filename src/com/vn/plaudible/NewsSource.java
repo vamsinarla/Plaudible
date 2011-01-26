@@ -3,6 +3,7 @@ package com.vn.plaudible;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Locale;
 
 /**
  * Class for representing a news source.
@@ -40,6 +41,7 @@ public class NewsSource implements Serializable {
 	 */
 	private String title;
 	private SourceType type;
+	private Locale locale;
 	private boolean hasCategories;
 	private Integer currentCategory;
 	private boolean subscribed;
@@ -60,14 +62,16 @@ public class NewsSource implements Serializable {
 		this.displayIndex = DISPLAYINDEX_NOTSET;
 		this.preferred = false;
 		this.subscribed = false;
+		this.locale = Locale.getDefault();
 	}
 	
-	public NewsSource(String title, String type, boolean hasCategories, ArrayList<String> categories,
+	public NewsSource(String title, String type, Locale locale, boolean hasCategories, ArrayList<String> categories,
 			ArrayList<String> categoryURLs, String defaultUrl, boolean preferred, boolean subscribed,
 			Integer displayIndex) {
 		
 		this.title = title;
 		this.type = getType(type);
+		this.locale = locale;
 		this.hasCategories = hasCategories;
 		this.categories = categories;
 		this.categoryUrls = categoryURLs;
@@ -77,6 +81,14 @@ public class NewsSource implements Serializable {
 		this.displayIndex = displayIndex;
 		
 		this.currentCategory = 0;
+	}
+
+	public Locale getLocale() {
+		return locale;
+	}
+
+	public void setLocale(Locale locale) {
+		this.locale = locale;
 	}
 
 	public String getCurrentCategoryName() {

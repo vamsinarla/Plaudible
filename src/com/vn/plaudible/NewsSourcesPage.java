@@ -65,7 +65,7 @@ public class NewsSourcesPage extends ListActivity {
         adapter = new NewsSourcesAdapter(this, R.layout.main_page_list_item, allSources);
         setListAdapter(adapter);
         
-        this.getListView().setTextFilterEnabled(true);
+        getListView().setTextFilterEnabled(true);
         
         filterText = (EditText) findViewById(R.id.search_box);
         filterText.addTextChangedListener(filterTextWatcher);

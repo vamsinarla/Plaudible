@@ -1,6 +1,7 @@
 package com.vn.plaudible;
 
 import java.util.ArrayList;
+import java.util.Locale;
 
 import android.content.ContentValues;
 import android.content.Context;
@@ -21,6 +22,11 @@ public class NewsSpeakDBAdapter {
 	private NewsSpeakDBHelper mDbHelper;
 	private SQLiteDatabase mDb;
 	
+	/**
+	 * DB related vars
+	 */
+	private int numberOfNewsSources;
+
 	private static final int DATABASE_VERSION = 2;
 	private static final String DATABASE_NAME = "NEWSSPEAKDATABASE";
 	private static final String NEWSPAPERS_TABLE_NAME = "NEWSPAPERS";
@@ -29,6 +35,8 @@ public class NewsSpeakDBAdapter {
                 "NAME " + " TEXT PRIMARY KEY, " +
                 "TYPE " + " TEXT, " +
                 "DEFAULTURL " + " TEXT NOT NULL, " +
+                "COUNTRY " + " TEXT NOT NULL, " +
+                "LANGUAGE " + " TEXT NOT NULL, " +
                 "HASCATEGORIES " + " BOOLEAN NOT NULL, " +
                 "SUBSCRIBED " + "BOOLEAN NOT NULL, " +
                 "DISPLAYINDEX " + "INTEGER, " +
@@ -110,10 +118,12 @@ public class NewsSpeakDBAdapter {
     /**
      * Create a new NewsSource record
      */
-    public long createNewsSource(NewsSource source) {
+    public long createNewsSource(NewsSource source) throws SQLException {
     	ContentValues values = new ContentValues();
     	values.put("NAME", source.getTitle());
     	values.put("TYPE", source.getType().toString());
+    	values.put("COUNTRY", source.getLocale().getCountry());
+    	values.put("LANGUAGE", source.getLocale().getLanguage());
     	values.put("DEFAULTURL", source.getDefaultUrl());
     	values.put("HASCATEGORIES", source.isHasCategories());
     	values.put("SUBSCRIBED", true); // When you create a NewsSource we automatically subscribe to it
@@ -133,9 +143,12 @@ public class NewsSpeakDBAdapter {
 	    		values.put("LINK", categoryUrls.get(ii));
 	    		values.put("NAME", source.getTitle());
 	    		
-	    		rowId = mDb.insert(CATEGORIES_TABLE_NAME, null, values);
+	    		rowId = mDb.insertOrThrow(CATEGORIES_TABLE_NAME, null, values);
 			}
 		}
+		
+		// Increment the number of sources
+		++numberOfNewsSources;
     	return rowId;
     }
     
@@ -185,6 +198,7 @@ public class NewsSpeakDBAdapter {
     		}
         }
     	cursor.close();
+    	numberOfNewsSources = sources.size();
     }
     
     /**
@@ -197,26 +211,29 @@ public class NewsSpeakDBAdapter {
 		
 		source.setTitle(cursor.getString(0));
 		source.setType(NewsSource.getType(cursor.getString(1)));
-		source.setDefaultUrl(cursor.getString(2));
-		source.setHasCategories(cursor.getInt(3) != 0 ? true : false);
-		source.setSubscribed(cursor.getInt(4) != 0 ? true : false);
-		source.setDisplayIndex(cursor.getInt(5));
-		source.setPreferred(cursor.getInt(6) != 0 ? true : false);
+		source.setLocale(new Locale(cursor.getString(2), cursor.getString(3)));
+		source.setDefaultUrl(cursor.getString(4));
+		source.setHasCategories(cursor.getInt(5) != 0 ? true : false);
+		source.setSubscribed(cursor.getInt(6) != 0 ? true : false);
+		source.setDisplayIndex(cursor.getInt(7));
+		source.setPreferred(cursor.getInt(8) != 0 ? true : false);
 		
 		return source;
 	}
 
 	/**
-     * Fetch a newspaper
+     * Check if a newspaper exists in the DB
      * @param name
-     * @turn
+     * @return Returns null if the newspaper did not exist, otherwise returns the NewsSource object for that
      */
-    public Cursor fetchNewsPaper(String name) {
-    	Cursor cursor = mDb.query(NEWSPAPERS_TABLE_NAME, new String[] {"NAME"}, null, null, null, null, "NAME ASC");
-    	if (cursor != null) {
+    public NewsSource getNewsPaper(String name) {
+    	Cursor cursor = mDb.query(NEWSPAPERS_TABLE_NAME, new String[] {"NAME"}, "NAME = ?", new String[]{name}, null, null, null);
+    	if (cursor != null && cursor.getCount() != 0) {
     		cursor.moveToFirst();
+        } else {
+        	return null;
         }
-        return cursor;
+    	return getNewsSourceFromCursor(cursor);
     }
     
     /**
@@ -235,6 +252,14 @@ public class NewsSpeakDBAdapter {
      * @param newsSource
      */
 	public int removeNewsSource(NewsSource newsSource) {
-		return mDb.delete(NEWSPAPERS_TABLE_NAME, "NAME = ?", new String[]{newsSource.getTitle()});
+		int rowsAffected = mDb.delete(NEWSPAPERS_TABLE_NAME, "NAME = ?", new String[]{newsSource.getTitle()});
+		if (rowsAffected != 0) {
+			--numberOfNewsSources;
+		}
+		return rowsAffected;
+	}
+	
+	public int getNumberOfNewsSources() {
+		return numberOfNewsSources;
 	}
 }
