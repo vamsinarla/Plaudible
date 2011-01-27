@@ -50,6 +50,7 @@ public final class R {
         public static final int SlidingDrawer=0x7f09000a;
         public static final int add_custom_feed=0x7f090003;
         public static final int add_custom_source=0x7f090025;
+        public static final int add_search_item=0x7f090028;
         public static final int articleListBottomBarIcon=0x7f090008;
         public static final int articleListBottomBarText=0x7f090009;
         public static final int articlelistbottombar=0x7f090007;
@@ -74,6 +75,7 @@ public final class R {
         public static final int results_list=0x7f090023;
         public static final int search_box=0x7f09001e;
         public static final int search_button=0x7f090022;
+        public static final int search_item=0x7f090027;
         public static final int search_layout=0x7f090021;
         public static final int settingsButton=0x7f09001c;
         public static final int shareButton=0x7f09001a;
@@ -97,6 +99,7 @@ public final class R {
         public static final int manage_newssources=0x7f030009;
         public static final int newssources_tabwidget=0x7f03000a;
         public static final int search_page=0x7f03000b;
+        public static final int search_result_item=0x7f03000c;
     }
     public static final class raw {
         public static final int newssources=0x7f050000;
@@ -104,6 +107,7 @@ public final class R {
     public static final class string {
         public static final int add_custom_feed_dialog_title=0x7f080011;
         public static final int add_custom_feed_text=0x7f08000d;
+        public static final int add_item=0x7f08001c;
         public static final int analytics_id=0x7f080006;
         public static final int app_desc=0x7f080004;
         public static final int app_name=0x7f080000;
@@ -111,12 +115,16 @@ public final class R {
         public static final int article_share_subject=0x7f080008;
         public static final int custom_feed_title_edittext_hint=0x7f08000f;
         public static final int custom_feed_url_edittext_hint=0x7f080010;
+        public static final int feed_suggestion_email=0x7f080017;
+        public static final int feedback_mail=0x7f080018;
         public static final int feedback_subject=0x7f080003;
         public static final int help=0x7f080005;
+        public static final int help_title=0x7f080019;
         public static final int invalid_title_message=0x7f080016;
         public static final int invalid_url_message=0x7f080012;
         public static final int loading_articles=0x7f080015;
         public static final int manage_tab_title=0x7f08000a;
+        public static final int ok=0x7f08001a;
         public static final int search_failed=0x7f080014;
         public static final int search_page_search_box_caption=0x7f08000c;
         public static final int search_tab_title=0x7f08000b;
@@ -125,6 +133,7 @@ public final class R {
         public static final int share_subject=0x7f080001;
         public static final int subscribed_tab_title=0x7f080009;
         public static final int suggest_custom_feed_text=0x7f08000e;
+        public static final int unknown_error_message=0x7f08001b;
     }
     public static final class xml {
         public static final int newssourcesdata=0x7f040000;

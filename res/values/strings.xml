@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     
-    <string name="app_name">NewsSpeak</string>
+<string name="app_name">NewsSpeak</string>
 
 <string name="share_subject">Hey! Check out NewsSpeak for Android!</string>
 <string name="share_body">I use NewsSpeak on Android which reads out articles from my favorite news sources! Yes, it speaks!  </string>
@@ -15,10 +15,6 @@
 <string name="manage_tab_title">Manage</string>
 <string name="search_tab_title">Search</string>
 <string name="search_page_search_box_caption">Search our directory</string>
-
-
-
-
 <string name="add_custom_feed_text">Add custom feed</string>
 <string name="suggest_custom_feed_text">Suggest a feed</string>
 <string name="custom_feed_title_edittext_hint">Give a name</string>
@@ -29,4 +25,11 @@
 <string name="search_failed">Search failed</string>
 <string name="loading_articles">Loading articles ...</string>
 <string name="invalid_title_message">Invalid name or name already be in use</string>
+<string name="feed_suggestion_email">suggestion@evecal.appspotmail.com</string>
+<string name="feedback_mail">feedback@evecal.appspotmail.com</string>
+<string name="help_title">Help</string>
+<string name="ok">Ok</string>
+<string name="unknown_error_message">Unknown error occurred</string>
+
+<string name="add_item">Add</string>
 </resources>

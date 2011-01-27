@@ -69,7 +69,7 @@ public class HomePage extends Activity implements TextToSpeech.OnInitListener {
 			@Override
 			public void onClick(View v) {
 				Intent myIntent = new Intent(android.content.Intent.ACTION_SEND);
-				String to[] = { "vamsi.narla+newsspeak@gmail.com" };
+				String to[] = { HomePage.this.getString(R.string.feedback_mail) };
 
 				myIntent.setType("plain/text");
 
@@ -118,10 +118,10 @@ public class HomePage extends Activity implements TextToSpeech.OnInitListener {
         	public void onClick(View v) {
         		AlertDialog alertDialog = new AlertDialog.Builder(HomePage.this).create();
         		
-        		alertDialog.setTitle("Help");
+        		alertDialog.setTitle(HomePage.this.getString(R.string.help_title));
         		alertDialog.setMessage(getApplicationContext().getString(R.string.help));
         		
-        		alertDialog.setButton("OK", new DialogInterface.OnClickListener() {
+        		alertDialog.setButton(HomePage.this.getString(R.string.ok), new DialogInterface.OnClickListener() {
         			@Override
         			public void onClick(DialogInterface dialog, int which) {
         				
@@ -154,8 +154,8 @@ public class HomePage extends Activity implements TextToSpeech.OnInitListener {
     	dbAdapter.open(NewsSpeakDBAdapter.READ_WRITE);
     	
     	// Make a call to AppEngine and get the featured sources
-    	// String link = getString(R.string.appengine_url) + "newssources.xml";
-    	String link = getLocalizedURLForFeaturedSources();
+    	String link = getString(R.string.appengine_url) + "newssources.xml";
+    	// String link = getLocalizedURLForFeaturedSources();
     	
     	try {
         	URL feedUrl = new URL(link);

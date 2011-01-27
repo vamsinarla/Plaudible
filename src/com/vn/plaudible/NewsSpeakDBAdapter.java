@@ -109,6 +109,15 @@ public class NewsSpeakDBAdapter {
     }
     
     /**
+     * Upgrade the Database. THIS FUNCTION IS TO BE USED ONLY IN DEV 
+     */
+    public void upgrade() {
+    	if (mDbHelper != null) {
+    		mDbHelper.onUpgrade(mDb, 0, 1);
+    	}
+    }
+    
+    /**
      * Close the connection
      */
     public void close() {
