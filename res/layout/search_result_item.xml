@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+  xmlns:android="http://schemas.android.com/apk/res/android"
+  android:layout_width="fill_parent"
+  android:layout_height="fill_parent"
+  android:orientation="horizontal">
+
+	<TextView android:id="@+id/search_item"
+	android:layout_width="wrap_content"
+	android:layout_height="fill_parent"
+	android:textColor="@android:color/black"
+	android:textSize="14sp"
+	android:textStyle="bold"
+	android:typeface="serif"
+	android:gravity="left|center_vertical"/>
+	
+	<Button android:id="@+id/add_search_item"
+	android:layout_width="wrap_content"
+	android:layout_height="fill_parent"
+	android:gravity="center_vertical"
+	android:layout_alignParentRight="true"
+	android:drawableLeft="@drawable/add_custom_feed_icon"
+	android:text="@string/add_item"/>
+	  
+</RelativeLayout>
