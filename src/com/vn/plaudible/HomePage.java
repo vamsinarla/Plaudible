@@ -1,8 +1,6 @@
 package com.vn.plaudible;
 
-import java.io.BufferedReader;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Locale;
@@ -162,17 +160,8 @@ public class HomePage extends Activity implements TextToSpeech.OnInitListener {
 	    	ArrayList<NewsSource> sources = new ArrayList<NewsSource>();
 	    	InputStream responseStream = feedUrl.openConnection().getInputStream();
 			
-			BufferedReader reader = new BufferedReader(new InputStreamReader(responseStream));
-			StringBuilder builder = new StringBuilder();
-			String oneLine;
-			
-			while ((oneLine = reader.readLine()) != null) {
-				builder.append(oneLine);
-			}
-			reader.close();
-			
 			// Construct the Array of sources from the JSON String
-			sources = NewsSource.getNewsSourcesFromJSON(builder.toString());
+			sources = NewsSource.getNewsSourcesFromJSON(Utils.getStringFromInputStream(responseStream));
 			
 			// Insert the NewsSources into the localDB
 			for (int index = 0; index < sources.size(); ++index) {

@@ -32,4 +32,5 @@
 <string name="unknown_error_message">Unknown error occurred</string>
 
 <string name="add_item">Add</string>
+<string name="adding_item_progress">Adding ...</string>
 </resources>

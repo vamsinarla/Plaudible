@@ -108,6 +108,7 @@ public final class R {
         public static final int add_custom_feed_dialog_title=0x7f080011;
         public static final int add_custom_feed_text=0x7f08000d;
         public static final int add_item=0x7f08001c;
+        public static final int adding_item_progress=0x7f08001d;
         public static final int analytics_id=0x7f080006;
         public static final int app_desc=0x7f080004;
         public static final int app_name=0x7f080000;

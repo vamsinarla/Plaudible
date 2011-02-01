@@ -1,8 +1,6 @@
 package com.vn.plaudible;
 
-import java.io.BufferedReader;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -93,16 +91,8 @@ public class SearchPage extends Activity {
 				try {
 					URL searchURL = new URL(searchURLString);
 					InputStream responseStream = searchURL.openConnection().getInputStream();
-					BufferedReader reader = new BufferedReader(new InputStreamReader(responseStream));
-					StringBuilder builder = new StringBuilder();
-					String oneLine;
 					
-					while ((oneLine = reader.readLine()) != null) {
-						builder.append(oneLine);
-					}
-					reader.close();
-					
-					searchResults = new JSONObject(builder.toString());
+					searchResults = new JSONObject(Utils.getStringFromInputStream(responseStream));
 					
 				} catch (Exception exception) {
 					exception.printStackTrace();
@@ -310,8 +300,11 @@ public class SearchPage extends Activity {
 				public void onClick(View v) {
 					// Get the title of the source to be added
 					String title = (String) v.getTag();
+					
 					// Show spinner
-					showSpinningWheel("", "Adding ...", ADDING_TIMEOUT);
+					showSpinningWheel("", SearchPage.this.getString(R.string.adding_item_progress),
+							ADDING_TIMEOUT);
+					
 					// Fetch the NewsSource object from AppEngine
 					String link = getString(R.string.appengine_url) + "fetchSource";
 					link += "?sourceName=" + title;
@@ -321,20 +314,14 @@ public class SearchPage extends Activity {
 						URL fetchUrl = new URL(link);
 						InputStream responseStream = fetchUrl.openConnection().getInputStream();
 						
-						BufferedReader reader = new BufferedReader(new InputStreamReader(responseStream));
-						StringBuilder builder = new StringBuilder();
-						String oneLine;
-						
-						while ((oneLine = reader.readLine()) != null) {
-							builder.append(oneLine);
-						}
-						reader.close();
-						
 						// Decode the JSON object
-						NewsSource source = NewsSource.getNewsSourceFromJSON(builder.toString());
+						NewsSource source = NewsSource.getNewsSourceFromJSON(Utils.getStringFromInputStream(responseStream));
+						
 						// Add to DB
 						mDbAdapter = new NewsSpeakDBAdapter(SearchPage.this);
 						mDbAdapter.open(NewsSpeakDBAdapter.READ_WRITE);
+						mDbAdapter.createNewsSource(source);
+						mDbAdapter.close();
 						
 					} catch (Exception exception) {
 						Toast.makeText(SearchPage.this, R.string.unknown_error_message, Toast.LENGTH_SHORT)

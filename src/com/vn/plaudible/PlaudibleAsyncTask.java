@@ -1,8 +1,6 @@
 package com.vn.plaudible;
 
-import java.io.BufferedReader;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
@@ -58,9 +56,6 @@ public class PlaudibleAsyncTask extends AsyncTask<PlaudibleAsyncTask.Payload, Ar
 		String category;
 		
 		InputStream responseStream;
-		BufferedReader reader;
-		StringBuilder builder;
-		String oneLine;		
 		
 		try {
 			SAXParser parser = factory.newSAXParser();
@@ -116,16 +111,9 @@ public class PlaudibleAsyncTask extends AsyncTask<PlaudibleAsyncTask.Payload, Ar
 						// Get the response from AppEngine
 						URL articleUrl = new URL(source);
 						responseStream = articleUrl.openConnection().getInputStream();
-						reader = new BufferedReader(new InputStreamReader(responseStream));
-						builder = new StringBuilder();
-						
-						while ((oneLine = reader.readLine()) != null) {
-							builder.append(oneLine);
-						}
-						reader.close();
 						
 						// Set the params for the article and mark as downloaded
-						articles.get(index).setContent(builder.toString());
+						articles.get(index).setContent(Utils.getStringFromInputStream(responseStream));
 						articles.get(index).setDownloaded(true);
 						payload.result = new String("Downloaded");
 					}
