@@ -107,9 +107,7 @@ public class Plaudible extends ListActivity {
         		new PlaudibleAsyncTask.Payload(
         				PlaudibleAsyncTask.FEED_DOWNLOADER_TASK,
         				new Object[] { Plaudible.this,
-        								currentNewsSource.getTitle(),
-        								(currentNewsSource.isHasCategories() ? 
-        								 currentNewsSource.getCurrentCategoryName() : null), 
+        								currentNewsSource,
         								articles }));
         bindSpeechService();
     }
@@ -221,10 +219,8 @@ public class Plaudible extends ListActivity {
 	        		new PlaudibleAsyncTask.Payload(
 	        				PlaudibleAsyncTask.FEED_DOWNLOADER_TASK,
 	        				new Object[] { Plaudible.this,
-	        								currentNewsSource.getTitle(),
-	        								(currentNewsSource.isHasCategories() ? // Check category existence
-	        								 categories.get(holder.position) : null),
-	        								 articles }));
+	        								currentNewsSource,
+	        								articles }));
 	   }
    }
    
@@ -340,7 +336,7 @@ public class Plaudible extends ListActivity {
 										   new Object[] { Plaudible.this,
 												   			position,
 												   			articles,
-												   			currentNewsSource.getTitle() }));
+												   			currentNewsSource }));
 						    
 						    // Track the event of article being spoken out
 							tracker.trackEvent("article", "speak", currentNewsSource.getTitle(), 0);

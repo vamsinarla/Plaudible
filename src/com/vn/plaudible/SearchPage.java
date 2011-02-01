@@ -168,6 +168,7 @@ public class SearchPage extends Activity {
 						// Verify the URL
 						EditText feedURLEditBox = (EditText) dialog.findViewById(R.id.custom_feed_url);
 						try {
+							@SuppressWarnings("unused")
 							URL feedURL = new URL(feedURLEditBox.getText().toString());
 						} catch (MalformedURLException exception) {
 							Toast.makeText(dialog.getContext(), R.string.invalid_url_message, Toast.LENGTH_SHORT)
@@ -186,7 +187,7 @@ public class SearchPage extends Activity {
 							return;
 						}
 						// Create a newsSource and then add it to the DB
-						NewsSource customSource = new NewsSource(titleEditBox.getText().toString(), 
+						NewsSource customSource = new NewsSource(customFeedTitle.toString(), 
 																	SourceType.BLOG.toString(),
 																	Locale.getDefault().getDisplayLanguage(),
 																	Locale.getDefault().getCountry(),

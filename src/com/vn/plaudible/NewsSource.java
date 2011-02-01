@@ -332,4 +332,18 @@ public class NewsSource implements Serializable {
 	public void setSubscribed(boolean subscribed) {
 		this.subscribed = subscribed;
 	}
+
+	/**
+	 * Return the correct relevant URL.
+	 * Which is the defaultURL for no categories or the URL
+	 * of the current category for the newssource
+	 * @return
+	 */
+	public String getCurrentURL() {
+		if (!isHasCategories()) {
+			return this.defaultUrl;
+		} else {
+			return this.categoryUrls.get(this.currentCategory);
+		}
+	}
 }

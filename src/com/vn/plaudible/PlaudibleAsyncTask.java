@@ -1,8 +1,10 @@
 package com.vn.plaudible;
 
 import java.io.InputStream;
+import java.io.OutputStreamWriter;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 
@@ -33,7 +35,7 @@ public class PlaudibleAsyncTask extends AsyncTask<PlaudibleAsyncTask.Payload, Ar
 			
 			switch (payload.taskType) {
 			case FEED_DOWNLOADER_TASK:
-				activity.setArticles((ArrayList<Article>) payload.data[3]);
+				activity.setArticles((ArrayList<Article>) payload.data[2]);
 				break;
 			case ARTICLE_DOWNLOADER_TASK:
 				break;
@@ -52,10 +54,9 @@ public class PlaudibleAsyncTask extends AsyncTask<PlaudibleAsyncTask.Payload, Ar
 		PlaudibleAsyncTask.Payload payload = params[0];
 		Plaudible activity = (Plaudible) payload.data[0];
 		ArrayList<Article> articles;
-		String source;
-		String category;
-		
+		NewsSource source;
 		InputStream responseStream;
+		String link;
 		
 		try {
 			SAXParser parser = factory.newSAXParser();
@@ -63,27 +64,27 @@ public class PlaudibleAsyncTask extends AsyncTask<PlaudibleAsyncTask.Payload, Ar
 			switch (payload.taskType) {
 			case FEED_DOWNLOADER_TASK:
 				// Extract the URL and arraylist of articles from the payload data
-				source = (String) payload.data[1];
-				category = (String) payload.data[2];
-				articles = (ArrayList<Article>) payload.data[3];
-				
-				// encode the source into UTF 8
-				source = URLEncoder.encode(source, "UTF-8");
+				source = (NewsSource) payload.data[1];
+				articles = (ArrayList<Article>) payload.data[2];
 				
 				// Construct the URL for calling the FeedServlet on AppEngine. Latest version of
 				// app engine URL must be in strings.xml
-				source = activity.getString(R.string.appengine_url) + "feed?newspaper=" + source;
+				link = activity.getString(R.string.appengine_url) + "feed2";
 				
-				// Add the category param, be very very cautious here
-				if (category != null) {
-					// add category
-					source += "&category=" + category;
-				}
+				// POST args
+				String args = URLEncoder.encode("feedLink") + "=" + 
+								URLEncoder.encode(source.getCurrentURL());
 				
 				// Construct the FeedHandler(SAXParser) and parse the response from AppEngine
-				URL feedUrl = new URL(source);
+				URL feedUrl = new URL(link);
 				FeedHandler feedHandler = new FeedHandler(articles);
-				responseStream = feedUrl.openConnection().getInputStream();
+				URLConnection conn = feedUrl.openConnection();
+				// Write the POST vars
+				conn.setDoOutput(true);
+				OutputStreamWriter wr = new OutputStreamWriter(conn.getOutputStream());
+			    wr.write(args);
+			    
+				responseStream = conn.getInputStream();
 				parser.parse(responseStream, feedHandler);
 				
 				// Write Success
@@ -93,23 +94,21 @@ public class PlaudibleAsyncTask extends AsyncTask<PlaudibleAsyncTask.Payload, Ar
 				// Extract the index of the article and the arraylist of articles
 				Integer position = (Integer) payload.data[1];
 				articles = (ArrayList<Article>) payload.data[2];
-				source = (String) payload.data[3];
+				source = (NewsSource) payload.data[3];
 				
 				for (int index = position; /*index < articles.size()*/ index <= position; ++index) {
 					
 					// Download the article only if it hasn't been till yet
 					if (articles.get(index).isDownloaded() == false) {
 					
-						// encode the source into UTF 8
-						source = URLEncoder.encode(source, "UTF-8");
-						
 						// Construct the AppEngine URL for the ArticleServlet
-						source = activity.getString(R.string.appengine_url) + "/article?source=" + source;
-						source += "&link=" + articles.get(position).getUrl();
-						source += "&type=text"; // We want only text for reading
+						link = activity.getString(R.string.appengine_url) + "/article?source="; 
+						link += source.getTitle();
+						link += "&link=" + articles.get(position).getUrl();
+						link += "&type=text"; // We want only text for reading
 						
 						// Get the response from AppEngine
-						URL articleUrl = new URL(source);
+						URL articleUrl = new URL(link);
 						responseStream = articleUrl.openConnection().getInputStream();
 						
 						// Set the params for the article and mark as downloaded
