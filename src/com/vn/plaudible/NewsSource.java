@@ -5,6 +5,10 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Locale;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 /**
  * Class for representing a news source.
  * Implements serializable so it can be passed as Intent extras
@@ -41,7 +45,8 @@ public class NewsSource implements Serializable {
 	 */
 	private String title;
 	private SourceType type;
-	private Locale locale;
+	private String language;
+	private String country;
 	private boolean hasCategories;
 	private Integer currentCategory;
 	private boolean subscribed;
@@ -51,6 +56,76 @@ public class NewsSource implements Serializable {
 	private ArrayList<String> categoryUrls;
 	private ArrayList<String> categories;
 	
+	/**
+	 * Static method to construct NewsSources array from JSON
+	 * The methods that will NOT be set are
+	 * displayIndex, subscribed
+	 * @throws JSONException 
+	 */
+	public static ArrayList<NewsSource> getNewsSourcesFromJSON(String objectString)
+	throws JSONException {
+		ArrayList<NewsSource> sources = new ArrayList<NewsSource> ();
+		
+		JSONObject root = new JSONObject(objectString);
+		
+		if (root.has("sources")) {
+			JSONArray sourcesArray = new JSONArray();
+			sourcesArray = root.getJSONArray("sources");
+			
+			for (int index = 0; index < sourcesArray.length(); ++index) {
+				sources.add(getNewsSourceFromJSON(sourcesArray.getString(index)));
+			}
+		} else {
+			throw new JSONException("JSON was incorrect");
+		}
+		
+		return sources;
+	}
+	
+	/**
+	 * Static method to construct a NewsSource object from JSON
+	 * The methods that will NOT be set are
+	 * displayIndex, subscribed
+	 * @throws JSONException 
+	 */
+	public static NewsSource getNewsSourceFromJSON(String objectString)
+	throws JSONException {
+		JSONObject object = new JSONObject(objectString);
+		NewsSource source = new NewsSource();
+		
+		source.setTitle(object.getString("title"));
+		source.setType(object.getString("type"));
+		source.setHasCategories(object.getBoolean("hasCategories"));
+		source.setDefaultUrl(object.getString("defaultUrl"));
+		source.setLanguage(object.getString("language"));
+		source.setCountry(object.getString("country"));
+		
+		if (source.isHasCategories()) {
+			// Build the array list of categories
+			ArrayList<String> javaList = new ArrayList<String>();
+			JSONArray jsonList = object.getJSONArray("categories");
+			for (int i = 0; i < jsonList.length(); ++i) {
+				javaList.add(jsonList.getString(i));
+			}
+			source.setCategories(javaList);
+			
+			// Build the array list of category urls
+			javaList = new ArrayList<String>();
+			jsonList = object.getJSONArray("categoryUrls");
+			for (int i = 0; i < jsonList.length(); ++i) {
+				javaList.add(jsonList.getString(i));
+			}
+			source.setCategoryUrls(javaList);
+		}
+		
+		source.setPreferred(object.getBoolean("preferred"));
+		
+		return source;
+	}
+	
+	/**
+	 * Default Ctor
+	 */
 	public NewsSource() {
 		this.title = null;
 		this.type = SourceType.INVALID;
@@ -62,16 +137,32 @@ public class NewsSource implements Serializable {
 		this.displayIndex = DISPLAYINDEX_NOTSET;
 		this.preferred = false;
 		this.subscribed = false;
-		this.locale = Locale.getDefault();
+		this.language = Locale.getDefault().getLanguage();
+		this.country = Locale.getDefault().getCountry();
 	}
 	
-	public NewsSource(String title, String type, Locale locale, boolean hasCategories, ArrayList<String> categories,
+	/**
+	 * Construct it properly
+	 * @param title
+	 * @param type
+	 * @param language
+	 * @param country
+	 * @param hasCategories
+	 * @param categories
+	 * @param categoryURLs
+	 * @param defaultUrl
+	 * @param preferred
+	 * @param subscribed
+	 * @param displayIndex
+	 */
+	public NewsSource(String title, String type, String language, String country, boolean hasCategories, ArrayList<String> categories,
 			ArrayList<String> categoryURLs, String defaultUrl, boolean preferred, boolean subscribed,
 			Integer displayIndex) {
 		
 		this.title = title;
 		this.type = getType(type);
-		this.locale = locale;
+		this.language = language;
+		this.country = country;
 		this.hasCategories = hasCategories;
 		this.categories = categories;
 		this.categoryUrls = categoryURLs;
@@ -83,12 +174,20 @@ public class NewsSource implements Serializable {
 		this.currentCategory = 0;
 	}
 
-	public Locale getLocale() {
-		return locale;
+	public String getLanguage() {
+		return language;
 	}
 
-	public void setLocale(Locale locale) {
-		this.locale = locale;
+	public void setLanguage(String language) {
+		this.language = language;
+	}
+
+	public String getCountry() {
+		return country;
+	}
+
+	public void setCountry(String country) {
+		this.country = country;
 	}
 
 	public String getCurrentCategoryName() {

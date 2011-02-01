@@ -41,18 +41,24 @@ import com.vn.plaudible.NewsSource.SourceType;
  */
 public class SearchPage extends Activity {
 
+	// Spinner timeouts
 	protected static final long SEARCHING_TIMEOUT = 10000;
+	protected static final long ADDING_TIMEOUT = 5000;
 
 	private ProgressDialog spinningWheel;
 	
 	// Adapter holding the search results
 	private SearchResultsAdapter mResultsAdapter;
 	
+	// ViewHolder pattern
 	static class ViewHolder {
 		TextView title;
 		Button addButton; 
 	}
 	
+	/**
+	 * onCreate for activity
+	 */
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		
@@ -70,11 +76,14 @@ public class SearchPage extends Activity {
 		searchButton.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View view) {
+				// Clear the current results of a previous search
+				mResultsAdapter.clear();
+				
 				JSONObject searchResults = null;
 				
 				EditText searchEditText = (EditText) SearchPage.this.findViewById(R.id.search_box);
 				String searchTerm = searchEditText.getEditableText().toString();
-				
+				// Construct the URL for search
 				String searchURLString = getString(R.string.appengine_url) + "search?searchTerm=";
 				searchURLString += searchTerm;
 				
@@ -108,9 +117,12 @@ public class SearchPage extends Activity {
 						throw new Exception("Failed to Search");
 					}
 					
+					// Add the results into the adapter 
 					for (int index = 0; index < resultsSize; ++index) {
 						mResultsAdapter.add(items.getString(index));
 					}
+					mResultsAdapter.notifyDataSetChanged();
+					
 				} catch (Exception exception) {
 					Toast.makeText(SearchPage.this, R.string.unknown_error_message, Toast.LENGTH_SHORT)
 					.show();
@@ -157,7 +169,7 @@ public class SearchPage extends Activity {
 						Editable customFeedTitle = titleEditBox.getText();
 						
 						// Edittext cannot be empty
-						if (titleEditBox.getText().toString().contentEquals("")) {
+						if (titleEditBox.getText().toString().trim().contentEquals("")) {
 							Toast.makeText(dialog.getContext(), R.string.invalid_title_message, Toast.LENGTH_SHORT)
 							.show();
 							return;
@@ -186,7 +198,8 @@ public class SearchPage extends Activity {
 						// Create a newsSource and then add it to the DB
 						NewsSource customSource = new NewsSource(titleEditBox.getText().toString(), 
 																	SourceType.BLOG.toString(),
-																	Locale.getDefault(),
+																	Locale.getDefault().getDisplayLanguage(),
+																	Locale.getDefault().getCountry(),
 																	false,
 																	null,
 																	null,
@@ -201,7 +214,8 @@ public class SearchPage extends Activity {
 						} catch (SQLException exception) {
 							Toast.makeText(dialog.getContext(), R.string.unknown_error_message, Toast.LENGTH_SHORT)
 							.show();
-							return;
+						} finally {
+							mDbAdapter.close();
 						}
 					}
 				});
@@ -271,12 +285,67 @@ public class SearchPage extends Activity {
 		 */
 		@Override
 		public View getView(int position, View convertView, ViewGroup parent) {
+			ViewHolder holder;
+			
+			if (getCount() == 0) {
+				return null;
+			}
 			
 			if (convertView == null) {
 				LayoutInflater inflater = (LayoutInflater)getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 				convertView = inflater.inflate(R.layout.search_result_item, null);
 				
+				holder = new ViewHolder();
+				holder.title = (TextView) convertView.findViewById(R.id.search_item);
+				holder.addButton = (Button) convertView.findViewById(R.id.add_search_item);
+				
+				convertView.setTag(holder);
+			} else {
+				holder = (ViewHolder) convertView.getTag();
 			}
+			holder.title.setText(getItem(position));
+			holder.addButton.setTag(getItem(position));
+			holder.addButton.setOnClickListener(new View.OnClickListener() {
+				@Override
+				public void onClick(View v) {
+					// Get the title of the source to be added
+					String title = (String) v.getTag();
+					// Show spinner
+					showSpinningWheel("", "Adding ...", ADDING_TIMEOUT);
+					// Fetch the NewsSource object from AppEngine
+					String link = getString(R.string.appengine_url) + "fetchSource";
+					link += "?sourceName=" + title;
+					
+					NewsSpeakDBAdapter mDbAdapter = null;
+					try {
+						URL fetchUrl = new URL(link);
+						InputStream responseStream = fetchUrl.openConnection().getInputStream();
+						
+						BufferedReader reader = new BufferedReader(new InputStreamReader(responseStream));
+						StringBuilder builder = new StringBuilder();
+						String oneLine;
+						
+						while ((oneLine = reader.readLine()) != null) {
+							builder.append(oneLine);
+						}
+						reader.close();
+						
+						// Decode the JSON object
+						NewsSource source = NewsSource.getNewsSourceFromJSON(builder.toString());
+						// Add to DB
+						mDbAdapter = new NewsSpeakDBAdapter(SearchPage.this);
+						mDbAdapter.open(NewsSpeakDBAdapter.READ_WRITE);
+						
+					} catch (Exception exception) {
+						Toast.makeText(SearchPage.this, R.string.unknown_error_message, Toast.LENGTH_SHORT)
+						.show();
+					} finally {
+						mDbAdapter.close();
+						suspendSpinningWheel();
+					}
+				}
+			});
+			
 			return convertView;
 		}
 	}
@@ -294,9 +363,11 @@ public class SearchPage extends Activity {
 		 *  Suspend the spinning wheel after some time.
 		 */
 		public void onFinish() {
-			suspendSpinningWheel();
-			Toast.makeText(SearchPage.this, getString(R.string.search_failed), Toast.LENGTH_SHORT)
-				.show();
+			if (spinningWheel.isShowing()) {
+				spinningWheel.cancel();
+				Toast.makeText(SearchPage.this, getString(R.string.search_failed), Toast.LENGTH_SHORT)
+					.show();
+			}
 		}
 		/**
 		 *  Do nothing here

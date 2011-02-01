@@ -122,9 +122,14 @@ public class ReorderNewsSourcesPage extends ListActivity {
 	
 	/**
 	 * Populate the sources from the DB
+	 * We are NOT fetching the entire NewsSource object rather
+	 * only the title and the display index which is what we need
+	 * at this activity level. Do lazy fetch when people click
+	 * on an article.
 	 */
 	private void populateSubscribedSourcesFromDB() throws SQLException {
-		mDbAdapter.fetchAllNewsPapers(allSources, true); // Get only NewsSources we have subscribed to	
+		// Get only titles and displayIndexes for subscribed NewsSources
+		mDbAdapter.fetchAllNewsPapers(allSources, " NAME, TYPE, DISPLAYINDEX ", false); 			
 	}
 	
 	/**

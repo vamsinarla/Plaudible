@@ -1,12 +1,11 @@
 package com.vn.plaudible;
 
+import java.io.BufferedReader;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Locale;
-
-import javax.xml.parsers.SAXParser;
-import javax.xml.parsers.SAXParserFactory;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -154,26 +153,31 @@ public class HomePage extends Activity implements TextToSpeech.OnInitListener {
     	dbAdapter.open(NewsSpeakDBAdapter.READ_WRITE);
     	
     	// Make a call to AppEngine and get the featured sources
-    	String link = getString(R.string.appengine_url) + "newssources.xml";
-    	// String link = getLocalizedURLForFeaturedSources();
+    	String link = getURLForFeaturedSources();
     	
     	try {
         	URL feedUrl = new URL(link);
 
-	    	SAXParserFactory factory = SAXParserFactory.newInstance();
-			SAXParser parser = factory.newSAXParser();
-	    	
-			// Parse the response stream from AppEngine
+        	// Parse the response stream from AppEngine
 	    	ArrayList<NewsSource> sources = new ArrayList<NewsSource>();
-	    	NewsSourceHandler sourcesHandler = new NewsSourceHandler(sources);
-			InputStream responseStream = feedUrl.openConnection().getInputStream();
-			parser.parse(responseStream, sourcesHandler);
+	    	InputStream responseStream = feedUrl.openConnection().getInputStream();
+			
+			BufferedReader reader = new BufferedReader(new InputStreamReader(responseStream));
+			StringBuilder builder = new StringBuilder();
+			String oneLine;
+			
+			while ((oneLine = reader.readLine()) != null) {
+				builder.append(oneLine);
+			}
+			reader.close();
+			
+			// Construct the Array of sources from the JSON String
+			sources = NewsSource.getNewsSourcesFromJSON(builder.toString());
 			
 			// Insert the NewsSources into the localDB
 			for (int index = 0; index < sources.size(); ++index) {
 				// Set the display index
 				sources.get(index).setDisplayIndex(index);
-				
 				dbAdapter.createNewsSource(sources.get(index));
 			}
 			
@@ -184,10 +188,20 @@ public class HomePage extends Activity implements TextToSpeech.OnInitListener {
     	}
     }
 
-	private String getLocalizedURLForFeaturedSources() {
-		Locale currentLocale = Locale.getDefault();
-		String country = currentLocale.getCountry();
-		return country;
+    /**
+     * We must construct the URL for the featured sources which are
+     * used first time the app are called
+     * @return
+     */
+	private String getURLForFeaturedSources() {
+		String country = Locale.getDefault().getCountry();
+		String language = Locale.getDefault().getLanguage();
+		
+		String url = getString(R.string.appengine_url) + "/featuredSources?";
+		url += "country=" + country;
+		url += "&language=" + language;
+		
+		return url;
 	}
 
 	/**
@@ -202,7 +216,7 @@ public class HomePage extends Activity implements TextToSpeech.OnInitListener {
     		editor.putBoolean("FirstRun", false);
     		editor.commit();
     	}
-     	return true;
+     	return result;
 	}
 
 	/**

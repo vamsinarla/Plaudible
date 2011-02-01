@@ -1,7 +1,6 @@
 package com.vn.plaudible;
 
 import java.util.ArrayList;
-import java.util.Locale;
 
 import android.content.ContentValues;
 import android.content.Context;
@@ -131,8 +130,8 @@ public class NewsSpeakDBAdapter {
     	ContentValues values = new ContentValues();
     	values.put("NAME", source.getTitle());
     	values.put("TYPE", source.getType().toString());
-    	values.put("COUNTRY", source.getLocale().getCountry());
-    	values.put("LANGUAGE", source.getLocale().getLanguage());
+    	values.put("COUNTRY", source.getCountry());
+    	values.put("LANGUAGE", source.getLanguage());
     	values.put("DEFAULTURL", source.getDefaultUrl());
     	values.put("HASCATEGORIES", source.isHasCategories());
     	values.put("SUBSCRIBED", true); // When you create a NewsSource we automatically subscribe to it
@@ -162,34 +161,38 @@ public class NewsSpeakDBAdapter {
     }
     
     /**
-     * Fetch all newspapers.
+     * Fetch all newspapers, corresponding to particular selection criteria.
+     * To filter out certain columns only
+     * @param sources The Arraylist to populate
+     * @param columns The columns to fetch. Put * for all columns and comma separated list otherwise
+     * @param fetchFullObject true or false since this function is dumb enough
+     * 			not to understand / infer from columns arg
      */
-    public void fetchAllNewsPapers(ArrayList<NewsSource> sources, boolean subscribedFilter) {
-    	// TODO: Order by display order index and dont filter on columns since we need to
-    	// use the newssource object (in entirety) as intent to the Plaudible class for example.
-    	Cursor cursor = mDb.rawQuery("SELECT * FROM " +
+    public void fetchAllNewsPapers(ArrayList<NewsSource> sources, String columns, boolean fetchFullObject) {
+    	// Filtering based on columns
+    	Cursor cursor = mDb.rawQuery("SELECT " +  columns + " FROM " +
     								NEWSPAPERS_TABLE_NAME +
     								" WHERE SUBSCRIBED <> ? " +
     								" ORDER BY DISPLAYINDEX ASC",
     								new String[] { "0" });
 
     	NewsSource source;
-    	
     	// Iterate over the NewsSources and append to list.
     	if (cursor != null && cursor.moveToFirst()) {
     		while (cursor.isAfterLast() == false) {
-    			source = getNewsSourceFromCursor(cursor);
+    			// We are asking for a full object or not
+    			source = getNewsSourceFromCursor(cursor, fetchFullObject);
     			sources.add(source);
     			cursor.moveToNext();
     			
     			// Complete building the NewsSource object with categories
-    			// TODO: Optimize this to either be lazy or structure the Query acc.
-    			if (source.isHasCategories()) {
+    			if (fetchFullObject && source.isHasCategories()) {
     				// Get all the categories belonging to the newssource and in the same 
     				// order they were inserted into the DB. That is the order we want them
     				// displayed, not have them sorted lexicographically.
     				String query = "SELECT * FROM " + CATEGORIES_TABLE_NAME + " WHERE NAME = ? ORDER BY ROWID";
-    				
+
+    				// Generate the query
     				Cursor categoryCursor = mDb.rawQuery(query, new String[] { source.getTitle() });
     				ArrayList <String> names = new ArrayList<String>();
     				ArrayList <String> urls = new ArrayList<String>();
@@ -203,46 +206,96 @@ public class NewsSpeakDBAdapter {
     					source.setCategories(names);
     					source.setCategoryUrls(urls);
     				}
+    				// Close the cursor
+    				categoryCursor.close();
     			}
     		}
         }
+    	
+    	// Close the cursor
     	cursor.close();
     	numberOfNewsSources = sources.size();
     }
     
     /**
      * Get a NewsSource object from a Cursor
+     * TODO make this function more robust
      * @param cursor
      * @return
      */
-    private NewsSource getNewsSourceFromCursor(Cursor cursor) {
-		NewsSource source = new NewsSource();
-		
-		source.setTitle(cursor.getString(0));
-		source.setType(NewsSource.getType(cursor.getString(1)));
-		source.setLocale(new Locale(cursor.getString(2), cursor.getString(3)));
-		source.setDefaultUrl(cursor.getString(4));
-		source.setHasCategories(cursor.getInt(5) != 0 ? true : false);
-		source.setSubscribed(cursor.getInt(6) != 0 ? true : false);
-		source.setDisplayIndex(cursor.getInt(7));
-		source.setPreferred(cursor.getInt(8) != 0 ? true : false);
-		
-		return source;
+    private NewsSource getNewsSourceFromCursor(Cursor cursor, boolean isFullObject) {
+    	if (!isFullObject) {
+    		NewsSource source = new NewsSource();
+    		
+    		source.setTitle(cursor.getString(0));
+    		source.setType(cursor.getString(1));
+    		source.setDisplayIndex(cursor.getInt(2));
+    		
+    		return source;
+    	} else if (cursor.getColumnCount() < 9) { // We need these many for full object
+			return null;
+		} else { // Ok, we have been asked for a full object and we have the columns
+			NewsSource source = new NewsSource();
+			
+			source.setTitle(cursor.getString(0));
+			source.setType(NewsSource.getType(cursor.getString(1)));
+			source.setDefaultUrl(cursor.getString(2));
+			source.setCountry(cursor.getString(3));
+			source.setLanguage(cursor.getString(4));
+			source.setHasCategories(cursor.getInt(5) != 0 ? true : false);
+			source.setSubscribed(cursor.getInt(6) != 0 ? true : false);
+			source.setDisplayIndex(cursor.getInt(7));
+			source.setPreferred(cursor.getInt(8) != 0 ? true : false);
+			
+			return source;
+		}
 	}
 
 	/**
-     * Check if a newspaper exists in the DB
+     * Check if a newspaper exists in the DB and return if it does.
+     * This function ALWAYS returns the complete object
      * @param name
-     * @return Returns null if the newspaper did not exist, otherwise returns the NewsSource object for that
+     * @return Returns null if the newspaper did not exist, otherwise returns the COMPLETE NewsSource object for that
      */
     public NewsSource getNewsPaper(String name) {
-    	Cursor cursor = mDb.query(NEWSPAPERS_TABLE_NAME, new String[] {"NAME"}, "NAME = ?", new String[]{name}, null, null, null);
+    	Cursor cursor = mDb.query(NEWSPAPERS_TABLE_NAME, null, "NAME = ?", new String[]{name}, null, null, null);
     	if (cursor != null && cursor.getCount() != 0) {
     		cursor.moveToFirst();
         } else {
+        	cursor.close();
         	return null;
         }
-    	return getNewsSourceFromCursor(cursor);
+    	
+    	NewsSource source = getNewsSourceFromCursor(cursor, true);
+    	
+    	// Complete building the NewsSource object with categories info.
+		if (source.isHasCategories()) {
+			// Get all the categories belonging to the newssource and in the same 
+			// order they were inserted into the DB. That is the order we want them
+			// displayed, not have them sorted lexicographically.
+			String query = "SELECT * FROM " + CATEGORIES_TABLE_NAME + " WHERE NAME = ? ORDER BY ROWID";
+
+			// Generate the query
+			Cursor categoryCursor = mDb.rawQuery(query, new String[] { source.getTitle() });
+			ArrayList <String> names = new ArrayList<String>();
+			ArrayList <String> urls = new ArrayList<String>();
+			
+			if (categoryCursor != null && categoryCursor.moveToFirst()) {
+				while (categoryCursor.isAfterLast() == false) {
+					names.add(categoryCursor.getString(0));
+					urls.add(categoryCursor.getString(2));
+					categoryCursor.moveToNext();
+				}
+				source.setCategories(names);
+				source.setCategoryUrls(urls);
+			}
+			// Close the cursor
+			categoryCursor.close();
+		}
+		cursor.close();
+    	
+    	// Get newspaper should always get full object
+    	return source;
     }
     
     /**
@@ -268,6 +321,10 @@ public class NewsSpeakDBAdapter {
 		return rowsAffected;
 	}
 	
+	/**
+	 * Cache the numbder of subscribed sources to prevent frequent DB access
+	 * @return
+	 */
 	public int getNumberOfNewsSources() {
 		return numberOfNewsSources;
 	}

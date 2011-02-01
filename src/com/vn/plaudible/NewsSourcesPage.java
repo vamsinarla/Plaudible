@@ -1,12 +1,9 @@
 package com.vn.plaudible;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import org.xmlpull.v1.XmlPullParserException;
 
 import android.app.ListActivity;
 import android.content.ComponentName;
@@ -14,7 +11,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.res.Configuration;
-import android.content.res.XmlResourceParser;
 import android.database.SQLException;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -69,7 +65,12 @@ public class NewsSourcesPage extends ListActivity {
         
         filterText = (EditText) findViewById(R.id.search_box);
         filterText.addTextChangedListener(filterTextWatcher);
-        
+
+		if (mDbAdapter == null) {
+			mDbAdapter = new NewsSpeakDBAdapter(this);
+		    mDbAdapter.open(NewsSpeakDBAdapter.READ_WRITE);
+		}
+		
         bindSpeechService();
     }
 		
@@ -90,11 +91,6 @@ public class NewsSourcesPage extends ListActivity {
 	@Override
 	protected void onResume() {
 		super.onResume();
-		
-		if (mDbAdapter == null) {
-			mDbAdapter = new NewsSpeakDBAdapter(this);
-		    mDbAdapter.open(NewsSpeakDBAdapter.READ_WRITE);
-		}
 		
 		// Clear the adapter data first
 		allSources.clear();
@@ -131,48 +127,17 @@ public class NewsSourcesPage extends ListActivity {
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
     }
-
-    /**
-     * Read XML resources in order to populate list of blogs and newspapers that we support
-     * @throws XmlPullParserException
-     * @throws IOException
-     */
-	private void populateSourcesFromXML() throws XmlPullParserException, IOException {
-		XmlResourceParser parser = getResources().getXml(R.xml.newssourcesdata);	
-		NewsSource source = null;
-		
-		int eventType = parser.getEventType();
-		while (eventType != XmlResourceParser.END_DOCUMENT) {
-			if(eventType == XmlResourceParser.START_DOCUMENT) {
-	              System.out.println("Start document");
-	          } else if(eventType == XmlResourceParser.END_DOCUMENT) {
-	              System.out.println("End document");
-	          } else if(eventType == XmlResourceParser.START_TAG) {
-	        	  if (parser.getName().equalsIgnoreCase("Item")) {
-	        		  source = new NewsSource();
-	        	  } else if (parser.getName().equalsIgnoreCase("Title")) {
-	        		  source.setTitle(parser.nextText());
-	        	  } else if (parser.getName().equalsIgnoreCase("Type")) {
-	        		  source.setType(NewsSource.getType(parser.nextText()));
-	        	  } else if (parser.getName().equalsIgnoreCase("Categories")) {
-	        		  source.setHasCategories(parser.nextText().equalsIgnoreCase("true") ? true : false);
-	        	  } 
-	          } else if(eventType == XmlResourceParser.END_TAG) {
-	              if (parser.getName().equalsIgnoreCase("Item")) {
-	            	  allSources.add(source);
-	              }
-	          } else if(eventType == XmlResourceParser.TEXT) {
-	              System.out.println("Text " + parser.getText());
-	          }
-	          eventType = parser.next();
-	         }
-	}
 	
 	/**
 	 * Populate the sources from the DB
+	 * We are NOT fetching the entire NewsSource object rather
+	 * only the title and the display index which is what we need
+	 * at this activity level. Do lazy fetch when people click
+	 * on an article.
 	 */
 	private void populateSubscribedSourcesFromDB() throws SQLException {
-		mDbAdapter.fetchAllNewsPapers(allSources, true); // Get only NewsSources we have subscribed to			
+		// Get only titles and displayIndexes for subscribed NewsSources
+		mDbAdapter.fetchAllNewsPapers(allSources, " NAME, TYPE, DISPLAYINDEX ", false); 			
 	}
 	
 	/**
@@ -274,6 +239,9 @@ public class NewsSourcesPage extends ListActivity {
 			
 			ViewHolder holder = (ViewHolder) view.getTag();
 			NewsSource source = getItem(holder.position);
+			
+			// Our NewsSource objects are incomplete. Fetch the full NewsSource now.
+			source = mDbAdapter.getNewsPaper(source.getTitle());
 			
 			// Start Plaudible
 			Intent listArticlesInFeed = new Intent();
