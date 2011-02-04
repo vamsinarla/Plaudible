@@ -14,6 +14,7 @@ import org.apache.http.StatusLine;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.util.EncodingUtils;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
@@ -23,6 +24,7 @@ import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.view.MotionEvent;
 import android.view.View;
+import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.widget.ImageButton;
 
@@ -37,6 +39,10 @@ public class ArticleViewer extends Activity {
 	
 	private Article article;
 	private String articleUrl;
+	private String appEngineUrl;
+	private String source;
+	private String type;
+	
 	private ProgressDialog spinningWheel;
 	private ImageButton shareButton;
 	
@@ -67,6 +73,7 @@ public class ArticleViewer extends Activity {
         
         // WebView stuff
         WebView webview = (WebView) this.findViewById(R.id.webview);
+        
         webview.setOnTouchListener(new View.OnTouchListener() {
 			@Override
 			public boolean onTouch(View v, MotionEvent event) {
@@ -91,13 +98,20 @@ public class ArticleViewer extends Activity {
         // Get the intent and the related extras
         Intent intent = this.getIntent();
         article = (Article) intent.getSerializableExtra("Article");
-        articleUrl = (String) intent.getStringExtra("ArticleUrl");
+        articleUrl = (String) intent.getStringExtra("articleUrl");
+        appEngineUrl= (String) intent.getStringExtra("appEngineUrl");
+        type = (String) intent.getStringExtra("type");
+        source = (String) intent.getStringExtra("source");
         
         // Set the title
         setTitle(article.getTitle());
         
         // Load the page from app Engine's article servlet
-        webview.loadUrl(articleUrl);
+        String postData = URLEncoder.encode("source") + "=" + URLEncoder.encode(source) + "&";
+        postData += URLEncoder.encode("type") + "=" + URLEncoder.encode(type) + "&";
+        postData += URLEncoder.encode("link") + "=" + URLEncoder.encode(articleUrl);
+        
+        webview.postUrl(appEngineUrl, EncodingUtils.getBytes(postData, "BASE64"));
         
         // Suspend progress dialog
         suspendSpinningWheel();

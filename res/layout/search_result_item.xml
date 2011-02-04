@@ -9,10 +9,10 @@
 	android:layout_width="wrap_content"
 	android:layout_height="fill_parent"
 	android:textColor="@android:color/black"
-	android:textSize="14sp"
+	android:textSize="18sp"
 	android:textStyle="bold"
 	android:typeface="serif"
-	android:gravity="left|center_vertical"/>
+	android:layout_centerVertical="true"/>
 	
 	<Button android:id="@+id/add_search_item"
 	android:layout_width="wrap_content"

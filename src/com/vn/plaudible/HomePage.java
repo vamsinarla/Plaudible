@@ -7,6 +7,7 @@ import java.util.Locale;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -22,6 +23,7 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.ImageButton;
+import android.widget.Toast;
 
 /**
  * The Starting screen of NewsSpeak
@@ -82,11 +84,11 @@ public class HomePage extends Activity implements TextToSpeech.OnInitListener {
         newsButton.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				
-				// Prepare the DB if this is the first run.
-				// Place a call to AppEngine to get the list of preferred NewsSources for this user
-				if (isFirstRun()) {
-					populateSourcesIntoDB();
+				// If no data link then just don't open further activity. Best to stop it here.
+				if (!Utils.checkDataConnectivity(HomePage.this)) {
+					Toast butterToast = Toast.makeText(HomePage.this, "No connection available", Toast.LENGTH_SHORT);
+					butterToast.show();
+					return;
 				}
 				
 				Intent getNewsIntent = new Intent();
@@ -139,16 +141,43 @@ public class HomePage extends Activity implements TextToSpeech.OnInitListener {
 			}
 		});
         
+        // Prepare the DB if this is the first run.
+		// Place a call to AppEngine to get the list of preferred NewsSources for this user
+		if (isFirstRun()) {
+			// Start a spinning wheel to show we are busy
+			ProgressDialog spinningWheel = ProgressDialog.show(HomePage.this, 
+											"Please wait",
+											"We are preparing your news list",
+											true);
+			spinningWheel.show();
+			
+			new PlaudibleAsyncTask().execute(
+								new PlaudibleAsyncTask.Payload(
+			        				PlaudibleAsyncTask.FEATURED_SOURCES_DOWNLOAD_TASK,
+			        				new Object[] { HomePage.this,
+			        								spinningWheel }));
+
+			// We can now know that we successfully completed the first run, so set it
+			setFirstRun();
+		}
+		
         bindSpeechService();
         checkAndInstallTTSEngine();
     }
     
     /**
-     * Populate NewsSources in the DB on first time usage
+     * Populate NewsSources in the DB on first time usage.
+     * The URL to fetch the JSON results are computed elsewhere
+     * and then we get all the sources to begin with. Then we enter them
+     * into the DB, but before that we must check the preferred sources
+     * and give them the special treatment
      */
     protected void populateSourcesIntoDB() {
     	NewsSpeakDBAdapter dbAdapter = new NewsSpeakDBAdapter(this);
     	dbAdapter.open(NewsSpeakDBAdapter.READ_WRITE);
+    	
+    	// Clean up the DB with any artifacts
+    	dbAdapter.upgrade();
     	
     	// Make a call to AppEngine and get the featured sources
     	String link = getURLForFeaturedSources();
@@ -167,6 +196,13 @@ public class HomePage extends Activity implements TextToSpeech.OnInitListener {
 			for (int index = 0; index < sources.size(); ++index) {
 				// Set the display index
 				sources.get(index).setDisplayIndex(index);
+				
+				// Here we treat preferred sources differently
+				if (sources.get(index).isPreferred()) {
+					NewsSource.createPreferred(sources.get(index));
+				}
+				
+				// Insert into DB
 				dbAdapter.createNewsSource(sources.get(index));
 			}
 			
@@ -200,13 +236,24 @@ public class HomePage extends Activity implements TextToSpeech.OnInitListener {
     protected boolean isFirstRun() {
     	SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
     	boolean result = prefs.getBoolean("FirstRun", true);
-    	if (result) {
-    		SharedPreferences.Editor editor = prefs.edit();
-    		editor.putBoolean("FirstRun", false);
-    		editor.commit();
-    	}
+    	
      	return result;
 	}
+    
+    /**
+     * Set the first run on the successful completion of the first run
+     * @return
+     */
+    protected boolean setFirstRun() {
+    	SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+		SharedPreferences.Editor editor = prefs.edit();
+		
+		editor.putBoolean("FirstRun", false);
+		editor.commit();
+	
+		return true;
+	}
+    
 
 	/**
      *  Listen for configuration changes and this is basically to prevent the 

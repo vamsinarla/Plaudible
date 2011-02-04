@@ -21,27 +21,30 @@ public final class R {
     }
     public static final class drawable {
         public static final int add_custom_feed_icon=0x7f020000;
-        public static final int blog=0x7f020001;
-        public static final int browser=0x7f020002;
-        public static final int getnews=0x7f020003;
-        public static final int getnewsbuttonnormal=0x7f020004;
-        public static final int getnewsbuttonpressed=0x7f020005;
-        public static final int gradient_line=0x7f020006;
-        public static final int line=0x7f020007;
-        public static final int move_item_handle=0x7f020008;
-        public static final int news=0x7f020009;
-        public static final int newsspeakicon=0x7f02000a;
-        public static final int pause64=0x7f02000b;
-        public static final int play64=0x7f02000c;
-        public static final int podcast=0x7f02000d;
-        public static final int remove_item=0x7f02000e;
-        public static final int search=0x7f02000f;
-        public static final int settings=0x7f020010;
-        public static final int speech=0x7f020011;
-        public static final int subscribed_lists=0x7f020012;
-        public static final int suggest_icon=0x7f020013;
-        public static final int textonly=0x7f020014;
-        public static final int tray_handle_normal=0x7f020015;
+        public static final int alert=0x7f020001;
+        public static final int blog=0x7f020002;
+        public static final int browser=0x7f020003;
+        public static final int down_arrow=0x7f020004;
+        public static final int getnews=0x7f020005;
+        public static final int getnewsbuttonnormal=0x7f020006;
+        public static final int getnewsbuttonpressed=0x7f020007;
+        public static final int gradient_line=0x7f020008;
+        public static final int line=0x7f020009;
+        public static final int move_item_handle=0x7f02000a;
+        public static final int news=0x7f02000b;
+        public static final int newsspeakicon=0x7f02000c;
+        public static final int pause64=0x7f02000d;
+        public static final int play64=0x7f02000e;
+        public static final int podcast=0x7f02000f;
+        public static final int remove_item=0x7f020010;
+        public static final int search=0x7f020011;
+        public static final int settings=0x7f020012;
+        public static final int speech=0x7f020013;
+        public static final int subscribed_lists=0x7f020014;
+        public static final int suggest_icon=0x7f020015;
+        public static final int textonly=0x7f020016;
+        public static final int tray_handle_normal=0x7f020017;
+        public static final int up_arrow=0x7f020018;
     }
     public static final class id {
         public static final int ArticleDescription=0x7f09000f;
@@ -114,6 +117,8 @@ public final class R {
         public static final int app_name=0x7f080000;
         public static final int appengine_url=0x7f080007;
         public static final int article_share_subject=0x7f080008;
+        public static final int cancel=0x7f080020;
+        public static final int confirm_delete_dialog_title=0x7f08001f;
         public static final int custom_feed_title_edittext_hint=0x7f08000f;
         public static final int custom_feed_url_edittext_hint=0x7f080010;
         public static final int feed_suggestion_email=0x7f080017;
@@ -126,6 +131,7 @@ public final class R {
         public static final int loading_articles=0x7f080015;
         public static final int manage_tab_title=0x7f08000a;
         public static final int ok=0x7f08001a;
+        public static final int reorder_page_help=0x7f080021;
         public static final int search_failed=0x7f080014;
         public static final int search_page_search_box_caption=0x7f08000c;
         public static final int search_tab_title=0x7f08000b;
@@ -133,6 +139,7 @@ public final class R {
         public static final int share_body=0x7f080002;
         public static final int share_subject=0x7f080001;
         public static final int subscribed_tab_title=0x7f080009;
+        public static final int success_add_source=0x7f08001e;
         public static final int suggest_custom_feed_text=0x7f08000e;
         public static final int unknown_error_message=0x7f08001b;
     }

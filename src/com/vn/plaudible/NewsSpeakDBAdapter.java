@@ -108,7 +108,7 @@ public class NewsSpeakDBAdapter {
     }
     
     /**
-     * Upgrade the Database. THIS FUNCTION IS TO BE USED ONLY IN DEV 
+     * Upgrade the Database.
      */
     public void upgrade() {
     	if (mDbHelper != null) {
@@ -135,7 +135,7 @@ public class NewsSpeakDBAdapter {
     	values.put("DEFAULTURL", source.getDefaultUrl());
     	values.put("HASCATEGORIES", source.isHasCategories());
     	values.put("SUBSCRIBED", true); // When you create a NewsSource we automatically subscribe to it
-    	values.put("DISPLAYINDEX", source.getDisplayIndex()); // No display Index will be set the first time around
+    	values.put("DISPLAYINDEX", this.numberOfNewsSources + 1); // No display Index will be set the first time around
     	values.put("PREFERRED", source.isPreferred());
     	
     	long rowId;
@@ -314,7 +314,8 @@ public class NewsSpeakDBAdapter {
      * @param newsSource
      */
 	public int removeNewsSource(NewsSource newsSource) {
-		int rowsAffected = mDb.delete(NEWSPAPERS_TABLE_NAME, "NAME = ?", new String[]{newsSource.getTitle()});
+		int rowsAffected = mDb.delete(NEWSPAPERS_TABLE_NAME, "NAME = ?", new String[]{ newsSource.getTitle() });
+		rowsAffected += mDb.delete(CATEGORIES_TABLE_NAME, "NAME = ?", new String[]{ newsSource.getTitle() });
 		if (rowsAffected != 0) {
 			--numberOfNewsSources;
 		}

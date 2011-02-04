@@ -346,4 +346,37 @@ public class NewsSource implements Serializable {
 			return this.categoryUrls.get(this.currentCategory);
 		}
 	}
+
+	/**
+	 * Get the no. of categories
+	 * @return
+	 */
+	public int getNumberOfCategories() {
+		return this.categories.size();
+	}
+	
+	/**
+	 * Take a regular newsSource and if it is preferred make it so
+	 * We hook this up with NewsSource insertions into the DB
+	 * @param currentNewsSource
+	 */
+	public static void createPreferred(NewsSource currentNewsSource) {
+		if (currentNewsSource.isPreferred()) {
+			
+			// Do special processing for Google News
+			if (currentNewsSource.getTitle().equalsIgnoreCase("Google News")) {
+				currentNewsSource.country = Locale.getDefault().getCountry();
+				currentNewsSource.language = Locale.getDefault().getLanguage();
+				
+				// To all the category URLs we add the user's country
+				for (int i = 0; i < currentNewsSource.getNumberOfCategories(); ++i) {
+					String link = currentNewsSource.categoryUrls.get(i);
+					link += "&ned=" + currentNewsSource.country;
+					currentNewsSource.categoryUrls.set(i, link);
+				}
+				
+				currentNewsSource.defaultUrl += "&ned=" + currentNewsSource.country;
+			}
+		}
+	}
 }

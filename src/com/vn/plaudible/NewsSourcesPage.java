@@ -12,8 +12,6 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.res.Configuration;
 import android.database.SQLException;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.text.Editable;
@@ -73,20 +71,6 @@ public class NewsSourcesPage extends ListActivity {
 		
         bindSpeechService();
     }
-		
-	/**
-	 * Return the status of data connectivity
-	 * @return boolean
-	 */
-	private boolean checkDataConnectivity() {
-		ConnectivityManager conMan = (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
-		NetworkInfo networkInfo = conMan.getActiveNetworkInfo();
-		
-		if(networkInfo != null && networkInfo.isConnected()){
-			return true;
-		}
-		return false;
-	}
 	
 	@Override
 	protected void onResume() {
@@ -231,7 +215,7 @@ public class NewsSourcesPage extends ListActivity {
 		@Override
 		public void onClick(View view) {
 			// If no data link then just don't open Plaudible activity. Best to stop it here.
-			if (!checkDataConnectivity()) {
+			if (!Utils.checkDataConnectivity(NewsSourcesPage.this)) {
 				Toast butterToast = Toast.makeText(this.getContext(), "No connection available", Toast.LENGTH_SHORT);
 				butterToast.show();
 				return;

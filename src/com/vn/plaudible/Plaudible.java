@@ -373,16 +373,19 @@ public class Plaudible extends ListActivity {
 					tracker.trackEvent("article", "textonly", currentNewsSource.getTitle(), 0);
 			        
 					// Construct the AppEngine URL for the ArticleServlet
-					String articleUrl = getString(R.string.appengine_url) + "/article?source=" + 
+					String appEngineUrl = getString(R.string.appengine_url) + "/article2"; /* + source=" + 
 													currentNewsSource.getTitle();
 					articleUrl += "&link=" + articles.get(position).getUrl();
-					articleUrl += "&type=html"; // We want HTML for the WebView
-					
+					articleUrl += "&type=html"; // We want HTML for the WebView */					
+
 					// Start the ArticleViewer activity
 					Intent listArticlesInFeed = new Intent();
 					listArticlesInFeed.setClass(getContext(), ArticleViewer.class);
 					listArticlesInFeed.putExtra("Article", articles.get(position));
-					listArticlesInFeed.putExtra("ArticleUrl", articleUrl); // The URL which should be opened for the Article
+					listArticlesInFeed.putExtra("appEngineUrl", appEngineUrl);
+					listArticlesInFeed.putExtra("articleUrl", articles.get(position).getUrl()); // The URL which should be opened for the Article
+					listArticlesInFeed.putExtra("type", "html"); // We want the HTML view
+					listArticlesInFeed.putExtra("source", currentNewsSource.getTitle()); // The source of this article
 					
 					startActivity(listArticlesInFeed);
 				}
@@ -519,22 +522,24 @@ public class Plaudible extends ListActivity {
 			holder = (ViewHolder) v.getTag();
 			
 			// Remove the bottom drawable of the TextView for description
-			holder.description.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0);
+			holder.description.setCompoundDrawablesWithIntrinsicBounds(0, 0, R.drawable.up_arrow, 0);
 			
 			// Make the drop down bar visible
 			dropDownBar = view.findViewById(R.id.dropDownBar);
 			dropDownBar.setVisibility(View.VISIBLE);
  		}
+		
 		/**
 		 *  Remove the drop down bar now
 		 */
 		public void onFinish() {
 			// Put back the down arrow drawable for description TextView
-			holder.description.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, android.R.drawable.arrow_down_float);
+			holder.description.setCompoundDrawablesWithIntrinsicBounds(0, 0, R.drawable.down_arrow, 0);
 			
 			// Remove the dropDownBar
 			dropDownBar.setVisibility(View.GONE);
 		}
+		
 		/**
 		 *  Do nothing here
 		 */

@@ -3,6 +3,8 @@ package com.vn.plaudible;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLConnection;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Locale;
 
@@ -15,6 +17,7 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.database.SQLException;
+import android.database.sqlite.SQLiteException;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.text.Editable;
@@ -139,7 +142,7 @@ public class SearchPage extends Activity {
 					@Override
 					public void onClick(View v) {
 						Dialog dialog = (Dialog) v.getTag();
-						dialog.dismiss();
+						dialog.cancel();
 					}
 				});
 				
@@ -202,11 +205,14 @@ public class SearchPage extends Activity {
 						// Attempt to add the source to the DB
 						try {
 							mDbAdapter.createNewsSource(customSource);
+							Toast.makeText(dialog.getContext(), R.string.success_add_source, Toast.LENGTH_SHORT)
+							.show();
 						} catch (SQLException exception) {
 							Toast.makeText(dialog.getContext(), R.string.unknown_error_message, Toast.LENGTH_SHORT)
 							.show();
 						} finally {
 							mDbAdapter.close();
+							dialog.cancel();
 						}
 					}
 				});
@@ -308,12 +314,13 @@ public class SearchPage extends Activity {
 					
 					// Fetch the NewsSource object from AppEngine
 					String link = getString(R.string.appengine_url) + "fetchSource";
-					link += "?sourceName=" + title;
+					link += "?sourceName=" + URLEncoder.encode(title);
 					
 					NewsSpeakDBAdapter mDbAdapter = null;
 					try {
 						URL fetchUrl = new URL(link);
-						InputStream responseStream = fetchUrl.openConnection().getInputStream();
+						URLConnection conn = fetchUrl.openConnection();
+						InputStream responseStream = conn.getInputStream();
 						
 						// Decode the JSON object
 						NewsSource source = NewsSource.getNewsSourceFromJSON(Utils.getStringFromInputStream(responseStream));
@@ -324,12 +331,18 @@ public class SearchPage extends Activity {
 						mDbAdapter.createNewsSource(source);
 						mDbAdapter.close();
 						
+						// Show the success ack
+						Toast.makeText(SearchPage.this, R.string.success_add_source, Toast.LENGTH_SHORT)
+						.show();
+						suspendSpinningWheel();
+						
+					} catch (SQLiteException exception) {
+						mDbAdapter.close();
+						Toast.makeText(SearchPage.this, R.string.unknown_error_message, Toast.LENGTH_SHORT)
+						.show();
 					} catch (Exception exception) {
 						Toast.makeText(SearchPage.this, R.string.unknown_error_message, Toast.LENGTH_SHORT)
 						.show();
-					} finally {
-						mDbAdapter.close();
-						suspendSpinningWheel();
 					}
 				}
 			});
@@ -369,6 +382,7 @@ public class SearchPage extends Activity {
 	 */
    public void showSpinningWheel(String title, String text, long timeout) {
 	   spinningWheel = ProgressDialog.show(SearchPage.this, title, text, true);
+	   spinningWheel.show();
        new  ProgressDialogTimer(timeout, timeout)
        		.start();
    }

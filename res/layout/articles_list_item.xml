@@ -24,7 +24,7 @@
         android:maxLines="3"
         android:textColor="#333333"
         android:typeface="serif"
-        android:drawableBottom="@android:drawable/arrow_down_float"
+        android:drawableRight="@drawable/down_arrow"
         android:layout_below="@id/ArticleTitle"/>
         
     <LinearLayout android:id="@+id/dropDownBar"

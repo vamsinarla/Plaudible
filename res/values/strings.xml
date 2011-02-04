@@ -33,4 +33,8 @@
 
 <string name="add_item">Add</string>
 <string name="adding_item_progress">Adding ...</string>
+<string name="success_add_source">Successfully added </string>
+<string name="confirm_delete_dialog_title">Delete </string>
+<string name="cancel">Cancel</string>
+<string name="reorder_page_help">Use the drag/drop holder on the left to reorder or use the delete button to remove.</string>
 </resources>

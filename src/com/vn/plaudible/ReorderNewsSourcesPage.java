@@ -3,8 +3,11 @@ package com.vn.plaudible;
 import java.util.ArrayList;
 import java.util.Collections;
 
+import android.app.AlertDialog;
 import android.app.ListActivity;
 import android.content.Context;
+import android.content.DialogInterface;
+import android.content.DialogInterface.OnClickListener;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteException;
 import android.os.Bundle;
@@ -243,8 +246,7 @@ public class ReorderNewsSourcesPage extends ListActivity {
     	 */
         @Override
     	public void onClick(View view) {
-        	TextView text = (TextView) view;
-        	Toast toast = Toast.makeText(mContext, text.getText(), Toast.LENGTH_SHORT);
+        	Toast toast = Toast.makeText(mContext, getString(R.string.reorder_page_help), Toast.LENGTH_LONG);
     		toast.show();
     	}
 
@@ -289,19 +291,53 @@ public class ReorderNewsSourcesPage extends ListActivity {
 				@Override
 				public void onClick(View v) {
 					Integer position = (Integer) v.getTag();
-					// Remove the item from the list and the DB
-					mDbAdapter.removeNewsSource(mContent.get(position));
-					onRemove(position);
 					
-					// After removing the item adjust the display indices of all items
-					modifyDisplayIndices(0, mContent.size() - 1);
-
-					// Notify dataset change
-					notifyDataSetChanged();
+					AlertDialog confirmationDialog = new AlertDialog.Builder(ReorderNewsSourcesPage.this)
+					.setIcon(R.drawable.alert)
+	                .setTitle(ReorderNewsSourcesPage.this.getString(R.string.confirm_delete_dialog_title) + " " +
+	                			getItem(position).getTitle() + " ?")
+	                .setPositiveButton(R.string.ok, new DialogClickListener(getItem(position), position))
+	                .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+	                    public void onClick(DialogInterface dialog, int whichButton) {
+	                    	// Do nothing
+	                    }
+	                })
+	                .create();
+					
+					confirmationDialog.show();
 				}
 			});
             
             return convertView;
+        }
+        
+        /**
+         * The DialogClickListener 
+         * @author narla
+         *
+         */
+        private class DialogClickListener implements OnClickListener {
+
+        	private NewsSource source;
+        	private int position;
+        	
+        	public DialogClickListener(NewsSource source, int position) {
+        		this.source = source;
+        		this.position = position;
+        	}
+        	
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				// Remove the item from the list and the DB
+				mDbAdapter.removeNewsSource(source);
+				onRemove(position);
+
+				// After removing the item adjust the display indices of all items
+				modifyDisplayIndices(0, mContent.size() - 1);
+
+				// Notify dataset change
+				notifyDataSetChanged();
+			}
         }
         
         /**
