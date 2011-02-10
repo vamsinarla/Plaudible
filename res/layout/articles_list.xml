@@ -20,7 +20,7 @@
     android:background="#000000"
     android:gravity="center"
     android:textSize="20sp"
-    android:text="No articles to show"/>
+    android:text="@string/no_articles_to_show"/>
     
     <LinearLayout android:id="@id/articlelistbottombar"
     android:layout_width="fill_parent"

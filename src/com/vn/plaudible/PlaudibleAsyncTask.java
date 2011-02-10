@@ -115,17 +115,20 @@ public class PlaudibleAsyncTask extends AsyncTask<PlaudibleAsyncTask.Payload, Ar
 						if (articles.get(index).isDownloaded() == false) {
 						
 							// Construct the AppEngine URL for the ArticleServlet
-							link = activity.getString(R.string.appengine_url) + "/article?source="; 
-							link += source.getTitle();
-							link += "&link=" + articles.get(position).getUrl();
-							link += "&type=text"; // We want only text for reading
+							
+							link = activity.getString(R.string.appengine_url) + "article2";
+							
+							String postArgs = URLEncoder.encode("source", "UTF-8") + "=" + URLEncoder.encode(source.getTitle(), "UTF-8") + "&";
+							postArgs += URLEncoder.encode("link", "UTF-8") + "=" + URLEncoder.encode(articles.get(position).getUrl(), "UTF-8") + "&";
+							postArgs += URLEncoder.encode("type", "UTF-8") + "=" + URLEncoder.encode("text", "UTF-8");
 							
 							// Get the response from AppEngine
 							URL articleUrl = new URL(link);
-							responseStream = articleUrl.openConnection().getInputStream();
+							URLConnection conn = articleUrl.openConnection();
+							Utils.postVars(conn, postArgs);
 							
 							// Set the params for the article and mark as downloaded
-							articles.get(index).setContent(Utils.getStringFromInputStream(responseStream));
+							articles.get(index).setContent(Utils.getStringFromInputStream(conn.getInputStream()));
 							articles.get(index).setDownloaded(true);
 							payload.result = new String("Downloaded");
 						}

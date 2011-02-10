@@ -216,7 +216,7 @@ public class NewsSourcesPage extends ListActivity {
 		public void onClick(View view) {
 			// If no data link then just don't open Plaudible activity. Best to stop it here.
 			if (!Utils.checkDataConnectivity(NewsSourcesPage.this)) {
-				Toast butterToast = Toast.makeText(this.getContext(), "No connection available", Toast.LENGTH_SHORT);
+				Toast butterToast = Toast.makeText(this.getContext(), R.string.connection_unavailable, Toast.LENGTH_SHORT);
 				butterToast.show();
 				return;
 			}

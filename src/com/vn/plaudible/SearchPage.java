@@ -189,6 +189,7 @@ public class SearchPage extends Activity {
 							.show();
 							return;
 						}
+						
 						// Create a newsSource and then add it to the DB
 						NewsSource customSource = new NewsSource(customFeedTitle.toString(), 
 																	SourceType.BLOG.toString(),
@@ -328,13 +329,13 @@ public class SearchPage extends Activity {
 						// Add to DB
 						mDbAdapter = new NewsSpeakDBAdapter(SearchPage.this);
 						mDbAdapter.open(NewsSpeakDBAdapter.READ_WRITE);
+						
 						mDbAdapter.createNewsSource(source);
 						mDbAdapter.close();
 						
 						// Show the success ack
 						Toast.makeText(SearchPage.this, R.string.success_add_source, Toast.LENGTH_SHORT)
 						.show();
-						suspendSpinningWheel();
 						
 					} catch (SQLiteException exception) {
 						mDbAdapter.close();
@@ -343,6 +344,8 @@ public class SearchPage extends Activity {
 					} catch (Exception exception) {
 						Toast.makeText(SearchPage.this, R.string.unknown_error_message, Toast.LENGTH_SHORT)
 						.show();
+					} finally {
+						suspendSpinningWheel();
 					}
 				}
 			});
@@ -366,8 +369,6 @@ public class SearchPage extends Activity {
 		public void onFinish() {
 			if (spinningWheel.isShowing()) {
 				spinningWheel.cancel();
-				Toast.makeText(SearchPage.this, getString(R.string.search_failed), Toast.LENGTH_SHORT)
-					.show();
 			}
 		}
 		/**

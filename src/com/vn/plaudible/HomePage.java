@@ -22,6 +22,7 @@ import android.speech.tts.TextToSpeech;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.Toast;
 
@@ -86,7 +87,7 @@ public class HomePage extends Activity implements TextToSpeech.OnInitListener {
 			public void onClick(View v) {
 				// If no data link then just don't open further activity. Best to stop it here.
 				if (!Utils.checkDataConnectivity(HomePage.this)) {
-					Toast butterToast = Toast.makeText(HomePage.this, "No connection available", Toast.LENGTH_SHORT);
+					Toast butterToast = Toast.makeText(HomePage.this, R.string.connection_unavailable, Toast.LENGTH_SHORT);
 					butterToast.show();
 					return;
 				}
@@ -160,6 +161,48 @@ public class HomePage extends Activity implements TextToSpeech.OnInitListener {
 			// We can now know that we successfully completed the first run, so set it
 			setFirstRun();
 		}
+		
+		// Quick Search box functionality
+		ImageButton quickSearchButton = (ImageButton) this.findViewById(R.id.quick_search_button);
+		quickSearchButton.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				EditText searchEditBox = (EditText) HomePage.this.findViewById(R.id.quick_search_box);
+				String searchTerm = searchEditBox.getEditableText().toString();
+				
+				if (searchTerm == null || searchTerm.trim().equalsIgnoreCase("")) {
+					Toast butterToast = Toast.makeText(HomePage.this, R.string.invalid_title_message, Toast.LENGTH_SHORT);
+					butterToast.show();
+					return;
+				}
+				
+				/* Create a NewsSource that Plaudible can use
+				 * Construct URL for google news on the following search Term 
+				 */
+				String googleNewsUrl = ""; 
+					
+				NewsSource newsSource = 
+					new NewsSource(getString(R.string.topic_search_title) + searchTerm,
+									"blog",
+									Locale.getDefault().getLanguage(),
+									Locale.getDefault().getCountry(),
+									false,
+									null,
+									null,
+									googleNewsUrl,
+									false,
+									false,
+									0);
+				
+				// Now create and dispatch an intent to PLaudible to read this NewsSource
+				Intent quickNewsIntent = new Intent();
+				quickNewsIntent.setClass(HomePage.this, Plaudible.class);
+				quickNewsIntent.putExtra("NewsSource", newsSource);
+				
+				startActivity(quickNewsIntent);
+						
+			}
+		});
 		
         bindSpeechService();
         checkAndInstallTTSEngine();

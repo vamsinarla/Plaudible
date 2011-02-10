@@ -271,6 +271,9 @@ public class SpeechService extends Service implements OnUtteranceCompletedListen
 	 */
 	private void prepareChunks() {
 		String chunk = currentArticle.getContent();
+		if (chunk == null || chunk.equalsIgnoreCase("")) {
+			chunk = new String("Sorry, This article could not be read.");
+		}
 		chunks = chunk.split("\\.");
 		chunkIndex = 0;
 	}
