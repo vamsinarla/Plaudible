@@ -179,10 +179,15 @@ public class HomePage extends Activity implements TextToSpeech.OnInitListener {
 				/* Create a NewsSource that Plaudible can use
 				 * Construct URL for google news on the following search Term 
 				 */
-				String googleNewsUrl = ""; 
+				String googleNewsUrl = "http://news.google.com/news?pz=1&cf=all";
+				googleNewsUrl += "&ned=" + Locale.getDefault().getCountry();
+				// googleNewsUrl += "&hl=" + Locale.getDefault().getLanguage();
+				googleNewsUrl += "&hl=en";
+				googleNewsUrl += "&q=" + searchTerm;
+				googleNewsUrl += "&cf=all&output=rss"; 
 					
 				NewsSource newsSource = 
-					new NewsSource(getString(R.string.topic_search_title) + searchTerm,
+					new NewsSource(getString(R.string.topic_search_title) + " " + searchTerm,
 									"blog",
 									Locale.getDefault().getLanguage(),
 									Locale.getDefault().getCountry(),

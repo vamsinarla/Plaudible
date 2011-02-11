@@ -11,11 +11,11 @@
 <string name="analytics_id">UA-20432863-1</string>
 <string name="appengine_url">http://3.latest.evecal.appspot.com/</string>
 <string name="article_share_subject">Shared via NewsSpeak on Android</string>
-<string name="subscribed_tab_title">My News</string>
-<string name="manage_tab_title">Manage</string>
-<string name="search_tab_title">Search</string>
-<string name="search_page_search_box_caption">Search our directory</string>
-<string name="add_custom_feed_text">Add custom feed</string>
+<string name="subscribed_tab_title">나의 뉴스</string>
+<string name="manage_tab_title">관리</string>
+<string name="search_tab_title">검색</string>
+<string name="search_page_search_box_caption">우리의 디렉토리를 검색</string>
+<string name="add_custom_feed_text">사용자 의 피드를 추가</string>
 <string name="suggest_custom_feed_text">Suggest a feed</string>
 <string name="custom_feed_title_edittext_hint">Give a name</string>
 <string name="custom_feed_url_edittext_hint">URL for your custom feed</string>
