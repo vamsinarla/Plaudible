@@ -17,8 +17,6 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.util.EncodingUtils;
 
-import com.google.android.apps.analytics.GoogleAnalyticsTracker;
-
 import android.app.Activity;
 import android.content.Intent;
 import android.media.AudioManager;
@@ -26,10 +24,14 @@ import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.Window;
 import android.view.animation.AnimationUtils;
 import android.webkit.WebView;
 import android.widget.ImageButton;
+import android.widget.TextView;
 import android.widget.ViewSwitcher;
+
+import com.google.android.apps.analytics.GoogleAnalyticsTracker;
 
 /**
  * View a text only version of the article for fast reading.
@@ -39,7 +41,7 @@ import android.widget.ViewSwitcher;
 public class ArticleViewer extends Activity {
 
 	// Timeout in ms for removing the overlay UI
-	private static final long TIMEOUT = 4000;
+	private static final long TIMEOUT = 7000;
 	
 	private NewsSource source;
 	private String appEngineUrl;
@@ -47,6 +49,7 @@ public class ArticleViewer extends Activity {
 	private ArrayList<Article> articles;
 	private Integer currentArticleIndex;
 	
+	private TextView title;
 	private WebView webview1;
 	private WebView webview2;
 	private WebView currentWebView;
@@ -67,6 +70,9 @@ public class ArticleViewer extends Activity {
 	@Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        
+        // Remove the Title
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
         
         // Expand the layout
         setContentView(R.layout.article_viewer);
@@ -164,6 +170,9 @@ public class ArticleViewer extends Activity {
         // Set currentWebView
         currentWebView = webview1;
         
+        // Get the title textview
+        title = (TextView) this.findViewById(R.id.articleViewerTitle);
+        
         // Set the volume control to media. So that when user presses volume button it adjusts the media volume
         this.setVolumeControlStream(AudioManager.STREAM_MUSIC);
     }
@@ -239,7 +248,7 @@ public class ArticleViewer extends Activity {
      */
     private void displayArticle(Integer index) {
     	// Set the title
-        setTitle(articles.get(index).getTitle());
+    	title.setText(articles.get(index).getTitle());
         
     	// Construct the AppEngine URL for the ArticleServlet
     	appEngineUrl = getString(R.string.appengine_url) + "/article2";
