@@ -17,6 +17,8 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.util.EncodingUtils;
 
+import com.google.android.apps.analytics.GoogleAnalyticsTracker;
+
 import android.app.Activity;
 import android.content.Intent;
 import android.media.AudioManager;
@@ -36,9 +38,10 @@ import android.widget.ViewSwitcher;
  */
 public class ArticleViewer extends Activity {
 
-	private static final long TIMEOUT = 5000;
+	// Timeout in ms for removing the overlay UI
+	private static final long TIMEOUT = 4000;
 	
-	private String source;
+	private NewsSource source;
 	private String appEngineUrl;
 	
 	private ArrayList<Article> articles;
@@ -54,6 +57,11 @@ public class ArticleViewer extends Activity {
 	
 	private ViewVisibilityController viewVisibilityController;
 	
+	/**
+	 * Google Analytics
+	 */
+	GoogleAnalyticsTracker tracker;
+	
 	/** Called when the activity is first created. */
     @SuppressWarnings("unchecked")
 	@Override
@@ -63,11 +71,17 @@ public class ArticleViewer extends Activity {
         // Expand the layout
         setContentView(R.layout.article_viewer);
         
+        // Get the analytics tracker instance
+        tracker = GoogleAnalyticsTracker.getInstance();
+        
+        // Start the tracker in auto dispatch mode to update every 60 seconds
+        tracker.start(getString(R.string.analytics_id), 60, this);
+        
         // Get the intent and the related extras
         Intent intent = this.getIntent();
         articles = (ArrayList<Article>) intent.getSerializableExtra("articles");
         currentArticleIndex = (Integer) intent.getIntExtra("currentArticleIndex", 0);
-        source = (String) intent.getStringExtra("source");
+        source = (NewsSource) intent.getSerializableExtra("source");
         
         // Share button stuff
         shareButton = (ImageButton) this.findViewById(R.id.articleshareButton);
@@ -110,11 +124,12 @@ public class ArticleViewer extends Activity {
         // Add all overlay views to the visibility controller
         // These views need to be shown in a timed fashion
         viewVisibilityController = new ViewVisibilityController();
-        viewVisibilityController.addView(nextArticleButton);
-        viewVisibilityController.addView(previousArticleButton);
-        viewVisibilityController.addView(shareButton);
+        viewVisibilityController.registerView(nextArticleButton);
+        viewVisibilityController.registerView(previousArticleButton);
+        viewVisibilityController.registerView(shareButton);
         
         // WebView stuff
+        // We are creating two WebViews here to switch between two articles.
         webview1 = (WebView) this.findViewById(R.id.webview1);
         webview1.setOnTouchListener(new View.OnTouchListener() {
 			@Override
@@ -159,8 +174,12 @@ public class ArticleViewer extends Activity {
     protected void moveToNextArticle() {
     	if (currentArticleIndex < articles.size() - 1) {
     		++currentArticleIndex;
-	    	
+    		
+	    	// Swap webviews 
     		swapWebView();
+    		
+    		// Play switching animation. Move the new article
+    		// in from the right to the left
     		switcher.setInAnimation(AnimationUtils.loadAnimation(this,
                     R.anim.push_left_in));
     		switcher.setOutAnimation(AnimationUtils.loadAnimation(this,
@@ -177,7 +196,11 @@ public class ArticleViewer extends Activity {
 		if (currentArticleIndex > 0) {
     		--currentArticleIndex;
 	    	
+    		// Swap webviews
     		swapWebView();
+    		
+    		// Play switching animation. Move the new article
+    		// in from the left to the right
     		switcher.setInAnimation(AnimationUtils.loadAnimation(this,
                     R.anim.push_right_in));
     		switcher.setOutAnimation(AnimationUtils.loadAnimation(this,
@@ -223,18 +246,22 @@ public class ArticleViewer extends Activity {
     	String articleUrl = articles.get(index).getUrl(); 
     	
         // Load the page from app Engine's article servlet
-        String postData = URLEncoder.encode("source") + "=" + URLEncoder.encode(source) + "&";
+        String postData = URLEncoder.encode("source") + "=" + URLEncoder.encode(source.getTitle()) + "&";
         postData += URLEncoder.encode("type") + "=" + URLEncoder.encode("html") + "&"; // Default to using HTML in text only
         postData += URLEncoder.encode("link") + "=" + URLEncoder.encode(articleUrl);
         
         currentWebView.postUrl(appEngineUrl, EncodingUtils.getBytes(postData, "BASE64"));
+        
+        // Collect analytics
+        // Track the event of article being read in text only mode
+		tracker.trackEvent("article", "textonly", source.getTitle(), 0);
     }
     
     /**
      * Class to make a list of views visible or invisible
      */
     class ViewVisibilityController {
-    	
+    	// Hold all the views registered with the controller
     	private ArrayList<View> views;
 		
     	/**
@@ -248,12 +275,19 @@ public class ArticleViewer extends Activity {
 		 * Add views to the array list
 		 * @param newView
 		 */
-		public void addView(View newView) {
+		public void registerView(View newView) {
 			views.add(newView);
 		}
 		
 		/**
-		 * Make visible or invisible
+		 * Remove or unregister views from the controller
+		 */
+		public void unRegisterView(View view) {
+			views.remove(view);
+		}
+		
+		/**
+		 * Make visible or invisible all UI widgets registered in the controller
 		 */
 		public void setViewVisibility(int newState) {
 			newState = ((newState == View.GONE) ? View.GONE : View.VISIBLE);
@@ -264,7 +298,7 @@ public class ArticleViewer extends Activity {
     }
   
 	/**
-	 * Timer to make the overlay UI like share button disappear	
+	 * Timer to make the overlay UI disappear	
 	 * @author vamsi
 	 *
 	 */

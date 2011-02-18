@@ -373,17 +373,13 @@ public class Plaudible extends ListActivity {
 					tracker.trackEvent("article", "textonly", currentNewsSource.getTitle(), 0);
 			        
 					// Start the ArticleViewer activity
-					Intent listArticlesInFeed = new Intent();
-					listArticlesInFeed.setClass(getContext(), ArticleViewer.class);
-					/* listArticlesInFeed.putExtra("Article", articles.get(position));
-					listArticlesInFeed.putExtra("appEngineUrl", appEngineUrl);
-					listArticlesInFeed.putExtra("articleUrl", articles.get(position).getUrl()); // The URL which should be opened for the Article
-					listArticlesInFeed.putExtra("type", "html"); // We want the HTML view */
-					listArticlesInFeed.putExtra("source", currentNewsSource.getTitle()); // The source of this article
-					listArticlesInFeed.putExtra("articles", articles);
-					listArticlesInFeed.putExtra("currentArticleIndex", position);
+					Intent articleViewerLaunchIntent = new Intent();
+					articleViewerLaunchIntent.setClass(getContext(), ArticleViewer.class);
+					articleViewerLaunchIntent.putExtra("source", currentNewsSource); // The source of this article
+					articleViewerLaunchIntent.putExtra("articles", articles);
+					articleViewerLaunchIntent.putExtra("currentArticleIndex", position);
 					
-					startActivity(listArticlesInFeed);
+					startActivity(articleViewerLaunchIntent);
 				}
 			});
         	// End of onClick stuff
