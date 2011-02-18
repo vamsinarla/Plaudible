@@ -1,17 +1,51 @@
 <?xml version="1.0" encoding="utf-8"?>
-<merge xmlns:android="http://schemas.android.com/apk/res/android">
-  
-	<WebView android:id="@+id/webview"
-	  android:layout_width="fill_parent"
-	  android:layout_height="fill_parent"/>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="fill_parent"
+	android:layout_height="fill_parent">
+  	
+  	<ViewSwitcher android:id="@+id/articleSwitcher"
+	  	android:layout_width="fill_parent"
+	  	android:layout_height="fill_parent">
+	  	
+		<WebView android:id="@+id/webview1"
+			android:layout_width="fill_parent"
+			android:layout_height="fill_parent"/>
 
-    <ImageButton
-      android:id="@+id/articleshareButton"
-      android:layout_width="wrap_content"
-      android:layout_height="wrap_content"
-      android:src="@android:drawable/ic_menu_share"
-      android:layout_gravity="bottom|left"
-      android:visibility="gone"
-      android:padding="10sp"/>
+		<WebView android:id="@+id/webview2"
+			android:layout_width="fill_parent"
+			android:layout_height="fill_parent"/>
+
+	</ViewSwitcher>
+	
+    <ImageButton android:id="@+id/articleshareButton"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:src="@android:drawable/ic_menu_share"
+		android:layout_alignParentBottom="true"
+		android:layout_alignParentLeft="true"
+		android:visibility="gone"
+		android:padding="10sp"/>
       
-</merge>
+    <ImageButton android:id="@+id/nextArticleButton"
+    	android:layout_width="wrap_content"
+    	android:layout_height="wrap_content"
+    	android:layout_alignParentRight="true"
+    	android:layout_centerVertical="true"
+    	android:paddingTop="20sp"
+    	android:paddingBottom="20sp"
+    	android:background="#55000000"
+    	android:src="@drawable/play64"
+    	android:layout_gravity="right|center_vertical"/>
+
+    <ImageButton android:id="@+id/previousArticleButton"
+    	android:layout_width="wrap_content"
+    	android:layout_height="wrap_content"
+    	android:layout_alignParentLeft="true"
+    	android:layout_centerVertical="true"
+    	android:paddingTop="20sp"
+    	android:paddingBottom="20sp"
+    	android:background="#55000000"
+    	android:src="@drawable/play64"
+    	android:layout_gravity="left|center_vertical"/>
+
+</RelativeLayout>

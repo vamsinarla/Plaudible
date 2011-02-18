@@ -372,20 +372,16 @@ public class Plaudible extends ListActivity {
 					// Track the event of article being read in text only
 					tracker.trackEvent("article", "textonly", currentNewsSource.getTitle(), 0);
 			        
-					// Construct the AppEngine URL for the ArticleServlet
-					String appEngineUrl = getString(R.string.appengine_url) + "/article2"; /* + source=" + 
-													currentNewsSource.getTitle();
-					articleUrl += "&link=" + articles.get(position).getUrl();
-					articleUrl += "&type=html"; // We want HTML for the WebView */					
-
 					// Start the ArticleViewer activity
 					Intent listArticlesInFeed = new Intent();
 					listArticlesInFeed.setClass(getContext(), ArticleViewer.class);
-					listArticlesInFeed.putExtra("Article", articles.get(position));
+					/* listArticlesInFeed.putExtra("Article", articles.get(position));
 					listArticlesInFeed.putExtra("appEngineUrl", appEngineUrl);
 					listArticlesInFeed.putExtra("articleUrl", articles.get(position).getUrl()); // The URL which should be opened for the Article
-					listArticlesInFeed.putExtra("type", "html"); // We want the HTML view
+					listArticlesInFeed.putExtra("type", "html"); // We want the HTML view */
 					listArticlesInFeed.putExtra("source", currentNewsSource.getTitle()); // The source of this article
+					listArticlesInFeed.putExtra("articles", articles);
+					listArticlesInFeed.putExtra("currentArticleIndex", position);
 					
 					startActivity(listArticlesInFeed);
 				}
