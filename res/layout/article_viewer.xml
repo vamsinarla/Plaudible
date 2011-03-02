@@ -33,6 +33,7 @@
     <ImageButton android:id="@+id/articleshareButton"
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
+		android:background="@drawable/rounded_rectangle_2_corner"
 		android:src="@android:drawable/ic_menu_share"
 		android:layout_alignParentBottom="true"
 		android:layout_alignParentLeft="true"
