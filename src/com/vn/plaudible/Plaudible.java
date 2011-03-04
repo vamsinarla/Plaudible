@@ -382,6 +382,29 @@ public class Plaudible extends ListActivity {
 					startActivity(articleViewerLaunchIntent);
 				}
 			});
+        	
+        	ImageButton playlistButton = (ImageButton) dropDownBar.findViewById(R.id.playlistButton);
+        	playlistButton.setTag(holder.position);
+        	playlistButton.setOnClickListener(new View.OnClickListener() {
+				@Override
+				public void onClick(View v) {
+					Integer position = (Integer) v.getTag();
+					ImageButton playlistButton = (ImageButton) v;
+					
+					ArticlePlaylist playlist = mSpeechService.getArticlePlaylist();
+					
+					// Check if it exists in the playlist
+					Article article = articles.get(position);
+					if (playlist.contains(article)) {
+						playlistButton.setImageResource(R.drawable.add_article);
+						playlist.removeArticle(article);
+					} else {
+						playlistButton.setImageResource(R.drawable.remove_article);
+						playlist.addArticle(article);
+					}
+				}
+			});
+        	
         	// End of onClick stuff
 		}
    }

@@ -14,46 +14,36 @@
         android:maxHeight="46sp"
         android:typeface="serif"/>
        
-    <LinearLayout android:id="@+id/middleBar"
-    	android:layout_below="@id/ArticleTitle"
-    	android:orientation="horizontal"
-    	android:layout_width="fill_parent"
-    	android:layout_height="fill_parent">
-    	
     <TextView android:id="@+id/ArticleDescription"
-        android:layout_width="wrap_content"
+        android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:layout_alignParentLeft="true"
         android:paddingLeft="3sp"
         android:paddingRight="3sp"
         android:textSize="15sp"
         android:maxHeight="62sp"
         android:maxLines="3"
         android:textColor="#333333"
-        android:typeface="serif"/>
+        android:typeface="serif"
+        android:drawableRight="@drawable/down_arrow"
+        android:layout_below="@id/ArticleTitle"/>
         
-    <ToggleButton android:id="@+id/togglePlaylist"
-    	android:textOn="-"
-    	android:textOff="+"
-    	android:textStyle="bold"
-    	android:layout_toRightOf="@id/ArticleDescription"
-    	android:layout_width="wrap_content"
-    	android:layout_height="wrap_content"
-    	android:layout_weight="1"
-    	android:layout_alignParentRight="true"/>
-    	
-   	</LinearLayout>
-    	
     <LinearLayout android:id="@+id/dropDownBar"
     android:layout_width="fill_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
     android:gravity="center_horizontal"
     android:background="#ffffff"
-    android:layout_below="@id/middleBar"
+    android:layout_below="@id/ArticleDescription"
     android:visibility="gone">
     
+    	<ImageButton android:id="@+id/playlistButton"
+        android:layout_width="fill_parent"
+        android:layout_weight="1"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="3sp"
+        android:maxHeight="15sp"
+        android:src="@drawable/add_article"/>
+        
         <ImageButton android:id="@+id/speakButton"
         android:layout_width="fill_parent"
         android:layout_weight="1"

@@ -41,4 +41,5 @@
 <string name="quick_search_box_hint">Search for news here</string>
 <string name="topic_search_title">Latest news for </string>
 <string name="connection_unavailable">No connection available</string>
+<string name="playlist_tab_title">Playlist</string>
 </resources>

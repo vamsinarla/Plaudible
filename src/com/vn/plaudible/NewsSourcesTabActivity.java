@@ -32,6 +32,13 @@ public class NewsSourcesTabActivity extends TabActivity {
              			.setContent(intent);
 	    tabHost.addTab(spec);
 	    
+	    // Create an Intent to launch the playlist tab to manage playlist
+	    intent = new Intent().setClass(this, PlaylistManager.class);
+	    // Define the tabspec for this activity
+	    spec = tabHost.newTabSpec("playlist").setIndicator(getString(R.string.playlist_tab_title), res.getDrawable(R.drawable.playlist))
+             			.setContent(intent);
+	    tabHost.addTab(spec);
+	    
 	    // Create an Intent to launch the manage tab to manage the list of subscribed newssources
 	    intent = new Intent().setClass(this, ReorderNewsSourcesPage.class);
 	    // Define the tabspec for this activity

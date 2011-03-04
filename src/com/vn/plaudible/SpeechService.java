@@ -264,6 +264,13 @@ public class SpeechService extends Service implements OnUtteranceCompletedListen
 	}
 	
 	/**
+	 * Return the playlist
+	 */
+	public ArticlePlaylist getArticlePlaylist() {
+		return playlist;
+	}
+	
+	/**
 	 *  Return the currently read news source
 	 * @return
 	 */

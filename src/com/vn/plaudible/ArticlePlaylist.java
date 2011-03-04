@@ -19,9 +19,10 @@ public class ArticlePlaylist {
 	}
 	
 	public void addArticle(Article newArticle, Integer position) {
-		if (position != null) {
-			currentPlaylist.add(position, newArticle);
-		}
+		currentPlaylist.add(position, newArticle);
+	}
+	
+	public void addArticle(Article newArticle) {
 		currentPlaylist.add(newArticle);
 	}
 	
@@ -66,5 +67,25 @@ public class ArticlePlaylist {
 	
 	public boolean isEmpty() {
 		return getSize() == 0;
+	}
+
+	public ArrayList<Article> getArticles() {
+		return currentPlaylist;
+	}
+
+	public Article get(int position) {
+		return currentPlaylist.get(position);
+	}
+
+	public void remove(int from) {
+		currentPlaylist.remove(from);
+	}
+
+	public void add(int to, Article temp) {
+		currentPlaylist.add(to, temp);
+	}
+
+	public boolean contains(Article article) {
+		return currentPlaylist.contains(article);
 	}
 }
