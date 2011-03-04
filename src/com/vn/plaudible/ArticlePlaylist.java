@@ -63,4 +63,8 @@ public class ArticlePlaylist {
 	public Integer getSize() {
 		return currentPlaylist.size();
 	}
+	
+	public boolean isEmpty() {
+		return getSize() == 0;
+	}
 }

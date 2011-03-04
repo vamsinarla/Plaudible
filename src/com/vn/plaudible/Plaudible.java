@@ -353,7 +353,7 @@ public class Plaudible extends ListActivity {
 							suspendSpinningWheel();
 					   	}
 						// Send the article for reading
-						sendArticleForReading(articles.get(position), currentNewsSource);
+						sendArticleForReading(articles.get(position));
 						
 						// Display the bottom bar
 						displayBottomBar();
@@ -418,9 +418,9 @@ public class Plaudible extends ListActivity {
 	 * @param article
 	 * @param newsSource
 	 */
-	public void sendArticleForReading(Article article, NewsSource newsSource) {
+	public void sendArticleForReading(Article article) {
 		if (mSpeechService != null) {
-			mSpeechService.readArticle(article, newsSource);
+			mSpeechService.readArticle(article);
 		}
 	}
 	

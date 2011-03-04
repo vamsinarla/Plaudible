@@ -16,6 +16,7 @@ public class Article implements Serializable {
 	private static final long serialVersionUID = 1L;
 	
 	private String title;
+	private NewsSource newsSource;
 	private String description;
 	private String content;
 	private String url;
@@ -24,13 +25,15 @@ public class Article implements Serializable {
 	
 	public Article() {
 		this.title = this.description = this.content = null;
+		this.newsSource = null;
 		this.isDownloaded = false;
 	}
 	
-	public Article(String title, String description, String url) {
+	public Article(String title, String description, String url, NewsSource newsSource) {
 		this.title = title;
 		this.description = description;
-		this.url = url;		
+		this.url = url;
+		this.newsSource = newsSource;
 		this.isDownloaded = false;		
 	}
 	
@@ -60,6 +63,14 @@ public class Article implements Serializable {
 
 	public String getUrl() {
 		return url;
+	}
+
+	public NewsSource getNewsSource() {
+		return newsSource;
+	}
+
+	public void setNewsSource(NewsSource newsSource) {
+		this.newsSource = newsSource;
 	}
 
 	public void setUrl(String url) {

@@ -46,8 +46,11 @@ public class SpeechService extends Service implements OnUtteranceCompletedListen
 	 */
 	private WakeLock lock;
 	
+	/**
+	 * Playlist of articles
+	 */
+	private ArticlePlaylist playlist; 
 	private Article currentArticle;
-	private NewsSource currentNewsSource;
 	private String[] chunks;
 	private Integer chunkIndex;
 	private boolean pausedReading;
@@ -82,7 +85,7 @@ public class SpeechService extends Service implements OnUtteranceCompletedListen
 		currentArticle = null;
 		chunkIndex = 0;
 		chunks = null;
-		currentNewsSource = null;
+		playlist = new ArticlePlaylist();
 		
 		notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
 		telephonyManager = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
@@ -177,7 +180,7 @@ public class SpeechService extends Service implements OnUtteranceCompletedListen
 		notification.flags |= Notification.FLAG_NO_CLEAR;
 		
 		Intent notificationIntent = new Intent(this, Plaudible.class);
-		notificationIntent.putExtra("NewsSource", currentNewsSource);
+		notificationIntent.putExtra("NewsSource", currentArticle.getNewsSource());
 		notificationIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
 		
 		// Set the intent in the notification
@@ -195,7 +198,7 @@ public class SpeechService extends Service implements OnUtteranceCompletedListen
 		this.ttsEngine.setOnUtteranceCompletedListener(this);
     }
 	
-	public void readArticle(Article article, NewsSource newsSource) {
+	public void readArticle(Article article) {
 		
 		// Check if a call is on
 		if (!checkCallStatus()) {
@@ -209,8 +212,10 @@ public class SpeechService extends Service implements OnUtteranceCompletedListen
 		currentArticle = article;
 		chunkIndex = 0;
 		chunks = null;
-		currentNewsSource = newsSource;
 		pausedReading = false;
+		
+		// Add the article as the first item in the playlist
+		playlist.addArticle(article, 0 /* First item */);
 		
 		// Show a notification
 		showNotification(currentArticle.getTitle());
@@ -263,7 +268,10 @@ public class SpeechService extends Service implements OnUtteranceCompletedListen
 	 * @return
 	 */
 	public NewsSource getCurrentNewsSource() {
-		return currentNewsSource;
+		if (currentArticle != null) {
+			return currentArticle.getNewsSource();
+		}
+		return null;
 	}
 	
 	/**
@@ -328,10 +336,21 @@ public class SpeechService extends Service implements OnUtteranceCompletedListen
 				pausedReading = true;
 				chunkIndex = 0;
 				chunks = null;
+
+				// Move to the next item in the playlist
+				playlist.removeArticle(currentArticle);
 				currentArticle = null;
 				
-				// Cancel the notification
-				notificationManager.cancel(NOTIFICATION_ID);
+				if (!playlist.isEmpty()) {
+					playlist.moveToNext();
+					
+					currentArticle = playlist.getCurrentArticle();
+					readArticle(currentArticle);
+				} else {
+					// Cancel the notification
+					notificationManager.cancel(NOTIFICATION_ID);
+				}
+				
 			} else if (!pausedReading){
 				// Read the next chunk
 				readNextChunk();

@@ -36,7 +36,15 @@ public class PlaudibleAsyncTask extends AsyncTask<PlaudibleAsyncTask.Payload, Ar
 			switch (payload.taskType) {
 				case FEED_DOWNLOADER_TASK: {
 					Plaudible activity = (Plaudible) payload.data[0];
-					activity.setArticles((ArrayList<Article>) payload.data[2]);
+					NewsSource source = (NewsSource) payload.data[1];
+					ArrayList<Article> articles = (ArrayList<Article>) payload.data[2];
+					
+					// Mark all articles with the newssource
+					for (int index = 0; index < articles.size(); index++) {
+						articles.get(index).setNewsSource(source);
+					}
+					
+					activity.setArticles(articles);
 					break;
 				}
 				case ARTICLE_DOWNLOADER_TASK:
