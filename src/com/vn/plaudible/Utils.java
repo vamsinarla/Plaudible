@@ -5,7 +5,17 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.io.Reader;
 import java.net.URLConnection;
+import java.net.URLEncoder;
+
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
+import org.apache.http.StatusLine;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.DefaultHttpClient;
 
 import android.content.Context;
 import android.net.ConnectivityManager;
@@ -63,5 +73,48 @@ public class Utils {
 			return true;
 		}
 		return false;
+	}
+
+	/**
+	 * Utility function to generate a TinyURL useful for sharing links
+	 * @param url
+	 * @return
+	 */
+	public static String generateTinyUrl(String url) {
+		String tinyUrl;
+		try {
+            HttpClient client = new DefaultHttpClient();
+            String urlTemplate = "http://tinyurl.com/api-create.php?url=%s";
+            String uri = String.format(urlTemplate, URLEncoder.encode(url));
+            HttpGet request = new HttpGet(uri);
+            HttpResponse response = client.execute(request);
+            HttpEntity entity = response.getEntity();
+            InputStream in = entity.getContent();
+            try {
+                StatusLine statusLine = response.getStatusLine();
+                int statusCode = statusLine.getStatusCode();
+                if (statusCode == HttpStatus.SC_OK) {
+                    // TODO: Support other encodings
+                    String enc = "utf-8";
+                    Reader reader = new InputStreamReader(in, enc);
+                    BufferedReader bufferedReader = new BufferedReader(reader);
+                    tinyUrl = bufferedReader.readLine();
+                    if (tinyUrl != null) {
+                        return tinyUrl;
+                    } else {
+                        throw new IOException("empty response");
+                    }
+                } else {
+                    String errorTemplate = "unexpected response: %d";
+                    String msg = String.format(errorTemplate, statusCode);
+                    throw new IOException(msg);
+                }
+            } finally {
+                in.close();
+            }
+        } catch (Exception exception) {
+        	// In case we couldn't generate a short URL send the original back
+        	return url;
+        }
 	}
 }

@@ -335,7 +335,6 @@ public class SpeechService extends Service implements OnUtteranceCompletedListen
 		readCurrentChunk();
 	}
 	
-	@Override
 	public void onUtteranceCompleted(String utteranceId) {
 		if (utteranceId.equals("Finished reading sentence")) {
 			if (chunkIndex == chunks.length) {

@@ -50,7 +50,6 @@ public class HomePage extends Activity implements TextToSpeech.OnInitListener {
         ImageButton shareButton = (ImageButton) this.findViewById(R.id.shareButton);
         shareButton.setImageResource(android.R.drawable.ic_menu_share);
         shareButton.setOnClickListener(new OnClickListener() {
-			@Override
 			public void onClick(View v) {
 				Intent shareIntent = new Intent(android.content.Intent.ACTION_SEND);
 				shareIntent.setType("text/plain");
@@ -66,7 +65,6 @@ public class HomePage extends Activity implements TextToSpeech.OnInitListener {
         ImageButton submitButton = (ImageButton) this.findViewById(R.id.feedbackButton);
         submitButton.setImageResource(android.R.drawable.ic_menu_send);
         submitButton.setOnClickListener(new OnClickListener() {
-			@Override
 			public void onClick(View v) {
 				Intent myIntent = new Intent(android.content.Intent.ACTION_SEND);
 				String to[] = { HomePage.this.getString(R.string.feedback_mail) };

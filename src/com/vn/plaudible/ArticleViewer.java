@@ -1,27 +1,26 @@
 package com.vn.plaudible;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
+import java.net.URL;
+import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpStatus;
-import org.apache.http.StatusLine;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.util.EncodingUtils;
 
 import android.app.Activity;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.media.AudioManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.CountDownTimer;
+import android.os.IBinder;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
@@ -41,11 +40,9 @@ import com.google.android.apps.analytics.GoogleAnalyticsTracker;
 public class ArticleViewer extends Activity {
 
 	// Timeout in ms for removing the overlay UI
-	private static final long TIMEOUT = 7000;
+	private static final long VISIBILITY_TIMEOUT = 3000;
 	
-	private NewsSource source;
-	private String appEngineUrl;
-	
+	private NewsSource currentNewsSource;
 	private ArrayList<Article> articles;
 	private Integer currentArticleIndex;
 	
@@ -54,7 +51,7 @@ public class ArticleViewer extends Activity {
 	private WebView webview2;
 	private WebView currentWebView;
 	private ViewSwitcher switcher;
-	private ImageButton shareButton;
+	
 	private ImageButton nextArticleButton;
 	private ImageButton previousArticleButton;
 	
@@ -64,6 +61,8 @@ public class ArticleViewer extends Activity {
 	 * Google Analytics
 	 */
 	GoogleAnalyticsTracker tracker;
+
+	protected SpeechService mSpeechService;
 	
 	/** Called when the activity is first created. */
     @SuppressWarnings("unchecked")
@@ -87,24 +86,7 @@ public class ArticleViewer extends Activity {
         Intent intent = this.getIntent();
         articles = (ArrayList<Article>) intent.getSerializableExtra("articles");
         currentArticleIndex = (Integer) intent.getIntExtra("currentArticleIndex", 0);
-        source = (NewsSource) intent.getSerializableExtra("source");
-        
-        // Share button stuff
-        shareButton = (ImageButton) this.findViewById(R.id.articleshareButton);
-        shareButton.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				Intent shareIntent = new Intent(android.content.Intent.ACTION_SEND);
-				shareIntent.setType("text/plain");
-
-				// Get a tiny url
-				String shortUrl = generateTinyUrl(articles.get(currentArticleIndex).getUrl());
-				shareIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, articles.get(currentArticleIndex).getTitle() + " " + shortUrl);
-				shareIntent.putExtra(android.content.Intent.EXTRA_TEXT, getString(R.string.article_share_subject));
-				
-				startActivity(Intent.createChooser(shareIntent, "Share using"));
-			}
-		});
+        currentNewsSource = (NewsSource) intent.getSerializableExtra("source");
         
         // Next article button stuff
         nextArticleButton = (ImageButton) findViewById(R.id.nextArticleButton);
@@ -132,7 +114,7 @@ public class ArticleViewer extends Activity {
         viewVisibilityController = new ViewVisibilityController();
         viewVisibilityController.registerView(nextArticleButton);
         viewVisibilityController.registerView(previousArticleButton);
-        viewVisibilityController.registerView(shareButton);
+        // viewVisibilityController.registerView(shareButton);
         
         // WebView stuff
         // We are creating two WebViews here to switch between two articles.
@@ -143,8 +125,9 @@ public class ArticleViewer extends Activity {
 				switch(event.getAction()){
 		        case MotionEvent.ACTION_DOWN:
 		        		viewVisibilityController.setViewVisibility(View.VISIBLE);
+		        		openOptionsMenu();
 		        		
-		        		ArticleViewerUIOverlayTimer timer = new ArticleViewerUIOverlayTimer(TIMEOUT, viewVisibilityController);
+		        		ArticleViewerUIOverlayTimer timer = new ArticleViewerUIOverlayTimer(VISIBILITY_TIMEOUT, viewVisibilityController);
 		        		timer.start();
 		                break;
 				}
@@ -158,8 +141,9 @@ public class ArticleViewer extends Activity {
 				switch(event.getAction()){
 		        case MotionEvent.ACTION_DOWN:
 			        	viewVisibilityController.setViewVisibility(View.VISIBLE);
+		        		openOptionsMenu();
 		        		
-			        	ArticleViewerUIOverlayTimer timer = new ArticleViewerUIOverlayTimer(TIMEOUT, viewVisibilityController);
+			        	ArticleViewerUIOverlayTimer timer = new ArticleViewerUIOverlayTimer(VISIBILITY_TIMEOUT, viewVisibilityController);
 		        		timer.start();
 		                break;
 				}
@@ -169,6 +153,9 @@ public class ArticleViewer extends Activity {
         
         // Set currentWebView
         currentWebView = webview1;
+        
+        // Bind speech service
+        bindSpeechService();
         
         // Get the title textview
         title = (TextView) this.findViewById(R.id.articleViewerTitle);
@@ -232,6 +219,56 @@ public class ArticleViewer extends Activity {
     	}
 	}
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.article_viewer_menu, menu);
+        return true;
+    }
+    
+    /**
+     * Handle the options menu
+     * @see android.app.Activity#onOptionsItemSelected(android.view.MenuItem)
+     */
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+    	Article currentArticle = articles.get(currentArticleIndex);
+    	
+        switch (item.getItemId()) {
+            case R.id.article_share:
+            	Intent shareIntent = new Intent(android.content.Intent.ACTION_SEND);
+				shareIntent.setType("text/plain");
+
+				// Get a tiny url
+				String shortUrl = Utils.generateTinyUrl(currentArticle.getUrl());
+				shareIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, 
+												getString(R.string.article_share_subject) + 
+												currentArticle.getTitle());
+				shareIntent.putExtra(android.content.Intent.EXTRA_TEXT, shortUrl);
+				
+				startActivity(Intent.createChooser(shareIntent, "Share using"));
+                break;
+            case R.id.article_speak:
+				try {
+					getArticleContent();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+            	mSpeechService.readArticle(currentArticle);
+                break;
+            case R.id.article_webpage:
+            	// Track the event of browser being opened to read
+				tracker.trackEvent("article", "browser", currentNewsSource.getTitle(), 0);
+		        
+				Uri uri = Uri.parse(currentArticle.getUrl());
+				Intent webViewIntent = new Intent(Intent.ACTION_VIEW, uri);
+				startActivity(Intent.createChooser(webViewIntent, "Open this article in"));
+            	break;
+        }
+        return true;
+    }
+    
 	/**
      * Show the article here
      */
@@ -251,11 +288,11 @@ public class ArticleViewer extends Activity {
     	title.setText(articles.get(index).getTitle());
         
     	// Construct the AppEngine URL for the ArticleServlet
-    	appEngineUrl = getString(R.string.appengine_url) + "/article2";
+    	String appEngineUrl = getString(R.string.appengine_url) + "/article2";
     	String articleUrl = articles.get(index).getUrl(); 
     	
         // Load the page from app Engine's article servlet
-        String postData = URLEncoder.encode("source") + "=" + URLEncoder.encode(source.getTitle()) + "&";
+        String postData = URLEncoder.encode("currentNewsSource") + "=" + URLEncoder.encode(currentNewsSource.getTitle()) + "&";
         postData += URLEncoder.encode("type") + "=" + URLEncoder.encode("html") + "&"; // Default to using HTML in text only
         postData += URLEncoder.encode("link") + "=" + URLEncoder.encode(articleUrl);
         
@@ -263,7 +300,32 @@ public class ArticleViewer extends Activity {
         
         // Collect analytics
         // Track the event of article being read in text only mode
-		tracker.trackEvent("article", "textonly", source.getTitle(), 0);
+		tracker.trackEvent("article", "textonly", currentNewsSource.getTitle(), 0);
+    }
+    
+    /**
+     * Get the content of the article in the desired format
+     * @param format
+     * @throws IOException 
+     */
+    private void getArticleContent() throws IOException {
+    	Article currentArticle = articles.get(currentArticleIndex);
+    	
+    	// Construct the AppEngine URL for the ArticleServlet
+		String link = getString(R.string.appengine_url) + "article2";
+		
+		String postArgs = URLEncoder.encode("source", "UTF-8") + "=" + URLEncoder.encode(currentNewsSource.getTitle(), "UTF-8") + "&";
+		postArgs += URLEncoder.encode("link", "UTF-8") + "=" + URLEncoder.encode(currentArticle.getUrl(), "UTF-8") + "&";
+		postArgs += URLEncoder.encode("type", "UTF-8") + "=" + URLEncoder.encode("text", "UTF-8");
+		
+		// Get the response from AppEngine
+		URL articleUrl = new URL(link);
+		URLConnection conn = articleUrl.openConnection();
+		Utils.postVars(conn, postArgs);
+		
+		// Set the params for the article and mark as downloaded
+		currentArticle.setContent(Utils.getStringFromInputStream(conn.getInputStream()));
+		currentArticle.setDownloaded(true);
     }
     
     /**
@@ -328,6 +390,7 @@ public class ArticleViewer extends Activity {
 		 *  Remove the overlay UI
 		 */
 		public void onFinish() {
+			closeOptionsMenu();
 			viewVisibilityController.setViewVisibility(View.GONE);
 		}
 		/**
@@ -338,45 +401,33 @@ public class ArticleViewer extends Activity {
 	}
 	
 	/**
-	 * Utility function to generate a TinyURL useful for sharing links
-	 * @param url
-	 * @return
+	 * Connection to the Service. All Activities must have this.
 	 */
-	static String generateTinyUrl(String url) {
-		String tinyUrl;
-		try {
-            HttpClient client = new DefaultHttpClient();
-            String urlTemplate = "http://tinyurl.com/api-create.php?url=%s";
-            String uri = String.format(urlTemplate, URLEncoder.encode(url));
-            HttpGet request = new HttpGet(uri);
-            HttpResponse response = client.execute(request);
-            HttpEntity entity = response.getEntity();
-            InputStream in = entity.getContent();
-            try {
-                StatusLine statusLine = response.getStatusLine();
-                int statusCode = statusLine.getStatusCode();
-                if (statusCode == HttpStatus.SC_OK) {
-                    // TODO: Support other encodings
-                    String enc = "utf-8";
-                    Reader reader = new InputStreamReader(in, enc);
-                    BufferedReader bufferedReader = new BufferedReader(reader);
-                    tinyUrl = bufferedReader.readLine();
-                    if (tinyUrl != null) {
-                        return tinyUrl;
-                    } else {
-                        throw new IOException("empty response");
-                    }
-                } else {
-                    String errorTemplate = "unexpected response: %d";
-                    String msg = String.format(errorTemplate, statusCode);
-                    throw new IOException(msg);
-                }
-            } finally {
-                in.close();
-            }
-        } catch (Exception exception) {
-        	// In case we couldn't generate a short URL send the original back
-        	return url;
-        }
+	private ServiceConnection mConnection = new ServiceConnection() {
+		@Override
+		public void onServiceConnected(ComponentName name, IBinder service) {
+			mSpeechService = ((SpeechService.SpeechBinder)service).getService();
+		}
+
+		@Override
+		public void onServiceDisconnected(ComponentName name) {
+			mSpeechService = null;
+		}	
+	};
+	
+	/**
+	 * Bind to the Speech Service. Called from onCreate() on this activity
+	 */
+	void bindSpeechService() {
+		this.bindService(new Intent(ArticleViewer.this, SpeechService.class), mConnection, Context.BIND_AUTO_CREATE);
+	}
+	
+	/**
+	 * Unbind from the Speech Service. Called from onDestroy() on this activity
+	 */
+	void unBindSpeechService() {
+		if (mSpeechService != null) {
+			this.unbindService(mConnection);
+		}
 	}
 }

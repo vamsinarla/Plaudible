@@ -38,8 +38,11 @@
 <string name="cancel">Cancel</string>
 <string name="reorder_page_help">Use the drag/drop holder on the left to reorder or use the delete button to remove.</string>
 <string name="no_articles_to_show">No articles to show. Check your feed settings.</string>
-<string name="quick_search_box_hint">Search for news here</string>
+<string name="quick_search_box_hint">Instant news search</string>
 <string name="topic_search_title">Latest news for </string>
 <string name="connection_unavailable">No connection available</string>
 <string name="playlist_tab_title">Playlist</string>
+<string name="article_speak">Speak it</string>
+<string name="article_webpage">Read on web</string>
+<string name="article_share">Share it</string>
 </resources>
