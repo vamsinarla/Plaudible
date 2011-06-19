@@ -1,6 +1,10 @@
-package com.vn.plaudible;
+package com.vn.plaudible.types;
 
 import java.io.Serializable;
+
+import com.vn.plaudible.R;
+import com.vn.plaudible.Utils;
+import com.vn.plaudible.R.string;
 
 /**
  * Class for representing Article

@@ -2,10 +2,10 @@ package com.vn.plaudible.tts;
 
 import android.util.Log;
 
-import com.vn.plaudible.Article;
-import com.vn.plaudible.Playlist;
 import com.vn.plaudible.R;
 import com.vn.plaudible.Utils;
+import com.vn.plaudible.types.Article;
+import com.vn.plaudible.types.Playlist;
 
 public class TTSDataAdapter<Item> {
 	/**

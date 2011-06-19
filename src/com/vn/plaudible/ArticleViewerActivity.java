@@ -30,8 +30,11 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.ViewSwitcher;
 
-import com.google.android.apps.analytics.GoogleAnalyticsTracker;
+import com.vn.plaudible.analytics.Tracker;
 import com.vn.plaudible.tts.SpeechService;
+import com.vn.plaudible.types.Article;
+import com.vn.plaudible.types.Feed;
+import com.vn.plaudible.types.NewsSource;
 
 /**
  * View a text only version of the article for fast reading.
@@ -42,6 +45,13 @@ public class ArticleViewerActivity extends Activity {
 
 	// Timeout in ms for removing the overlay UI
 	private static final long VISIBILITY_TIMEOUT = 3000;
+	
+	// Intent strings and extras
+	public static final String INTENT_FEED = "feed";
+	public static final String INTENT_CURRENT_ARTILCE_INDEX = "currentArticleIndex";
+	public static final String INTENT_CURRENT_SOURCE = "source";
+	
+	private static final String CONTENT_SERVLET = "/article/content";
 	
 	private NewsSource currentNewsSource;
 	private Feed feed;
@@ -58,12 +68,9 @@ public class ArticleViewerActivity extends Activity {
 	
 	private ViewVisibilityController viewVisibilityController;
 	
-	/**
-	 * Google Analytics
-	 */
-	GoogleAnalyticsTracker tracker;
-
 	protected SpeechService mSpeechService;
+
+	private Tracker tracker;
 	
 	/** Called when the activity is first created. */
     @Override
@@ -77,16 +84,13 @@ public class ArticleViewerActivity extends Activity {
         setContentView(R.layout.article_viewer);
         
         // Get the analytics tracker instance
-        tracker = GoogleAnalyticsTracker.getInstance();
-        
-        // Start the tracker in auto dispatch mode to update every 60 seconds
-        tracker.start(getString(R.string.analytics_id), 60, this);
+        tracker = Tracker.getInstance(this);
         
         // Get the intent and the related extras
         Intent intent = this.getIntent();
-        feed = (Feed) intent.getSerializableExtra("articles");
-        currentArticleIndex = (Integer) intent.getIntExtra("currentArticleIndex", 0);
-        currentNewsSource = (NewsSource) intent.getSerializableExtra("source");
+        feed = (Feed) intent.getSerializableExtra(INTENT_FEED);
+        currentArticleIndex = (Integer) intent.getIntExtra(INTENT_CURRENT_ARTILCE_INDEX, 0);
+        currentNewsSource = (NewsSource) intent.getSerializableExtra(INTENT_CURRENT_SOURCE);
         
         // Next article button stuff
         nextArticleButton = (ImageButton) findViewById(R.id.nextArticleButton);
@@ -153,6 +157,9 @@ public class ArticleViewerActivity extends Activity {
         
         // Set currentWebView
         currentWebView = webview1;
+        
+        // 
+        Utils.suspendSpinningWheel();
         
         // Bind speech service
         bindSpeechService();
@@ -259,7 +266,7 @@ public class ArticleViewerActivity extends Activity {
                 break;
             case R.id.article_webpage:
             	// Track the event of browser being opened to read
-				tracker.trackEvent("article", "browser", currentNewsSource.getTitle(), 0);
+				tracker.trackEvent("article", "browser", currentNewsSource.getTitle());
 		        
 				Uri uri = Uri.parse(currentArticle.getUrl());
 				Intent webViewIntent = new Intent(Intent.ACTION_VIEW, uri);
@@ -288,19 +295,18 @@ public class ArticleViewerActivity extends Activity {
     	title.setText(feed.getItem(index).getTitle());
         
     	// Construct the AppEngine URL for the ArticleServlet
-    	String appEngineUrl = getString(R.string.appengine_url) + "/article2";
+    	String appEngineUrl = getString(R.string.appengine_url2) + CONTENT_SERVLET;
     	String articleUrl = feed.getItem(index).getUrl(); 
     	
         // Load the page from app Engine's article servlet
-        String postData = URLEncoder.encode("currentNewsSource") + "=" + URLEncoder.encode(currentNewsSource.getTitle()) + "&";
-        postData += URLEncoder.encode("type") + "=" + URLEncoder.encode("html") + "&"; // Default to using HTML in text only
-        postData += URLEncoder.encode("link") + "=" + URLEncoder.encode(articleUrl);
+        String postData = URLEncoder.encode("format") + "=" + URLEncoder.encode("json") + "&";
+        postData += URLEncoder.encode("url") + "=" + URLEncoder.encode(articleUrl);
         
         currentWebView.postUrl(appEngineUrl, EncodingUtils.getBytes(postData, "BASE64"));
         
         // Collect analytics
         // Track the event of article being read in text only mode
-		tracker.trackEvent("article", "textonly", currentNewsSource.getTitle(), 0);
+		tracker.trackEvent("article", "textonly", currentNewsSource.getTitle());
     }
     
     /**

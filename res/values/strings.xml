@@ -37,7 +37,7 @@
 <string name="confirm_delete_dialog_title">Delete </string>
 <string name="cancel">Cancel</string>
 <string name="reorder_page_help">Use the drag/drop holder on the left to reorder or use the delete button to remove.</string>
-<string name="no_articles_to_show">No articles to show. Check your feed settings.</string>
+<string name="no_articles_to_show">Loading...</string>
 <string name="quick_search_box_hint">Instant news search</string>
 <string name="topic_search_title">Latest news for </string>
 <string name="connection_unavailable">No connection available</string>

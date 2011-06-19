@@ -5,7 +5,10 @@ import java.util.Collections;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.vn.plaudible.db.NewsSpeakDBAdapter;
 import com.vn.plaudible.tts.SpeechService;
+import com.vn.plaudible.types.NewsSource;
+
 
 import android.app.ListActivity;
 import android.content.ComponentName;
@@ -43,7 +46,7 @@ public class NewsSourcesPage extends ListActivity {
 	private SpeechService mSpeechService;
 	private EditText filterText;
 	
-	private static final int instantNewsSearchListPosition = 0;
+	private static final int INSTANT_NEWS_SEARCH_POSITION = 0;
 	
 	static class ViewHolder {
 		ImageView image;
@@ -225,10 +228,13 @@ public class NewsSourcesPage extends ListActivity {
 				return;
 			}
 			
+			// Start a spinning wheel
+			Utils.showSpinningWheel(NewsSourcesPage.this, "", getString(R.string.loading_articles));
+			
 			ViewHolder holder = (ViewHolder) view.getTag();
 			NewsSource source = getItem(holder.position);
 			
-			if (instantNewsSearchListPosition != holder.position) {
+			if (INSTANT_NEWS_SEARCH_POSITION != holder.position) {
 				// Our NewsSource objects are incomplete. Fetch the full NewsSource now.
 				source = mDbAdapter.getNewsPaper(source.getTitle());
 			}
@@ -236,7 +242,7 @@ public class NewsSourcesPage extends ListActivity {
 			// Start Plaudible
 			Intent listArticlesInFeed = new Intent();
 			listArticlesInFeed.setClass(context, FeedViewerActivity.class);
-			listArticlesInFeed.putExtra("NewsSource", source);
+			listArticlesInFeed.putExtra(FeedViewerActivity.INTENT_NEWSSOURCE, source);
 			
 			context.startActivity(listArticlesInFeed);
 		}
@@ -274,7 +280,7 @@ public class NewsSourcesPage extends ListActivity {
 					}
 					
 					// Add the Google News source to the resulting filtered sets
-					subSources.add(instantNewsSearchListPosition, Utils.generateGoogleNewsSource(constraint.toString()));
+					subSources.add(INSTANT_NEWS_SEARCH_POSITION, Utils.generateGoogleNewsSource(constraint.toString()));
 					
 					// Adding into the result set
 					results.values = subSources;

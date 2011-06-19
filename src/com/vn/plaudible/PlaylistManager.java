@@ -23,6 +23,8 @@ import com.vn.plaudible.dragdrop.DragNDropListView;
 import com.vn.plaudible.dragdrop.DropListener;
 import com.vn.plaudible.dragdrop.RemoveListener;
 import com.vn.plaudible.tts.SpeechService;
+import com.vn.plaudible.types.Playlist;
+import com.vn.plaudible.types.Item;
 
 public class PlaylistManager extends ListActivity {
 	

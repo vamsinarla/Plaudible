@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.concurrent.ExecutionException;
 
 import android.app.ListActivity;
-import android.app.ProgressDialog;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -26,8 +25,12 @@ import android.widget.SlidingDrawer;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.apps.analytics.GoogleAnalyticsTracker;
+import com.vn.plaudible.analytics.Tracker;
 import com.vn.plaudible.tts.SpeechService;
+import com.vn.plaudible.types.Article;
+import com.vn.plaudible.types.Feed;
+import com.vn.plaudible.types.NewsSource;
+import com.vn.plaudible.types.Playlist;
 
 public class FeedViewerActivity extends ListActivity {
 	
@@ -43,21 +46,17 @@ public class FeedViewerActivity extends ListActivity {
         int position;
     }
 
-	/**
-	 * Google Analytics
-	 */
-	GoogleAnalyticsTracker tracker;
-	
 	private FeedListAdapter adapter;
 	private NewsSource currentNewsSource;
 	private SpeechService mSpeechService;
-	private ProgressDialog spinningWheel;
 	
 	private SlidingDrawer slidingDrawer;
+	private Tracker tracker;
 	
-	private static final int DOWNLOADING_TIMEOUT = 10000;
+	// Intents and extra strings
+	public static final String INTENT_NEWSSOURCE = "newssource";
+	
 	private static final int DROPDOWNBAR_TIMEOUT = 7000;
-	private static final int ANALYTICS_REPORTING_INTERVAL = 60;
 	
 	/** Called when the activity is first created. */
     @Override
@@ -67,18 +66,12 @@ public class FeedViewerActivity extends ListActivity {
         // Set view related stuff
         setContentView(R.layout.articles_list);
  
-        // Get the analytics tracker instance
-        tracker = GoogleAnalyticsTracker.getInstance();
-        
-        // Start the tracker in auto dispatch mode to update every few seconds
-        tracker.start(getString(R.string.analytics_id), ANALYTICS_REPORTING_INTERVAL, this);
-        
-        // Show the spinning wheel and the counter, which suspends the wheel in TIMEOUT milli-seconds
-        showSpinningWheel("", getString(R.string.loading_articles), DOWNLOADING_TIMEOUT);
-        
         // Get the intent and the related extras
         Intent intent = getIntent();
-        currentNewsSource = (NewsSource) intent.getSerializableExtra("NewsSource");
+        currentNewsSource = (NewsSource) intent.getSerializableExtra(INTENT_NEWSSOURCE);
+        
+        // Get a analytics tracking instance
+        tracker = Tracker.getInstance(this);
         
         // Track this news source being opened
         tracker.trackPageView("/news/" + currentNewsSource.getTitle());
@@ -93,6 +86,7 @@ public class FeedViewerActivity extends ListActivity {
         adapter = new FeedListAdapter(this, R.layout.articles_list_item, new Feed());
         setListAdapter(adapter);
 
+        // Load feed will automatically load the correct feed as per the current newssource
         loadFeed();
         
         bindSpeechService();
@@ -136,7 +130,7 @@ public class FeedViewerActivity extends ListActivity {
 	   adapter.notifyDataSetChanged();
 	   
 	   // Articles were fetched so we can suspend the wheel
-	   suspendSpinningWheel();
+	   Utils.suspendSpinningWheel();
 	   
 	   // Bottom bar
 	   displayBottomBar();
@@ -225,8 +219,8 @@ public class FeedViewerActivity extends ListActivity {
 		   // Close the drawer
 		   slidingDrawer.animateClose();
 		   
-	       // Show the spinning wheel and the counter, which suspends the wheel in TIMEOUT milli-seconds
-	       showSpinningWheel("", getString(R.string.loading_articles), DOWNLOADING_TIMEOUT);
+	       // Show the spinning wheel
+	       Utils.showSpinningWheel(FeedViewerActivity.this, "", getString(R.string.loading_articles));
 	       
 	       // Set the title and the category
 	       currentNewsSource.setCurrentCategoryIndex(holder.position);
@@ -325,7 +319,7 @@ public class FeedViewerActivity extends ListActivity {
 					Integer position = (Integer) v.getTag();
 					
 					// Track the event of browser being opened to read
-					tracker.trackEvent("article", "browser", currentNewsSource.getTitle(), 0);
+					tracker.trackEvent("article", "browser", currentNewsSource.getTitle());
 			        
 					Uri uri = Uri.parse(adapter.getItem(position).getUrl());
 					Intent webViewIntent = new Intent(Intent.ACTION_VIEW, uri);
@@ -342,7 +336,7 @@ public class FeedViewerActivity extends ListActivity {
 					Integer position = (Integer) v.getTag();
 					if (!feed.getItem(position).isDownloaded()) {
 						   // Spinning wheel to show while the article is being downloaded
-						   showSpinningWheel("", getString(R.string.loading_articles), DOWNLOADING_TIMEOUT);
+						   Utils.showSpinningWheel(FeedViewerActivity.this, "", getString(R.string.loading_articles));
 						   
 						   // Start the article download
 						   @SuppressWarnings("rawtypes")
@@ -355,7 +349,7 @@ public class FeedViewerActivity extends ListActivity {
 												   			currentNewsSource }));
 						    
 						    // Track the event of article being spoken out
-							tracker.trackEvent("article", "speak", currentNewsSource.getTitle(), 0);
+							tracker.trackEvent("article", "speak", currentNewsSource.getTitle());
 					        
 						    // Wait on the task to get completed
 							try {
@@ -366,7 +360,7 @@ public class FeedViewerActivity extends ListActivity {
 								showToast("Downloading error");
 							}
 							// Suspend the spinning wheel
-							suspendSpinningWheel();
+							Utils.suspendSpinningWheel();
 					   	}
 						// Send the article for reading
 						sendArticleForReading(feed.getItem(position));
@@ -386,14 +380,17 @@ public class FeedViewerActivity extends ListActivity {
 					Integer position = (Integer) v.getTag();
 					
 					// Track the event of article being read in text only
-					tracker.trackEvent("article", "textonly", currentNewsSource.getTitle(), 0);
+					tracker.trackEvent("article", "textonly", currentNewsSource.getTitle());
 			        
+					// Start a loading dialog
+					Utils.showSpinningWheel(FeedViewerActivity.this, "", getString(R.string.no_articles_to_show));
+					
 					// Start the ArticleViewer activity
 					Intent articleViewerLaunchIntent = new Intent();
 					articleViewerLaunchIntent.setClass(getContext(), ArticleViewerActivity.class);
-					articleViewerLaunchIntent.putExtra("source", currentNewsSource); // The source of this article
-					articleViewerLaunchIntent.putExtra("feed", feed);
-					articleViewerLaunchIntent.putExtra("currentArticleIndex", position);
+					articleViewerLaunchIntent.putExtra(ArticleViewerActivity.INTENT_CURRENT_SOURCE, currentNewsSource); // The source of this article
+					articleViewerLaunchIntent.putExtra(ArticleViewerActivity.INTENT_FEED, feed);
+					articleViewerLaunchIntent.putExtra(ArticleViewerActivity.INTENT_CURRENT_ARTILCE_INDEX, position);
 					
 					startActivity(articleViewerLaunchIntent);
 				}
@@ -407,7 +404,7 @@ public class FeedViewerActivity extends ListActivity {
 					Integer position = (Integer) v.getTag();
 					ImageButton playlistButton = (ImageButton) v;
 					
-					Playlist playlist = mSpeechService.getPlaylist();
+					Playlist<Article> playlist = mSpeechService.getPlaylist();
 					
 					// Check if it exists in the playlist
 					Article article = feed.getItem(position);
@@ -424,24 +421,6 @@ public class FeedViewerActivity extends ListActivity {
         	// End of onClick stuff
 		}
    }
-   
-	/**
-	 * Show the spinning wheel
-	 */
-   public void showSpinningWheel(String title, String text, long timeout) {
-	   ProgressDialogTimer timer = new  ProgressDialogTimer(timeout, timeout);
-       spinningWheel = ProgressDialog.show(FeedViewerActivity.this, title, text, true);
-       timer.start();
-   }
-   
-   /**
-    * Suspend the spinning wheel
-    */
-   	public void suspendSpinningWheel() {
-	   if (spinningWheel.isShowing()) {
-		   spinningWheel.cancel();
-	   }
-   	}
    
    	/**
     * Show the toast for error messages
@@ -501,30 +480,6 @@ public class FeedViewerActivity extends ListActivity {
 			});
         }
 		
-	}
-	
-	/**
-	 * Timer for the progress dialog
-	 * @author vamsi
-	 *
-	 */
-	private class ProgressDialogTimer extends CountDownTimer {
-		public ProgressDialogTimer(long millisInFuture, long countDownInterval) {
-			super(millisInFuture, countDownInterval);
-		}
-		/**
-		 *  Suspend the spinning wheel after some time.
-		 */
-		public void onFinish() {
-			suspendSpinningWheel();
-			displayBottomBar();
-		}
-		/**
-		 *  Do nothing here
-		 */
-		public void onTick(long millisUntilFinished) {
-			
-		}
 	}
 	
 	/**

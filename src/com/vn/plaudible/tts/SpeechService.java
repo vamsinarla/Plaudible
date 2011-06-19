@@ -16,11 +16,11 @@ import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.vn.plaudible.Article;
 import com.vn.plaudible.FeedViewerActivity;
-import com.vn.plaudible.Playlist;
 import com.vn.plaudible.R;
 import com.vn.plaudible.Utils;
+import com.vn.plaudible.types.Article;
+import com.vn.plaudible.types.Playlist;
 
 /**
  * The service that speaks

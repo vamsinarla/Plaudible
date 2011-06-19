@@ -33,7 +33,10 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.vn.plaudible.NewsSource.SourceType;
+import com.vn.plaudible.db.NewsSpeakDBAdapter;
+import com.vn.plaudible.types.NewsSource;
+import com.vn.plaudible.types.NewsSource.SourceType;
+
 
 /**
  * Search Page 

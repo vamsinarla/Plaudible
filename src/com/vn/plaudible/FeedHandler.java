@@ -4,6 +4,9 @@ import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
+import com.vn.plaudible.types.Article;
+import com.vn.plaudible.types.Feed;
+
 /**
  * Handler - SAX implementation for handling the XML returned by the FeedServlet on AppEngine
  * @author vamsi
@@ -15,10 +18,10 @@ public class FeedHandler extends DefaultHandler {
 	private Article currentArticle;
 	private StringBuilder builder;
 	
-	private static final String titleTag = "title";
-	private static final String descriptionTag = "description";
-	private static final String itemTag = "item";
-	private static final String linkTag = "link";
+	private static final String TITLE_TAG = "title";
+	private static final String DESCRIPTION_TAG = "description";
+	private static final String ITEM_TAG = "item";
+	private static final String LINK_TAG = "link";
 	
 	/**
 	 * Ctor. Supply the articles arraylist which initially has no elements
@@ -44,13 +47,13 @@ public class FeedHandler extends DefaultHandler {
 		super.endElement(uri, localName, name);
 		
 		if (this.currentArticle != null){
-			if (localName.equalsIgnoreCase(titleTag)) {
+			if (localName.equalsIgnoreCase(TITLE_TAG)) {
 				currentArticle.setTitle(builder.toString().trim());
-			} else if (localName.equalsIgnoreCase(descriptionTag)) {
+			} else if (localName.equalsIgnoreCase(DESCRIPTION_TAG)) {
 				currentArticle.setDescription(builder.toString().trim());
-			} else if (localName.equalsIgnoreCase(linkTag)) {
+			} else if (localName.equalsIgnoreCase(LINK_TAG)) {
 				currentArticle.setUrl(builder.toString().trim());
-			} else if (localName.equalsIgnoreCase(itemTag)) {
+			} else if (localName.equalsIgnoreCase(ITEM_TAG)) {
 				
 				// Set the id of the article which is basically its index
 				currentArticle.setId(feed.size());
@@ -72,7 +75,7 @@ public class FeedHandler extends DefaultHandler {
 	public void startElement(String uri, String localName, String name,
 			Attributes attributes) throws SAXException {
 		super.startElement(uri, localName, name, attributes);
-		if (localName.equalsIgnoreCase(itemTag)){
+		if (localName.equalsIgnoreCase(ITEM_TAG)){
 			this.currentArticle = new Article();
 			builder.setLength(0);
 		}

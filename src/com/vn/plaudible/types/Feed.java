@@ -1,4 +1,4 @@
-package com.vn.plaudible;
+package com.vn.plaudible.types;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -28,7 +28,7 @@ public class Feed implements Serializable {
 	private String description;
 	private String url;
 	
-	Feed() {
+	public Feed() {
 		items = new ArrayList<Article>();
 	}
 	
@@ -55,7 +55,7 @@ public class Feed implements Serializable {
 		return feed;
 	}
 	
-	void clear() {
+	public void clear() {
 		items.clear();
 	}
 
@@ -87,7 +87,7 @@ public class Feed implements Serializable {
 		return description;
 	}
 
-	int size() {
+	public int size() {
 		return items.size();
 	}
 

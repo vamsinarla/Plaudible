@@ -1,4 +1,4 @@
-package com.vn.plaudible;
+package com.vn.plaudible.types;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -34,7 +34,7 @@ public class NewsSource implements Serializable {
 	/**
 	 * Static comparator for NewsSource
 	 */
-	static final Comparator<NewsSource> DISPLAYINDEX_ORDER = new Comparator<NewsSource>() {
+	public static final Comparator<NewsSource> DISPLAYINDEX_ORDER = new Comparator<NewsSource>() {
 		public int compare(NewsSource n1, NewsSource n2) {
 			return n1.getDisplayIndex().compareTo(n2.getDisplayIndex());
 		}

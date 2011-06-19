@@ -1,4 +1,4 @@
-package com.vn.plaudible;
+package com.vn.plaudible.types;
 
 import java.util.ArrayList;
 

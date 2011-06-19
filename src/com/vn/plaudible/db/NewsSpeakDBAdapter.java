@@ -1,6 +1,8 @@
-package com.vn.plaudible;
+package com.vn.plaudible.db;
 
 import java.util.ArrayList;
+
+import com.vn.plaudible.types.NewsSource;
 
 import android.content.ContentValues;
 import android.content.Context;

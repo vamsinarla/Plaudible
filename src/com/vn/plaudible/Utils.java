@@ -18,6 +18,9 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
 
+import com.vn.plaudible.types.NewsSource;
+
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -29,8 +32,17 @@ import android.net.NetworkInfo;
  */
 public class Utils {
 	
-	public static Context context;
-
+	private static Context context;
+	private static ProgressDialog spinningWheel;
+	
+	/**
+	 * Set the context which is required by several utilities
+	 * @return 
+	 */
+	public static synchronized void setContext(Context _context) {
+		context = _context;
+	}
+	
 	/**
 	 * Get a string from an inputStream
 	 * @param inputStream
@@ -154,4 +166,21 @@ public class Utils {
         	return url;
         }
 	}
+	
+	 
+	/**
+	 * Show the spinning wheel
+	 */
+   public static void showSpinningWheel(Context _context, String title, String text) {
+	   spinningWheel = ProgressDialog.show(_context, title, text, true);
+   }
+   
+   /**
+    * Suspend the spinning wheel
+    */
+   	public static void suspendSpinningWheel() {
+	   if (spinningWheel.isShowing()) {
+		   spinningWheel.cancel();
+	   }
+   	}
 }

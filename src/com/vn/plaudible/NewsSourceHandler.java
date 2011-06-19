@@ -6,6 +6,8 @@ import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
+import com.vn.plaudible.types.NewsSource;
+
 /**
  * Can construct an ArrayList of NewsSource objects from the standard
  * XML format for NewsSource(s) we follow 

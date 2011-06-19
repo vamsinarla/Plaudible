@@ -1,6 +1,6 @@
-package com.vn.plaudible;
+package com.vn.plaudible.types;
 
-abstract class Item {
+public abstract class Item {
 
 	public String getContentForSpeech() {
 		return null;

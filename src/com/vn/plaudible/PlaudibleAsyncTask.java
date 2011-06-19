@@ -9,6 +9,10 @@ import java.net.URLEncoder;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
+import com.vn.plaudible.types.Article;
+import com.vn.plaudible.types.Feed;
+import com.vn.plaudible.types.NewsSource;
+
 import android.app.ProgressDialog;
 import android.os.AsyncTask;
 import android.util.Log;

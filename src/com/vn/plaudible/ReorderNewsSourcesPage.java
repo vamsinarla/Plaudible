@@ -22,10 +22,13 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.vn.plaudible.db.NewsSpeakDBAdapter;
 import com.vn.plaudible.dragdrop.DragListener;
 import com.vn.plaudible.dragdrop.DragNDropListView;
 import com.vn.plaudible.dragdrop.DropListener;
 import com.vn.plaudible.dragdrop.RemoveListener;
+import com.vn.plaudible.types.NewsSource;
+
 
 public class ReorderNewsSourcesPage extends ListActivity {
 
