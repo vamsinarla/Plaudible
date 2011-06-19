@@ -407,16 +407,16 @@ public class FeedViewerActivity extends ListActivity {
 					Integer position = (Integer) v.getTag();
 					ImageButton playlistButton = (ImageButton) v;
 					
-					Playlist playlist = mSpeechService.getArticlePlaylist();
+					Playlist playlist = mSpeechService.getPlaylist();
 					
 					// Check if it exists in the playlist
 					Article article = feed.getItem(position);
 					if (playlist.contains(article)) {
 						playlistButton.setImageResource(R.drawable.add_article);
-						playlist.removeArticle(article);
+						playlist.removeItem(article);
 					} else {
 						playlistButton.setImageResource(R.drawable.remove_article);
-						playlist.addArticle(article);
+						playlist.addItem(article);
 					}
 				}
 			});
@@ -467,16 +467,15 @@ public class FeedViewerActivity extends ListActivity {
 	 * Display the bottom bar which contains the pause/play button
 	 */
 	public void displayBottomBar() {
-		Article article;
 		
 		// See if an article is with the SpeechService (paused or not) doesn't matter
-		if (mSpeechService != null && (article = mSpeechService.getCurrentlyReadArticle()) != null) {
+		if (mSpeechService != null && mSpeechService.isReading()) {
         	View bottomBar = findViewById(R.id.articlelistbottombar);
         	bottomBar.setVisibility(View.VISIBLE);
         	
         	// Set the text on the bottom bar
         	TextView bottomBarText = (TextView) findViewById(R.id.articleListBottomBarText);
-        	String text = mSpeechService.getCurrentNewsSource().getTitle() + " - " + article.getTitle();
+        	String text = mSpeechService.getCurrentItem().getSource().getTitle() + " - " + mSpeechService.getCurrentItem().getTitle();
          	bottomBarText.setText(text);
         	
         	// Set the correct icon on the bottom bar

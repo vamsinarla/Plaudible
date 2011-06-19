@@ -255,7 +255,7 @@ public class ArticleViewerActivity extends Activity {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-            	mSpeechService.readArticle(currentArticle, currentNewsSource);
+            	mSpeechService.startReadingArticle(currentArticle);
                 break;
             case R.id.article_webpage:
             	// Track the event of browser being opened to read

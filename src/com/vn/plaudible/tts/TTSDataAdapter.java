@@ -29,14 +29,14 @@ public class TTSDataAdapter<Item> {
 	 *  Return the index of the currently read item
 	 * @return
 	 */
-	Item getCurrentlyReadArticle() {
+	Item getCurrentItem() {
 		return currentItem;
 	}
 	
 	/**
 	 * Return the playlist
 	 */
-	Playlist<Item> getArticlePlaylist() {
+	Playlist<Item> getPlaylist() {
 		return playlist;
 	}
 	

@@ -63,14 +63,14 @@ public class PlaylistManager extends ListActivity {
      * @author vamsi
      *
      */
-    private class DragNDropAdapter extends ArrayAdapter<Article> implements RemoveListener, DropListener, View.OnClickListener {
+    private class DragNDropAdapter extends ArrayAdapter<Item> implements RemoveListener, DropListener, View.OnClickListener {
 
     	private Context mContext;
     	private LayoutInflater mInflater;
-    	private Playlist mPlaylist;
+    	private Playlist<Item> mPlaylist;
     	
-        public DragNDropAdapter(Context context, int resource, Playlist playlist) {
-        	super(context, resource, playlist.getArticles());
+        public DragNDropAdapter(Context context, int resource, Playlist<Item> playlist) {
+        	super(context, resource, playlist.getItems());
         	mPlaylist = playlist;
         	mContext = context;
         	
@@ -93,7 +93,7 @@ public class PlaylistManager extends ListActivity {
          *
          * @see android.widget.ListAdapter#getItem(int)
          */
-        public Article getItem(int position) {
+        public Item getItem(int position) {
             return mPlaylist.get(position);
         }
 
@@ -167,7 +167,7 @@ public class PlaylistManager extends ListActivity {
 		@Override
 		public void onDrop(int from, int to) {
 			// Swap the items in the adapter
-    		Article temp = mPlaylist.get(from);
+    		Item temp = mPlaylist.get(from);
     		mPlaylist.remove(from);
     		mPlaylist.add(to,temp);
 		}

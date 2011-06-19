@@ -176,28 +176,7 @@ public class HomePage extends Activity implements TextToSpeech.OnInitListener {
 					return;
 				}
 				
-				/* Create a NewsSource that Plaudible can use
-				 * Construct URL for google news on the following search Term 
-				 */
-				String googleNewsUrl = "http://news.google.com/news?pz=1&cf=all";
-				googleNewsUrl += "&ned=" + Locale.getDefault().getCountry();
-				// googleNewsUrl += "&hl=" + Locale.getDefault().getLanguage();
-				googleNewsUrl += "&hl=en";
-				googleNewsUrl += "&q=" + searchTerm;
-				googleNewsUrl += "&cf=all&output=rss"; 
-					
-				NewsSource newsSource = 
-					new NewsSource(getString(R.string.topic_search_title) + " " + searchTerm,
-									"blog",
-									Locale.getDefault().getLanguage(),
-									Locale.getDefault().getCountry(),
-									false,
-									null,
-									null,
-									googleNewsUrl,
-									false,
-									false,
-									0);
+				NewsSource newsSource = Utils.generateGoogleNewsSource(searchTerm);
 				
 				// Now create and dispatch an intent to PLaudible to read this NewsSource
 				Intent quickNewsIntent = new Intent();
@@ -211,6 +190,9 @@ public class HomePage extends Activity implements TextToSpeech.OnInitListener {
 		
         bindSpeechService();
         checkAndInstallTTSEngine();
+        
+        // Set the context for Utils
+        Utils.context = this;
     }
     
     /**

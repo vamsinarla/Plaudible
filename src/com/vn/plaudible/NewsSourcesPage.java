@@ -43,6 +43,8 @@ public class NewsSourcesPage extends ListActivity {
 	private SpeechService mSpeechService;
 	private EditText filterText;
 	
+	private static final int instantNewsSearchListPosition = 0;
+	
 	static class ViewHolder {
 		ImageView image;
 		TextView text;
@@ -226,8 +228,10 @@ public class NewsSourcesPage extends ListActivity {
 			ViewHolder holder = (ViewHolder) view.getTag();
 			NewsSource source = getItem(holder.position);
 			
-			// Our NewsSource objects are incomplete. Fetch the full NewsSource now.
-			source = mDbAdapter.getNewsPaper(source.getTitle());
+			if (instantNewsSearchListPosition != holder.position) {
+				// Our NewsSource objects are incomplete. Fetch the full NewsSource now.
+				source = mDbAdapter.getNewsPaper(source.getTitle());
+			}
 			
 			// Start Plaudible
 			Intent listArticlesInFeed = new Intent();
@@ -268,6 +272,10 @@ public class NewsSourcesPage extends ListActivity {
 							subSources.add(source);
 						}
 					}
+					
+					// Add the Google News source to the resulting filtered sets
+					subSources.add(instantNewsSearchListPosition, Utils.generateGoogleNewsSource(constraint.toString()));
+					
 					// Adding into the result set
 					results.values = subSources;
 					results.count = subSources.size();
@@ -278,6 +286,7 @@ public class NewsSourcesPage extends ListActivity {
 						results.count = allSources.size();
 					}
 				}
+				
 				return results;
 			}
 

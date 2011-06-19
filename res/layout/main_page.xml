@@ -7,7 +7,7 @@
     <EditText android:id="@+id/search_box" 
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:hint="Type to filter"
+        android:hint="@string/quick_search_box_hint"
         android:inputType="text"
         android:maxLines="1"/>
         

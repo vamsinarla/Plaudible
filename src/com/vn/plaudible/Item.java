@@ -9,4 +9,8 @@ abstract class Item {
 	public String getContent() {
 		return null;
 	}
+
+	public String getTitle() {
+		return null;
+	}
 }

@@ -18,6 +18,7 @@ import android.widget.Toast;
 
 import com.vn.plaudible.Article;
 import com.vn.plaudible.FeedViewerActivity;
+import com.vn.plaudible.Playlist;
 import com.vn.plaudible.R;
 import com.vn.plaudible.Utils;
 
@@ -53,7 +54,7 @@ public class SpeechService extends Service {
 	 *
 	 */
 	public class SpeechBinder extends Binder {
-		SpeechService getService() {
+		public SpeechService getService() {
 			return SpeechService.this;
 		}
 	}
@@ -80,7 +81,6 @@ public class SpeechService extends Service {
 		}
 	}
 	
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Override
 	public void onCreate() {
 		// Init state
@@ -150,7 +150,7 @@ public class SpeechService extends Service {
 		notification.flags |= Notification.FLAG_NO_CLEAR;
 		
 		Intent notificationIntent = new Intent(this, FeedViewerActivity.class);
-		notificationIntent.putExtra("NewsSource", ttsDataAdapter.getCurrentlyReadArticle().getSource());
+		notificationIntent.putExtra("NewsSource", ttsDataAdapter.getCurrentItem().getSource());
 		notificationIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
 		
 		// Set the intent in the notification
@@ -217,5 +217,13 @@ public class SpeechService extends Service {
 	public void resumeReading() {
 		ttsController.resume();
 		state = State.PLAYING;
+	}
+
+	public Article getCurrentItem() {
+		return ttsDataAdapter.getCurrentItem();
+	}
+
+	public Playlist getPlaylist() {
+		return ttsDataAdapter.getPlaylist();
 	}
 }

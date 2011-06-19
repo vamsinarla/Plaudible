@@ -49,6 +49,9 @@ public class PlaudibleAsyncTask extends AsyncTask<PlaudibleAsyncTask.Payload, Ar
 					break;
 				}
 			}
+			
+			payload.data = null;
+			payload = null;
 		}
 	}
 	

@@ -8,6 +8,7 @@ import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.net.URLConnection;
 import java.net.URLEncoder;
+import java.util.Locale;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -18,7 +19,6 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
 
 import android.content.Context;
-import android.content.res.Resources;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 
@@ -28,6 +28,9 @@ import android.net.NetworkInfo;
  *
  */
 public class Utils {
+	
+	public static Context context;
+
 	/**
 	 * Get a string from an inputStream
 	 * @param inputStream
@@ -80,8 +83,33 @@ public class Utils {
 	 * Get a string from the application resources
 	 */
 	public static String getStringFromResourceId(Integer id) {
-		final Resources r = Resources.getSystem();
-		return r.getString(id);
+		return context.getString(id);
+	}
+	
+	/**
+	 * Create a Google news NewsSource
+	 */
+	public static NewsSource generateGoogleNewsSource(String searchTerm) {
+		String googleNewsUrl = "http://news.google.com/news?pz=1&cf=all";
+		googleNewsUrl += "&ned=" + Locale.getDefault().getCountry();
+		googleNewsUrl += "&hl=" + Locale.getDefault().getLanguage();
+		// googleNewsUrl += "&hl=en";
+		googleNewsUrl += "&q=" + searchTerm;
+		googleNewsUrl += "&cf=all&output=rss"; 
+			
+		NewsSource newsSource = 
+			new NewsSource(Utils.getStringFromResourceId(R.string.topic_search_title) + " " + searchTerm,
+							"blog",
+							Locale.getDefault().getLanguage(),
+							Locale.getDefault().getCountry(),
+							false,
+							null,
+							null,
+							googleNewsUrl,
+							false,
+							false,
+							0);
+		return newsSource;
 	}
 
 	/**
