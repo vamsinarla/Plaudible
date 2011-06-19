@@ -18,6 +18,7 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
 
 import android.content.Context;
+import android.content.res.Resources;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 
@@ -73,6 +74,14 @@ public class Utils {
 			return true;
 		}
 		return false;
+	}
+	
+	/**
+	 * Get a string from the application resources
+	 */
+	public static String getStringFromResourceId(Integer id) {
+		final Resources r = Resources.getSystem();
+		return r.getString(id);
 	}
 
 	/**

@@ -27,8 +27,9 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.apps.analytics.GoogleAnalyticsTracker;
+import com.vn.plaudible.tts.SpeechService;
 
-public class Plaudible extends ListActivity {
+public class FeedViewerActivity extends ListActivity {
 	
 	/**
 	 *  ViewHolder pattern for efficient ListAdapter usage
@@ -47,8 +48,7 @@ public class Plaudible extends ListActivity {
 	 */
 	GoogleAnalyticsTracker tracker;
 	
-	private ArrayList<Article> articles;
-	private ArticleListAdapter adapter;
+	private FeedListAdapter adapter;
 	private NewsSource currentNewsSource;
 	private SpeechService mSpeechService;
 	private ProgressDialog spinningWheel;
@@ -57,6 +57,7 @@ public class Plaudible extends ListActivity {
 	
 	private static final int DOWNLOADING_TIMEOUT = 10000;
 	private static final int DROPDOWNBAR_TIMEOUT = 7000;
+	private static final int ANALYTICS_REPORTING_INTERVAL = 60;
 	
 	/** Called when the activity is first created. */
     @Override
@@ -69,8 +70,8 @@ public class Plaudible extends ListActivity {
         // Get the analytics tracker instance
         tracker = GoogleAnalyticsTracker.getInstance();
         
-        // Start the tracker in auto dispatch mode to update every 60 seconds
-        tracker.start(getString(R.string.analytics_id), 60, this);
+        // Start the tracker in auto dispatch mode to update every few seconds
+        tracker.start(getString(R.string.analytics_id), ANALYTICS_REPORTING_INTERVAL, this);
         
         // Show the spinning wheel and the counter, which suspends the wheel in TIMEOUT milli-seconds
         showSpinningWheel("", getString(R.string.loading_articles), DOWNLOADING_TIMEOUT);
@@ -83,32 +84,17 @@ public class Plaudible extends ListActivity {
         tracker.trackPageView("/news/" + currentNewsSource.getTitle());
         
         // Enable the sliding drawer if there are categories for this source
-        slidingDrawer = (SlidingDrawer) findViewById(R.id.SlidingDrawer);
-        
-        if (currentNewsSource.isHasCategories()) {
-    		// Setup sliding drawer with a listview with the categories
-            setupSlidingDrawer();
-    		setTitle(currentNewsSource.getTitle() + " : " + currentNewsSource.getCurrentCategoryName());
-        }
-        else {
-        	setTitle(currentNewsSource.getTitle());
-        }
+        initializeSlidingDrawer();
         
         // Set the volume control to media. So that when user presses volume button it adjusts the media volume
         setVolumeControlStream(AudioManager.STREAM_MUSIC);
 
         // Arraylist adapter
-        articles = new ArrayList<Article>();
-        adapter = new ArticleListAdapter(this, R.layout.articles_list_item, articles);
-        
+        adapter = new FeedListAdapter(this, R.layout.articles_list_item, new Feed());
         setListAdapter(adapter);
 
-        new PlaudibleAsyncTask().execute(
-        		new PlaudibleAsyncTask.Payload(
-        				PlaudibleAsyncTask.FEED_DOWNLOADER_TASK,
-        				new Object[] { Plaudible.this,
-        								currentNewsSource,
-        								articles }));
+        loadFeed();
+        
         bindSpeechService();
     }
 	
@@ -127,12 +113,26 @@ public class Plaudible extends ListActivity {
         super.onConfigurationChanged(newConfig);
     }
     
+    /**
+     * Function that loads a feed as per the current URl of the current newssource
+     */
+    private void loadFeed() {
+    	// Set the URL for the feed to load
+    	adapter.feed.setUrl(currentNewsSource.getCurrentURL());
+    	
+    	new PlaudibleAsyncTask().execute(
+        		new PlaudibleAsyncTask.Payload(
+        				PlaudibleAsyncTask.FEED_DOWNLOADER_TASK,
+        				new Object[] { FeedViewerActivity.this,
+        								adapter.feed }));
+    }
+    
    /**
     *  Used by the AsyncTask to update the set of articles
     * @param articles
     */
-   public void setArticles(ArrayList<Article> articles) {
-	   this.articles = articles;   
+   public void setFeed(Feed feed) {
+	   adapter.feed = feed; 
 	   adapter.notifyDataSetChanged();
 	   
 	   // Articles were fetched so we can suspend the wheel
@@ -143,6 +143,26 @@ public class Plaudible extends ListActivity {
    }
    
    /**
+    * Initialize the sliding drawer if required
+    */
+   private void initializeSlidingDrawer() {
+	   String title;
+	   // Enable the sliding drawer if there are categories for this source
+	   slidingDrawer = (SlidingDrawer) findViewById(R.id.SlidingDrawer);
+	   
+	   if (currentNewsSource.isHasCategories()) {
+			// Setup sliding drawer with a listview with the categories
+		   setupSlidingDrawer();
+		   
+		   title = currentNewsSource.getTitle() + " : " + currentNewsSource.getCurrentCategoryName();
+	   }
+	   else {
+		   title = currentNewsSource.getTitle();
+	   }
+	   setTitle(title);
+   }
+   
+   /**
     * Setup the sliding drawer to show categories
     */
    private void setupSlidingDrawer() {
@@ -150,7 +170,7 @@ public class Plaudible extends ListActivity {
 		slidingDrawer.setVisibility(View.VISIBLE);
 	    
 	   	ListView categoriesListView = (ListView) findViewById(R.id.categoriesListView);
-	   	categoriesListView.setAdapter(new CategoryListAdapter(Plaudible.this, 
+	   	categoriesListView.setAdapter(new CategoryListAdapter(FeedViewerActivity.this, 
 	   											R.layout.categories_list_item, 
 												currentNewsSource.getCategories()));
    }
@@ -213,14 +233,10 @@ public class Plaudible extends ListActivity {
 	       setTitle(currentNewsSource.getTitle() + " : " + currentNewsSource.getCurrentCategoryName());
 	        
 	       // Clear old articles
-	       articles.clear();
+	       adapter.feed.clear();
 	       
-	       new PlaudibleAsyncTask().execute(
-	        		new PlaudibleAsyncTask.Payload(
-	        				PlaudibleAsyncTask.FEED_DOWNLOADER_TASK,
-	        				new Object[] { Plaudible.this,
-	        								currentNewsSource,
-	        								articles }));
+	       // Load feed will automatically load the correct feed as per the current newssource
+	       loadFeed();
 	   }
    }
    
@@ -229,14 +245,14 @@ public class Plaudible extends ListActivity {
     * @author vamsi
     *
     */
-   private class ArticleListAdapter extends ArrayAdapter<Article> implements View.OnClickListener {
+   private class FeedListAdapter extends ArrayAdapter<Article> implements View.OnClickListener {
 	   
-	   ArrayList<Article> articles;
+	   private Feed feed;
 	   
-	   public ArticleListAdapter(Context context, int textViewResourceId, ArrayList<Article> articles) {
-		   super(context, textViewResourceId, articles);
+	   public FeedListAdapter(Context context, int textViewResourceId, Feed feed) {
+		   super(context, textViewResourceId, feed.getItems());
 		   
-		   this.articles = articles;
+		   this.feed = feed;
 		   setNotifyOnChange(true);
 	   }
 	   
@@ -263,19 +279,19 @@ public class Plaudible extends ListActivity {
 		   
 		   convertView.setOnClickListener(this);
 		   
-		   holder.title.setText(articles.get(position).getTitle());
-		   holder.description.setText(articles.get(position).getDescription());
+		   holder.title.setText(feed.getItem(position).getTitle());
+		   holder.description.setText(feed.getItem(position).getDescription());
 		   holder.position = position;
 
 		   return convertView;
 	   }
 
 	   public int getCount() {
-		   return articles.size();
+		   return feed.size();
 	   }
 	   
 	   public Article getItem(int position) {
-		   return articles.get(position);
+		   return feed.getItem(position);
 	   }
 	   
 	   public long getItemId(int position) {
@@ -324,7 +340,7 @@ public class Plaudible extends ListActivity {
 				@Override
 				public void onClick(View v) {
 					Integer position = (Integer) v.getTag();
-					if (!articles.get(position).isDownloaded()) {
+					if (!feed.getItem(position).isDownloaded()) {
 						   // Spinning wheel to show while the article is being downloaded
 						   showSpinningWheel("", getString(R.string.loading_articles), DOWNLOADING_TIMEOUT);
 						   
@@ -333,9 +349,9 @@ public class Plaudible extends ListActivity {
 						   AsyncTask task = new PlaudibleAsyncTask().execute(
 								   new PlaudibleAsyncTask.Payload(
 										   PlaudibleAsyncTask.ARTICLE_DOWNLOADER_TASK,
-										   new Object[] { Plaudible.this,
+										   new Object[] { FeedViewerActivity.this,
 												   			position,
-												   			articles,
+												   			feed,
 												   			currentNewsSource }));
 						    
 						    // Track the event of article being spoken out
@@ -353,7 +369,7 @@ public class Plaudible extends ListActivity {
 							suspendSpinningWheel();
 					   	}
 						// Send the article for reading
-						sendArticleForReading(articles.get(position));
+						sendArticleForReading(feed.getItem(position));
 						
 						// Display the bottom bar
 						displayBottomBar();
@@ -374,9 +390,9 @@ public class Plaudible extends ListActivity {
 			        
 					// Start the ArticleViewer activity
 					Intent articleViewerLaunchIntent = new Intent();
-					articleViewerLaunchIntent.setClass(getContext(), ArticleViewer.class);
+					articleViewerLaunchIntent.setClass(getContext(), ArticleViewerActivity.class);
 					articleViewerLaunchIntent.putExtra("source", currentNewsSource); // The source of this article
-					articleViewerLaunchIntent.putExtra("articles", articles);
+					articleViewerLaunchIntent.putExtra("feed", feed);
 					articleViewerLaunchIntent.putExtra("currentArticleIndex", position);
 					
 					startActivity(articleViewerLaunchIntent);
@@ -391,10 +407,10 @@ public class Plaudible extends ListActivity {
 					Integer position = (Integer) v.getTag();
 					ImageButton playlistButton = (ImageButton) v;
 					
-					ArticlePlaylist playlist = mSpeechService.getArticlePlaylist();
+					Playlist playlist = mSpeechService.getArticlePlaylist();
 					
 					// Check if it exists in the playlist
-					Article article = articles.get(position);
+					Article article = feed.getItem(position);
 					if (playlist.contains(article)) {
 						playlistButton.setImageResource(R.drawable.add_article);
 						playlist.removeArticle(article);
@@ -414,7 +430,7 @@ public class Plaudible extends ListActivity {
 	 */
    public void showSpinningWheel(String title, String text, long timeout) {
 	   ProgressDialogTimer timer = new  ProgressDialogTimer(timeout, timeout);
-       spinningWheel = ProgressDialog.show(Plaudible.this, title, text, true);
+       spinningWheel = ProgressDialog.show(FeedViewerActivity.this, title, text, true);
        timer.start();
    }
    
@@ -443,7 +459,7 @@ public class Plaudible extends ListActivity {
 	 */
 	public void sendArticleForReading(Article article) {
 		if (mSpeechService != null) {
-			mSpeechService.readArticle(article);
+			mSpeechService.startReadingArticle(article);
 		}
 	}
 	
@@ -581,7 +597,7 @@ public class Plaudible extends ListActivity {
 	 * Bind to the Speech Service. Called from onCreate() on this activity
 	 */
 	void bindSpeechService() {
-		this.bindService(new Intent(Plaudible.this, SpeechService.class), mConnection, Context.BIND_AUTO_CREATE);
+		this.bindService(new Intent(FeedViewerActivity.this, SpeechService.class), mConnection, Context.BIND_AUTO_CREATE);
 	}
 	
 	/**

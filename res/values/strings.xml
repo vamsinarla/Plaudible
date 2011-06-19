@@ -45,4 +45,10 @@
 <string name="article_speak">Speak it</string>
 <string name="article_webpage">Read on web</string>
 <string name="article_share">Share it</string>
+<string name="appengine_url2">http://4.latest.evecal.appspot.com/</string>
+<string name="article_reading_finished">NewsSpeak finished reading the article</string>
+<string name="article_start_reading">NewsSpeak will now read </string>
+<string name="call_in_progress">Call is in progress, cannot read articles at this time</string>
+<string name="reading_paused">NewsSpeak is paused</string>
+<string name="reading_playing">NewsSpeak is reading</string>
 </resources>

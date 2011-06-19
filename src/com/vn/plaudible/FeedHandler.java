@@ -1,7 +1,5 @@
 package com.vn.plaudible;
 
-import java.util.ArrayList;
-
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
@@ -13,26 +11,21 @@ import org.xml.sax.helpers.DefaultHandler;
  */
 public class FeedHandler extends DefaultHandler {
 	
-	private ArrayList<Article> articles;
+	private Feed feed;
 	private Article currentArticle;
 	private StringBuilder builder;
 	
-	private String titleTag;
-	private String descriptionTag;
-	private String itemTag;
-	private String linkTag;
+	private static final String titleTag = "title";
+	private static final String descriptionTag = "description";
+	private static final String itemTag = "item";
+	private static final String linkTag = "link";
 	
 	/**
 	 * Ctor. Supply the articles arraylist which initially has no elements
 	 * @param articles
 	 */
-	FeedHandler(ArrayList<Article> articles) {
-		itemTag = "item";
-		titleTag = "title";
-		descriptionTag = "description";
-		linkTag = "link";
-		
-		this.articles = articles;
+	FeedHandler(Feed feed) {
+		this.feed = feed;
 	}
 		
 	/** 
@@ -60,10 +53,10 @@ public class FeedHandler extends DefaultHandler {
 			} else if (localName.equalsIgnoreCase(itemTag)) {
 				
 				// Set the id of the article which is basically its index
-				currentArticle.setId(articles.size());
+				currentArticle.setId(feed.size());
 				
 				// Add to the array list
-				articles.add(currentArticle);
+				feed.addItem(currentArticle);
 			}
 			builder.setLength(0);	
 		}

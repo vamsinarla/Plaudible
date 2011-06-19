@@ -5,6 +5,8 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Locale;
 
+import com.vn.plaudible.tts.SpeechService;
+
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
@@ -199,7 +201,7 @@ public class HomePage extends Activity implements TextToSpeech.OnInitListener {
 				
 				// Now create and dispatch an intent to PLaudible to read this NewsSource
 				Intent quickNewsIntent = new Intent();
-				quickNewsIntent.setClass(HomePage.this, Plaudible.class);
+				quickNewsIntent.setClass(HomePage.this, FeedViewerActivity.class);
 				quickNewsIntent.putExtra("NewsSource", newsSource);
 				
 				startActivity(quickNewsIntent);
@@ -369,7 +371,7 @@ public class HomePage extends Activity implements TextToSpeech.OnInitListener {
 	           ttsEngine.setLanguage(Locale.US);	            
 	           
 	           if (mSpeechService != null) {
-	        	   mSpeechService.setTTSEngine(this.ttsEngine);
+	        	   mSpeechService.initializeSpeechService(this.ttsEngine);
 	           }
 		}
 	}

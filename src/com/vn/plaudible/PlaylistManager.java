@@ -22,6 +22,7 @@ import com.vn.plaudible.dragdrop.DragListener;
 import com.vn.plaudible.dragdrop.DragNDropListView;
 import com.vn.plaudible.dragdrop.DropListener;
 import com.vn.plaudible.dragdrop.RemoveListener;
+import com.vn.plaudible.tts.SpeechService;
 
 public class PlaylistManager extends ListActivity {
 	
@@ -66,9 +67,9 @@ public class PlaylistManager extends ListActivity {
 
     	private Context mContext;
     	private LayoutInflater mInflater;
-    	private ArticlePlaylist mPlaylist;
+    	private Playlist mPlaylist;
     	
-        public DragNDropAdapter(Context context, int resource, ArticlePlaylist playlist) {
+        public DragNDropAdapter(Context context, int resource, Playlist playlist) {
         	super(context, resource, playlist.getArticles());
         	mPlaylist = playlist;
         	mContext = context;

@@ -8,24 +8,26 @@ import java.io.Serializable;
  * @author vamsi
  *
  */
-public class Article implements Serializable {
+public class Article extends Item implements Serializable {
 	
 	/**
 	 * UID for Serializable
 	 */
 	private static final long serialVersionUID = 1L;
+
+	private static final String EMPTY_CONTENT = "";
 	
 	private String title;
-	private NewsSource newsSource;
 	private String description;
 	private String content;
 	private String url;
 	private boolean isDownloaded;
 	private int id;
+	private NewsSource source;
 	
 	public Article() {
 		this.title = this.description = this.content = null;
-		this.newsSource = null;
+		this.source = null;
 		this.isDownloaded = false;
 	}
 	
@@ -33,12 +35,18 @@ public class Article implements Serializable {
 		this.title = title;
 		this.description = description;
 		this.url = url;
-		this.newsSource = newsSource;
+		this.source = newsSource;
 		this.isDownloaded = false;		
 	}
 	
+	public Article(String title, String description, String url) {
+		this.title = title;
+		this.description = description;
+		this.url = url;
+	}
+
 	public String getContent() {
-		return content;
+		return (isDownloaded() ? content : Article.EMPTY_CONTENT);
 	}
 
 	public void setContent(String content) {
@@ -65,14 +73,6 @@ public class Article implements Serializable {
 		return url;
 	}
 
-	public NewsSource getNewsSource() {
-		return newsSource;
-	}
-
-	public void setNewsSource(NewsSource newsSource) {
-		this.newsSource = newsSource;
-	}
-
 	public void setUrl(String url) {
 		this.url = url;
 	}
@@ -88,6 +88,18 @@ public class Article implements Serializable {
 	}
 	public void setDescription(String description) {
 		this.description = description;
+	}
+
+	public void setSource(NewsSource source) {
+		this.source = source;
+	}
+
+	public NewsSource getSource() {
+		return source;
+	}
+
+	public String getContentForSpeech() {
+		return Utils.getStringFromResourceId(R.string.article_start_reading) + this.title;
 	}
 
 }

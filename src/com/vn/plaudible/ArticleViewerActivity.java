@@ -31,19 +31,20 @@ import android.widget.TextView;
 import android.widget.ViewSwitcher;
 
 import com.google.android.apps.analytics.GoogleAnalyticsTracker;
+import com.vn.plaudible.tts.SpeechService;
 
 /**
  * View a text only version of the article for fast reading.
  * @author vamsi
  *
  */
-public class ArticleViewer extends Activity {
+public class ArticleViewerActivity extends Activity {
 
 	// Timeout in ms for removing the overlay UI
 	private static final long VISIBILITY_TIMEOUT = 3000;
 	
 	private NewsSource currentNewsSource;
-	private ArrayList<Article> articles;
+	private Feed feed;
 	private Integer currentArticleIndex;
 	
 	private TextView title;
@@ -65,8 +66,7 @@ public class ArticleViewer extends Activity {
 	protected SpeechService mSpeechService;
 	
 	/** Called when the activity is first created. */
-    @SuppressWarnings("unchecked")
-	@Override
+    @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         
@@ -84,7 +84,7 @@ public class ArticleViewer extends Activity {
         
         // Get the intent and the related extras
         Intent intent = this.getIntent();
-        articles = (ArrayList<Article>) intent.getSerializableExtra("articles");
+        feed = (Feed) intent.getSerializableExtra("articles");
         currentArticleIndex = (Integer) intent.getIntExtra("currentArticleIndex", 0);
         currentNewsSource = (NewsSource) intent.getSerializableExtra("source");
         
@@ -93,7 +93,7 @@ public class ArticleViewer extends Activity {
         nextArticleButton.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				ArticleViewer.this.moveToNextArticle();
+				ArticleViewerActivity.this.moveToNextArticle();
 			}
 		});
         
@@ -102,7 +102,7 @@ public class ArticleViewer extends Activity {
         previousArticleButton.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				ArticleViewer.this.moveToPreviousArticle();
+				ArticleViewerActivity.this.moveToPreviousArticle();
 			}
 		});
         
@@ -168,7 +168,7 @@ public class ArticleViewer extends Activity {
      * Move to display next article
      */
     protected void moveToNextArticle() {
-    	if (currentArticleIndex < articles.size() - 1) {
+    	if (currentArticleIndex < feed.size() - 1) {
     		++currentArticleIndex;
     		
 	    	// Swap webviews 
@@ -232,7 +232,7 @@ public class ArticleViewer extends Activity {
      */
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-    	Article currentArticle = articles.get(currentArticleIndex);
+    	Article currentArticle = feed.getItem(currentArticleIndex);
     	
         switch (item.getItemId()) {
             case R.id.article_share:
@@ -255,7 +255,7 @@ public class ArticleViewer extends Activity {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-            	mSpeechService.readArticle(currentArticle);
+            	mSpeechService.readArticle(currentArticle, currentNewsSource);
                 break;
             case R.id.article_webpage:
             	// Track the event of browser being opened to read
@@ -285,11 +285,11 @@ public class ArticleViewer extends Activity {
      */
     private void displayArticle(Integer index) {
     	// Set the title
-    	title.setText(articles.get(index).getTitle());
+    	title.setText(feed.getItem(index).getTitle());
         
     	// Construct the AppEngine URL for the ArticleServlet
     	String appEngineUrl = getString(R.string.appengine_url) + "/article2";
-    	String articleUrl = articles.get(index).getUrl(); 
+    	String articleUrl = feed.getItem(index).getUrl(); 
     	
         // Load the page from app Engine's article servlet
         String postData = URLEncoder.encode("currentNewsSource") + "=" + URLEncoder.encode(currentNewsSource.getTitle()) + "&";
@@ -309,7 +309,7 @@ public class ArticleViewer extends Activity {
      * @throws IOException 
      */
     private void getArticleContent() throws IOException {
-    	Article currentArticle = articles.get(currentArticleIndex);
+    	Article currentArticle = feed.getItem(currentArticleIndex);
     	
     	// Construct the AppEngine URL for the ArticleServlet
 		String link = getString(R.string.appengine_url) + "article2";
@@ -419,7 +419,7 @@ public class ArticleViewer extends Activity {
 	 * Bind to the Speech Service. Called from onCreate() on this activity
 	 */
 	void bindSpeechService() {
-		this.bindService(new Intent(ArticleViewer.this, SpeechService.class), mConnection, Context.BIND_AUTO_CREATE);
+		this.bindService(new Intent(ArticleViewerActivity.this, SpeechService.class), mConnection, Context.BIND_AUTO_CREATE);
 	}
 	
 	/**

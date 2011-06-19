@@ -5,6 +5,8 @@ import java.util.Collections;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.vn.plaudible.tts.SpeechService;
+
 import android.app.ListActivity;
 import android.content.ComponentName;
 import android.content.Context;
@@ -229,7 +231,7 @@ public class NewsSourcesPage extends ListActivity {
 			
 			// Start Plaudible
 			Intent listArticlesInFeed = new Intent();
-			listArticlesInFeed.setClass(context, Plaudible.class);
+			listArticlesInFeed.setClass(context, FeedViewerActivity.class);
 			listArticlesInFeed.putExtra("NewsSource", source);
 			
 			context.startActivity(listArticlesInFeed);
