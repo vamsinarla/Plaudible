@@ -22,6 +22,7 @@
         android:textSize="24sp"
         android:maxHeight="40sp"
         android:typeface="serif"
+        android:scrollHorizontally="true"
         android:layout_toRightOf="@id/newsPaperImages"/>
         
 </RelativeLayout>

@@ -118,7 +118,6 @@ public class ArticleViewerActivity extends Activity {
         viewVisibilityController = new ViewVisibilityController();
         viewVisibilityController.registerView(nextArticleButton);
         viewVisibilityController.registerView(previousArticleButton);
-        // viewVisibilityController.registerView(shareButton);
         
         // WebView stuff
         // We are creating two WebViews here to switch between two articles.
@@ -129,7 +128,7 @@ public class ArticleViewerActivity extends Activity {
 				switch(event.getAction()){
 		        case MotionEvent.ACTION_DOWN:
 		        		viewVisibilityController.setViewVisibility(View.VISIBLE);
-		        		openOptionsMenu();
+		        		
 		        		
 		        		ArticleViewerUIOverlayTimer timer = new ArticleViewerUIOverlayTimer(VISIBILITY_TIMEOUT, viewVisibilityController);
 		        		timer.start();
@@ -145,7 +144,6 @@ public class ArticleViewerActivity extends Activity {
 				switch(event.getAction()){
 		        case MotionEvent.ACTION_DOWN:
 			        	viewVisibilityController.setViewVisibility(View.VISIBLE);
-		        		openOptionsMenu();
 		        		
 			        	ArticleViewerUIOverlayTimer timer = new ArticleViewerUIOverlayTimer(VISIBILITY_TIMEOUT, viewVisibilityController);
 		        		timer.start();
@@ -300,7 +298,8 @@ public class ArticleViewerActivity extends Activity {
     	
         // Load the page from app Engine's article servlet
         String postData = URLEncoder.encode("format") + "=" + URLEncoder.encode("json") + "&";
-        postData += URLEncoder.encode("url") + "=" + URLEncoder.encode(articleUrl);
+        postData += URLEncoder.encode("url") + "=" + URLEncoder.encode(articleUrl) + "&";
+        postData += URLEncoder.encode("type") + "=" + URLEncoder.encode("html");
         
         currentWebView.postUrl(appEngineUrl, EncodingUtils.getBytes(postData, "BASE64"));
         

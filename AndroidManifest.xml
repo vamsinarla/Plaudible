@@ -14,21 +14,13 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
-        <activity android:name=".NewsSourcesPage"
+        <activity android:name=".NewsSourcesActivity"
                   android:label="@string/app_name"
                   android:configChanges="orientation"
                   android:windowSoftInputMode="adjustPan|stateHidden"
                   android:theme="@android:style/Theme.NoTitleBar">
             <intent-filter>
                 <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
-        </activity>
-        <activity android:name=".HomePage"
-                  android:label="@string/app_name"
-                  android:configChanges="orientation">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
         <activity android:name=".NewsSourcesTabActivity"
@@ -37,10 +29,11 @@
                   android:windowSoftInputMode="adjustPan|stateHidden"
                   android:theme="@android:style/Theme.NoTitleBar">
             <intent-filter>
-                <category android:name="android.intent.category.DEFAULT" />
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".ReorderNewsSourcesPage"
+        <activity android:name=".ReorderNewsSourcesPageActivity"
                   android:label="@string/app_name"
                   android:configChanges="orientation"
                   android:theme="@android:style/Theme.NoTitleBar">
@@ -48,7 +41,7 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
-        <activity android:name=".PlaylistManager"
+        <activity android:name=".MarkedListManagerActivity"
                   android:label="@string/app_name"
                   android:configChanges="orientation"
                   android:theme="@android:style/Theme.NoTitleBar">
@@ -72,7 +65,7 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
-        <activity android:name=".NewsSpeakPreferences"
+        <activity android:name=".NewsSpeakPreferencesActivity"
                   android:label="@string/app_name"
                   android:configChanges="orientation">
             <intent-filter>

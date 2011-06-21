@@ -29,16 +29,6 @@
 			android:layout_height="fill_parent"/>
 
 	</ViewSwitcher>
-	
-    <ImageButton android:id="@+id/articleshareButton"
-		android:layout_width="wrap_content"
-		android:layout_height="wrap_content"
-		android:background="@drawable/rounded_rectangle_2_corner"
-		android:src="@android:drawable/ic_menu_share"
-		android:layout_alignParentBottom="true"
-		android:layout_alignParentLeft="true"
-		android:visibility="gone"
-		android:padding="10sp"/>
       
     <ImageButton android:id="@+id/nextArticleButton"
     	android:layout_width="wrap_content"
@@ -67,5 +57,48 @@
     	android:visibility="gone"
     	android:src="@drawable/horizontal_arrow_left"
     	android:layout_gravity="left|center_vertical"/>
-
+    	
+    <LinearLayout android:id="@+id/article_viewer_bottom_bar"
+    	android:layout_width="fill_parent"
+    	android:layout_height="wrap_content"
+    	android:layout_alignParentBottom="true"
+    	android:background="#dd000000">
+    	
+    	<Button android:id="@+id/article_share"
+    		android:layout_width="wrap_content"
+    		android:layout_height="fill_parent"
+    		android:layout_weight="1"
+    		android:textColor="@color/white"
+    		android:background="#00000000"
+    		android:text="@string/article_share"
+    		android:drawableTop="@drawable/share"/>
+    		
+    	<Button android:id="@+id/article_speak"
+    		android:layout_width="wrap_content"
+    		android:layout_height="fill_parent"
+    		android:layout_weight="1"
+    		android:textColor="@color/white"
+    		android:background="#00000000"
+    		android:text="@string/article_speak"
+    		android:drawableTop="@drawable/speech"/>
+    	
+    	<Button android:id="@+id/article_web"
+    		android:layout_width="wrap_content"
+    		android:layout_height="fill_parent"
+    		android:layout_weight="1"
+    		android:textColor="@color/white"
+    		android:background="#00000000"
+    		android:text="@string/article_webpage"
+    		android:drawableTop="@drawable/browser"/>
+    	
+    	<Button android:id="@+id/article_similarities"
+    		android:layout_width="wrap_content"
+    		android:layout_height="fill_parent"
+    		android:layout_weight="1"
+    		android:textColor="@color/white"
+    		android:background="#00000000"
+    		android:text="@string/article_similarities"
+    		android:drawableTop="@drawable/article_similarities"/>
+    	
+	</LinearLayout>
 </RelativeLayout>

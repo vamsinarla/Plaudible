@@ -69,14 +69,13 @@
         android:id="@+id/contentLayout" 
         android:orientation="vertical" 
         android:gravity="center|top"
-        android:background="#ffffff"
         android:layout_height="fill_parent">
            
            <ListView android:id="@+id/categoriesListView"
            android:layout_width="fill_parent"
            android:layout_height="fill_parent"
-           android:background="#ffffff"
-           android:cacheColorHint="#ffffff"/>
+           android:background="#ccffffff"
+           android:cacheColorHint="#ccffffff"/>
             
         </LinearLayout>
     </SlidingDrawer>

@@ -11,9 +11,9 @@
 <string name="analytics_id">UA-20432863-1</string>
 <string name="appengine_url">http://3.latest.evecal.appspot.com/</string>
 <string name="article_share_subject">Shared via NewsSpeak on Android</string>
-<string name="subscribed_tab_title">My News</string>
+<string name="subscribed_tab_title">Featured</string>
 <string name="manage_tab_title">Manage</string>
-<string name="search_tab_title">Search</string>
+<string name="search_tab_title">Add more</string>
 <string name="search_page_search_box_caption">Search our directory</string>
 <string name="add_custom_feed_text">Add custom feed</string>
 <string name="suggest_custom_feed_text">Suggest a feed</string>
@@ -39,9 +39,9 @@
 <string name="reorder_page_help">Use the drag/drop holder on the left to reorder or use the delete button to remove.</string>
 <string name="no_articles_to_show">Loading...</string>
 <string name="quick_search_box_hint">Instant news search</string>
-<string name="topic_search_title">Latest news for </string>
+<string name="topic_search_title">News for </string>
 <string name="connection_unavailable">No connection available</string>
-<string name="playlist_tab_title">Playlist</string>
+<string name="playlist_tab_title">My List</string>
 <string name="article_speak">Speak it</string>
 <string name="article_webpage">Read on web</string>
 <string name="article_share">Share it</string>
@@ -51,4 +51,9 @@
 <string name="call_in_progress">Call is in progress, cannot read articles at this time</string>
 <string name="reading_paused">NewsSpeak is paused</string>
 <string name="reading_playing">NewsSpeak is reading</string>
+<string name="mark_article">Mark</string>
+<string name="quick_read_article">Quick read</string>
+<string name="empty_playlist">Playlist is empty</string>
+<string name="article_similarities">More like this</string>
+<string name="settings_tab_title">Settings</string>
 </resources>

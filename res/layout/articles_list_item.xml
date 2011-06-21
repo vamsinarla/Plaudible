@@ -36,37 +36,46 @@
     android:layout_below="@id/ArticleDescription"
     android:visibility="gone">
     
-    	<ImageButton android:id="@+id/playlistButton"
+    	<Button android:id="@+id/shareButton"
         android:layout_width="fill_parent"
         android:layout_weight="1"
         android:layout_height="wrap_content"
-        android:layout_marginLeft="3sp"
-        android:maxHeight="15sp"
-        android:src="@drawable/add_article"/>
+        android:background="#00000000"
+        android:gravity="center"
+        android:text="@string/article_share"
+        android:drawableTop="@drawable/share"/>
         
-        <ImageButton android:id="@+id/speakButton"
+    	<Button android:id="@+id/playlistButton"
         android:layout_width="fill_parent"
         android:layout_weight="1"
         android:layout_height="wrap_content"
-        android:layout_marginLeft="3sp"
-        android:maxHeight="15sp"
-        android:src="@drawable/speech"/>
+        android:background="#00000000"
+        android:text="@string/mark_article"
+        android:drawableTop="@drawable/add_article"/>
         
-        <ImageButton android:id="@+id/textOnlyButton"
+        <Button android:id="@+id/speakButton"
         android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:layout_marginLeft="3sp"
-        android:maxHeight="15sp"
-        android:src="@drawable/textonly"/>
+        android:layout_height="wrap_content"
+        android:background="#00000000"
+        android:text="@string/article_speak"
+        android:drawableTop="@drawable/speech"/>
         
-        <ImageButton android:id="@+id/browserButton"
+        <Button android:id="@+id/textOnlyButton"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:layout_marginLeft="3sp"
-        android:maxHeight="15sp"
-        android:src="@drawable/browser"/>
+        android:background="#00000000"
+        android:text="@string/quick_read_article"
+        android:drawableTop="@drawable/textonly"/>
+        
+        <Button android:id="@+id/browserButton"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:background="#00000000"
+        android:text="@string/article_webpage"
+        android:drawableTop="@drawable/browser"/>
                 
     </LinearLayout>
 

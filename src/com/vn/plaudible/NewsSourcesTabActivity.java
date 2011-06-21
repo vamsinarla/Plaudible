@@ -26,30 +26,37 @@ public class NewsSourcesTabActivity extends TabActivity {
 	    Intent intent;
 
 	    // Create an Intent to launch the default tab to show the list of subscribed newssources
-	    intent = new Intent().setClass(this, NewsSourcesPage.class);
+	    intent = new Intent().setClass(this, NewsSourcesActivity.class);
 	    // Define the tabspec for this activity
 	    spec = tabHost.newTabSpec("display").setIndicator(getString(R.string.subscribed_tab_title), res.getDrawable(R.drawable.subscribed_lists))
              			.setContent(intent);
 	    tabHost.addTab(spec);
 	    
 	    // Create an Intent to launch the playlist tab to manage playlist
-	    intent = new Intent().setClass(this, PlaylistManager.class);
+	    intent = new Intent().setClass(this, MarkedListManagerActivity.class);
 	    // Define the tabspec for this activity
-	    spec = tabHost.newTabSpec("playlist").setIndicator(getString(R.string.playlist_tab_title), res.getDrawable(R.drawable.playlist))
+	    spec = tabHost.newTabSpec("playlist").setIndicator(getString(R.string.playlist_tab_title), res.getDrawable(R.drawable.bookmark_icon))
              			.setContent(intent);
 	    tabHost.addTab(spec);
 	    
 	    // Create an Intent to launch the manage tab to manage the list of subscribed newssources
-	    intent = new Intent().setClass(this, ReorderNewsSourcesPage.class);
+	    intent = new Intent().setClass(this, ReorderNewsSourcesPageActivity.class);
 	    // Define the tabspec for this activity
-	    spec = tabHost.newTabSpec("manage").setIndicator(getString(R.string.manage_tab_title), res.getDrawable(R.drawable.settings))
+	    spec = tabHost.newTabSpec("manage").setIndicator(getString(R.string.manage_tab_title), res.getDrawable(R.drawable.manage_newssources))
+             			.setContent(intent);
+	    tabHost.addTab(spec);
+	    
+	    // Create an Intent to launch the manage tab to manage the list of subscribed newssources
+	    intent = new Intent().setClass(this, NewsSpeakPreferencesActivity.class);
+	    // Define the tabspec for this activity
+	    spec = tabHost.newTabSpec("settings").setIndicator(getString(R.string.settings_tab_title), res.getDrawable(R.drawable.settings))
              			.setContent(intent);
 	    tabHost.addTab(spec);
 	    
 	    // Create an Intent to launch the search tab to search
 	    intent = new Intent().setClass(this, SearchPage.class);
 	    // Define the tabspec for this activity
-	    spec = tabHost.newTabSpec("search").setIndicator(getString(R.string.search_tab_title), res.getDrawable(R.drawable.search))
+	    spec = tabHost.newTabSpec("search").setIndicator(getString(R.string.search_tab_title), res.getDrawable(R.drawable.add_newssource))
              			.setContent(intent);
 	    tabHost.addTab(spec);
 	 }

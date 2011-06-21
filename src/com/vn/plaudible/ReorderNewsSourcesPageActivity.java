@@ -30,7 +30,7 @@ import com.vn.plaudible.dragdrop.RemoveListener;
 import com.vn.plaudible.types.NewsSource;
 
 
-public class ReorderNewsSourcesPage extends ListActivity {
+public class ReorderNewsSourcesPageActivity extends ListActivity {
 
     static class ViewHolder {
         TextView itemTitle;
@@ -295,9 +295,9 @@ public class ReorderNewsSourcesPage extends ListActivity {
 				public void onClick(View v) {
 					Integer position = (Integer) v.getTag();
 					
-					AlertDialog confirmationDialog = new AlertDialog.Builder(ReorderNewsSourcesPage.this)
+					AlertDialog confirmationDialog = new AlertDialog.Builder(ReorderNewsSourcesPageActivity.this)
 					.setIcon(R.drawable.alert)
-	                .setTitle(ReorderNewsSourcesPage.this.getString(R.string.confirm_delete_dialog_title) + " " +
+	                .setTitle(ReorderNewsSourcesPageActivity.this.getString(R.string.confirm_delete_dialog_title) + " " +
 	                			getItem(position).getTitle() + " ?")
 	                .setPositiveButton(R.string.ok, new DialogClickListener(getItem(position), position))
 	                .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {

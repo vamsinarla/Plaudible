@@ -5,11 +5,6 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Locale;
 
-import com.vn.plaudible.db.NewsSpeakDBAdapter;
-import com.vn.plaudible.tts.SpeechService;
-import com.vn.plaudible.types.NewsSource;
-
-
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
@@ -30,6 +25,10 @@ import android.view.View.OnClickListener;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.Toast;
+
+import com.vn.plaudible.db.NewsSpeakDBAdapter;
+import com.vn.plaudible.tts.SpeechService;
+import com.vn.plaudible.types.NewsSource;
 
 /**
  * The Starting screen of NewsSpeak
@@ -199,96 +198,6 @@ public class HomePage extends Activity implements TextToSpeech.OnInitListener {
     }
     
     /**
-     * Populate NewsSources in the DB on first time usage.
-     * The URL to fetch the JSON results are computed elsewhere
-     * and then we get all the sources to begin with. Then we enter them
-     * into the DB, but before that we must check the preferred sources
-     * and give them the special treatment
-     */
-    protected void populateSourcesIntoDB() {
-    	NewsSpeakDBAdapter dbAdapter = new NewsSpeakDBAdapter(this);
-    	dbAdapter.open(NewsSpeakDBAdapter.READ_WRITE);
-    	
-    	// Clean up the DB with any artifacts
-    	dbAdapter.upgrade();
-    	
-    	// Make a call to AppEngine and get the featured sources
-    	String link = getURLForFeaturedSources();
-    	
-    	try {
-        	URL feedUrl = new URL(link);
-
-        	// Parse the response stream from AppEngine
-	    	ArrayList<NewsSource> sources = new ArrayList<NewsSource>();
-	    	InputStream responseStream = feedUrl.openConnection().getInputStream();
-			
-			// Construct the Array of sources from the JSON String
-			sources = NewsSource.getNewsSourcesFromJSON(Utils.getStringFromInputStream(responseStream));
-			
-			// Insert the NewsSources into the localDB
-			for (int index = 0; index < sources.size(); ++index) {
-				// Set the display index
-				sources.get(index).setDisplayIndex(index);
-				
-				// Here we treat preferred sources differently
-				if (sources.get(index).isPreferred()) {
-					NewsSource.createPreferred(sources.get(index));
-				}
-				
-				// Insert into DB
-				dbAdapter.createNewsSource(sources.get(index));
-			}
-			
-    	} catch (Exception e) {
-    		e.printStackTrace();
-    	} finally {
-    		dbAdapter.close();
-    	}
-    }
-
-    /**
-     * We must construct the URL for the featured sources which are
-     * used first time the app are called
-     * @return
-     */
-	private String getURLForFeaturedSources() {
-		String country = Locale.getDefault().getCountry();
-		String language = Locale.getDefault().getLanguage();
-		
-		String url = getString(R.string.appengine_url) + "/featuredSources?";
-		url += "country=" + country;
-		url += "&language=" + language;
-		
-		return url;
-	}
-
-	/**
-     * Find out if this is the first run of NewsSpeak
-     * @return
-     */
-    protected boolean isFirstRun() {
-    	SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-    	boolean result = prefs.getBoolean("FirstRun", true);
-    	
-     	return result;
-	}
-    
-    /**
-     * Set the first run on the successful completion of the first run
-     * @return
-     */
-    protected boolean setFirstRun() {
-    	SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-		SharedPreferences.Editor editor = prefs.edit();
-		
-		editor.putBoolean("FirstRun", false);
-		editor.commit();
-	
-		return true;
-	}
-    
-
-	/**
      *  Listen for configuration changes and this is basically to prevent the 
      *  activity from being restarted. Do nothing here.
      */

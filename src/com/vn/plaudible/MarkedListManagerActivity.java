@@ -26,7 +26,7 @@ import com.vn.plaudible.tts.SpeechService;
 import com.vn.plaudible.types.Playlist;
 import com.vn.plaudible.types.Item;
 
-public class PlaylistManager extends ListActivity {
+public class MarkedListManagerActivity extends ListActivity {
 	
 	private SpeechService mSpeechService;
 	
@@ -201,7 +201,7 @@ public class PlaylistManager extends ListActivity {
 	 * Bind to the Speech Service. Called from onCreate() on this activity
 	 */
 	void bindSpeechService() {
-		this.bindService(new Intent(PlaylistManager.this, SpeechService.class), mConnection, Context.BIND_AUTO_CREATE);
+		this.bindService(new Intent(MarkedListManagerActivity.this, SpeechService.class), mConnection, Context.BIND_AUTO_CREATE);
 	}
 	
 	/**

@@ -8,7 +8,7 @@ import android.preference.PreferenceActivity;
  * @author vamsi
  *
  */
-public class NewsSpeakPreferences extends PreferenceActivity {
+public class NewsSpeakPreferencesActivity extends PreferenceActivity {
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {

@@ -144,7 +144,7 @@ public class PlaudibleAsyncTask extends AsyncTask<PlaudibleAsyncTask.Payload, Ar
 					break;
 				}
 				case FEATURED_SOURCES_DOWNLOAD_TASK: {
-					HomePage activity = (HomePage) payload.data[0];
+					NewsSourcesActivity activity = (NewsSourcesActivity) payload.data[0];
 					
 					// Perform the heavy task of downloading and bulk insertion into DB 
 					activity.populateSourcesIntoDB();

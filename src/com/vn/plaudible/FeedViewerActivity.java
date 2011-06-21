@@ -19,6 +19,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.SlidingDrawer;
@@ -311,7 +312,7 @@ public class FeedViewerActivity extends ListActivity {
         	
         	// Set the functionality of the drop down bar
         	// The browser button
-        	ImageButton browserButton = (ImageButton) dropDownBar.findViewById(R.id.browserButton);
+        	Button browserButton = (Button) dropDownBar.findViewById(R.id.browserButton);
         	browserButton.setTag(holder.position);
         	browserButton.setOnClickListener(new View.OnClickListener() {
 				@Override
@@ -328,7 +329,7 @@ public class FeedViewerActivity extends ListActivity {
 			});
         	
         	// The speak button
-        	ImageButton speakButton = (ImageButton) dropDownBar.findViewById(R.id.speakButton);
+        	Button speakButton = (Button) dropDownBar.findViewById(R.id.speakButton);
         	speakButton.setTag(holder.position);
         	speakButton.setOnClickListener(new View.OnClickListener() {
 				@Override
@@ -372,7 +373,7 @@ public class FeedViewerActivity extends ListActivity {
         	
         	
         	// The text only button
-        	ImageButton textOnlyButton = (ImageButton) dropDownBar.findViewById(R.id.textOnlyButton);
+        	Button textOnlyButton = (Button) dropDownBar.findViewById(R.id.textOnlyButton);
         	textOnlyButton.setTag(holder.position);
         	textOnlyButton.setOnClickListener(new View.OnClickListener() {
 				@Override
@@ -396,7 +397,7 @@ public class FeedViewerActivity extends ListActivity {
 				}
 			});
         	
-        	ImageButton playlistButton = (ImageButton) dropDownBar.findViewById(R.id.playlistButton);
+        	Button playlistButton = (Button) dropDownBar.findViewById(R.id.playlistButton);
         	playlistButton.setTag(holder.position);
         	playlistButton.setOnClickListener(new View.OnClickListener() {
 				@Override
