@@ -14,13 +14,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.media.AudioManager;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.IBinder;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
@@ -223,56 +219,6 @@ public class ArticleViewerActivity extends Activity {
     		currentWebView = webview1;
     	}
 	}
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.article_viewer_menu, menu);
-        return true;
-    }
-    
-    /**
-     * Handle the options menu
-     * @see android.app.Activity#onOptionsItemSelected(android.view.MenuItem)
-     */
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-    	Article currentArticle = feed.getItem(currentArticleIndex);
-    	
-        switch (item.getItemId()) {
-            case R.id.article_share:
-            	Intent shareIntent = new Intent(android.content.Intent.ACTION_SEND);
-				shareIntent.setType("text/plain");
-
-				// Get a tiny url
-				String shortUrl = Utils.generateTinyUrl(currentArticle.getUrl());
-				shareIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, 
-												getString(R.string.article_share_subject) + 
-												currentArticle.getTitle());
-				shareIntent.putExtra(android.content.Intent.EXTRA_TEXT, shortUrl);
-				
-				startActivity(Intent.createChooser(shareIntent, "Share using"));
-                break;
-            case R.id.article_speak:
-				try {
-					getArticleContent();
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-            	mSpeechService.startReadingArticle(currentArticle);
-                break;
-            case R.id.article_webpage:
-            	// Track the event of browser being opened to read
-				tracker.trackEvent("article", "browser", currentNewsSource.getTitle());
-		        
-				Uri uri = Uri.parse(currentArticle.getUrl());
-				Intent webViewIntent = new Intent(Intent.ACTION_VIEW, uri);
-				startActivity(Intent.createChooser(webViewIntent, "Open this article in"));
-            	break;
-        }
-        return true;
-    }
     
 	/**
      * Show the article here

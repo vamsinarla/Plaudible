@@ -1,9 +1,14 @@
 package com.vn.plaudible;
 
+import android.app.AlertDialog;
 import android.app.TabActivity;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.widget.TabHost;
 
 
@@ -59,5 +64,60 @@ public class NewsSourcesTabActivity extends TabActivity {
 	    spec = tabHost.newTabSpec("search").setIndicator(getString(R.string.search_tab_title), res.getDrawable(R.drawable.add_newssource))
              			.setContent(intent);
 	    tabHost.addTab(spec);
-	 }
+	}
+	
+	/**
+	 * Create the options menu
+	 */
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+	    MenuInflater inflater = getMenuInflater();
+	    inflater.inflate(R.menu.main_page_options_menu, menu);
+	    return true;
+	}
+	
+    /**
+     * Handle the options menu
+     */
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+    	
+        switch (item.getItemId()) {
+            case R.id.newsspeak_share:
+            	Intent shareIntent = new Intent(android.content.Intent.ACTION_SEND);
+				shareIntent.setType("text/plain");
+
+				shareIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, getString(R.string.share_subject));
+				shareIntent.putExtra(android.content.Intent.EXTRA_TEXT, getString(R.string.share_body));
+
+				startActivity(Intent.createChooser(shareIntent, "Share using"));
+                break;
+            case R.id.newsspeak_feedback:
+            	Intent myIntent = new Intent(android.content.Intent.ACTION_SEND);
+				String to[] = { getString(R.string.feedback_mail) };
+
+				myIntent.setType("plain/text");
+
+				myIntent.putExtra(android.content.Intent.EXTRA_EMAIL, to);
+				myIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, getString(R.string.feedback_subject));
+
+				startActivity(myIntent);
+            	break;
+            case R.id.newsspeak_help:
+            	AlertDialog alertDialog = new AlertDialog.Builder(this).create();
+        		
+        		alertDialog.setTitle(getString(R.string.newsspeak_help));
+        		alertDialog.setMessage(getString(R.string.help_text));
+        		
+        		alertDialog.setButton(getString(R.string.ok), new DialogInterface.OnClickListener() {
+        			@Override
+        			public void onClick(DialogInterface dialog, int which) {
+        				
+        			}
+        		});
+        		alertDialog.show();
+            	break;
+        }
+        return true;
+    }
 }
