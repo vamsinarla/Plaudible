@@ -21,4 +21,13 @@
         <item>1.5</item>
         <item>1.75</item>
     </string-array>
+    
+    <string-array name="color_scheme_pref_entries">
+    	<item>White on Black</item>
+    	<item>Black on White</item>
+    </string-array>
+    <string-array name="color_scheme_pref_entryValues">
+    	<item>White on Black</item>
+    	<item>Black on White</item>
+    </string-array>
 </resources>

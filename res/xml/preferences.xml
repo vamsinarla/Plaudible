@@ -3,21 +3,31 @@
   xmlns:android="http://schemas.android.com/apk/res/android">
   
     <ListPreference
-           android:title="Language preference"
-           android:summary="Select the style of English you would like to hear articles in"
-           android:key="languagePref"
-           android:defaultValue="US"
-           android:persistent="true"
-           android:entries="@array/language"
-           android:entryValues="@array/language_values" /> 
+			android:title="Language preference"
+			android:summary="Select the style of English you would like to hear articles in"
+			android:key="languagePref"
+			android:defaultValue="US"
+			android:persistent="true"
+			android:entries="@array/language"
+			android:entryValues="@array/language_values" /> 
   
     <ListPreference
-           android:title="Reading speed"
-           android:summary="Select the speech rate for reading articles"
-           android:key="speedPref"
-           android:defaultValue="1"
-           android:persistent="true"
-           android:entries="@array/readingSpeed"
-           android:entryValues="@array/readingSpeed_values" />
+			android:title="Reading speed"
+			android:summary="Select the speech rate for reading articles"
+			android:key="speedPref"
+			android:defaultValue="1"
+			android:persistent="true"
+			android:entries="@array/readingSpeed"
+			android:entryValues="@array/readingSpeed_values" />
+
+	<ListPreference
+			android:title="@string/color_scheme_pref_title"
+			android:summary="@string/color_scheme_pref_summary"
+			android:key="@string/color_scheme_pref_key"
+			android:persistent="true"
+			android:defaultValue="Black on White"
+			android:entries="@array/color_scheme_pref_entries"
+			android:entryValues="@array/color_scheme_pref_entryValues" />
+		
                     
 </PreferenceScreen>

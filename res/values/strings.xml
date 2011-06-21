@@ -56,4 +56,7 @@
 <string name="empty_playlist">Playlist is empty</string>
 <string name="article_similarities">More like this</string>
 <string name="settings_tab_title">Settings</string>
+<string name="color_scheme_pref_title">Color Theme</string>
+<string name="color_scheme_pref_summary">Select a color scheme for the application</string>
+<string name="color_scheme_pref_key">colorSchemePref</string>
 </resources>
