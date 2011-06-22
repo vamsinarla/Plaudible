@@ -14,6 +14,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.media.AudioManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.IBinder;
@@ -22,6 +23,7 @@ import android.view.View;
 import android.view.Window;
 import android.view.animation.AnimationUtils;
 import android.webkit.WebView;
+import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.ViewSwitcher;
@@ -152,6 +154,8 @@ public class ArticleViewerActivity extends Activity {
         // Set currentWebView
         currentWebView = webview1;
         
+        setBottomBarListeners();
+        
         // 
         Utils.suspendSpinningWheel();
         
@@ -165,7 +169,72 @@ public class ArticleViewerActivity extends Activity {
         this.setVolumeControlStream(AudioManager.STREAM_MUSIC);
     }
 
+    private void setBottomBarListeners() {
+		Button shareButton = (Button) findViewById(R.id.article_share);
+		shareButton.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				
+			}
+		});
+		
+		Button speakButton = (Button) findViewById(R.id.article_speak);
+		speakButton.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				// Track the event of article being spoken out
+				tracker.trackEvent("article", "speak", currentNewsSource.getTitle());
+		        
+				try {
+					getArticleContent();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
+				// Send the article for reading
+				sendArticleForReading(feed.getItem(currentArticleIndex));
+			}
+		});
+		
+		Button readOnWebButton = (Button) findViewById(R.id.article_web);
+		readOnWebButton.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				// Track the event of browser being opened to read
+				tracker.trackEvent("article", "browser", currentNewsSource.getTitle());
+		        
+				Uri uri = Uri.parse(feed.getItem(currentArticleIndex).getUrl());
+				Intent webViewIntent = new Intent(Intent.ACTION_VIEW, uri);
+				startActivity(Intent.createChooser(webViewIntent, "Open this article in"));
+			}
+		});
+		
+		Button similaritiesButton = (Button) findViewById(R.id.article_similarities);
+		similaritiesButton.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				ArrayList<String> articleEntities = getArticleEntities();
+				
+				// Show the list dialog to show the entities
+			}
+		});
+		
+		
+	}
+    
     /**
+	 *  Send an article to the service so it can begin reading
+	 * @param article
+	 * @param newsSource
+	 */
+	public void sendArticleForReading(Article article) {
+		if (mSpeechService != null) {
+			mSpeechService.startReadingArticle(article);
+		}
+	}
+
+	/**
      * Move to display next article
      */
     protected void moveToNextArticle() {
