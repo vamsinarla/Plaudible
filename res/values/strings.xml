@@ -40,7 +40,7 @@
 <string name="quick_search_box_hint">Instant news search</string>
 <string name="topic_search_title">News for </string>
 <string name="connection_unavailable">No connection available</string>
-<string name="playlist_tab_title">My List</string>
+<string name="playlist_tab_title">Bookmarks</string>
 <string name="article_speak">Speak it</string>
 <string name="article_webpage">Read on web</string>
 <string name="article_share">Share it</string>
