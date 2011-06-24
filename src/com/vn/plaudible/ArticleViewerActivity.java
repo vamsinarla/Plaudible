@@ -7,10 +7,15 @@ import java.net.URLEncoder;
 import java.util.ArrayList;
 
 import org.apache.http.util.EncodingUtils;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.media.AudioManager;
@@ -26,6 +31,7 @@ import android.webkit.WebView;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.TextView;
+import android.widget.Toast;
 import android.widget.ViewSwitcher;
 
 import com.vn.plaudible.analytics.Tracker;
@@ -50,6 +56,7 @@ public class ArticleViewerActivity extends Activity {
 	public static final String INTENT_CURRENT_SOURCE = "source";
 	
 	private static final String CONTENT_SERVLET = "/article/content";
+	private static final String ENTITY_SERVLET = "/article/entity";
 	
 	private NewsSource currentNewsSource;
 	private Feed feed;
@@ -170,11 +177,17 @@ public class ArticleViewerActivity extends Activity {
     }
 
     private void setBottomBarListeners() {
-		Button shareButton = (Button) findViewById(R.id.article_share);
+    	final Context application = this;
+		
+    	Button shareButton = (Button) findViewById(R.id.article_share);
 		shareButton.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				
+				Intent shareIntent = new Intent(android.content.Intent.ACTION_SEND);
+				shareIntent.setType("text/plain");
+				shareIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, getBaseContext().getString(R.string.share_subject));
+				shareIntent.putExtra(android.content.Intent.EXTRA_TEXT, getBaseContext().getString(R.string.share_body));
+				startActivity(Intent.createChooser(shareIntent, application.getString(R.string.article_share_dialog_title)));
 			}
 		});
 		
@@ -206,7 +219,7 @@ public class ArticleViewerActivity extends Activity {
 		        
 				Uri uri = Uri.parse(feed.getItem(currentArticleIndex).getUrl());
 				Intent webViewIntent = new Intent(Intent.ACTION_VIEW, uri);
-				startActivity(Intent.createChooser(webViewIntent, "Open this article in"));
+				startActivity(Intent.createChooser(webViewIntent, application.getString(R.string.article_share_dialog_title)));
 			}
 		});
 		
@@ -214,16 +227,31 @@ public class ArticleViewerActivity extends Activity {
 		similaritiesButton.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				ArrayList<String> articleEntities = getArticleEntities();
-				
 				// Show the list dialog to show the entities
+				final CharSequence[] items;
+				try {
+					items = ArticleViewerActivity.this.getArticleEntities();
+				} catch (Exception e) {
+					Toast.makeText(application, application.getString(R.string.entity_fetch_error), Toast.LENGTH_SHORT).show();
+					return;
+				}
+				 
+				AlertDialog.Builder builder = new AlertDialog.Builder(application);
+				builder.setTitle(application.getString(R.string.entities_list_dialog));
+				builder.setItems(items, new DialogInterface.OnClickListener() {
+					
+				    public void onClick(DialogInterface dialog, int item) {
+				    	Toast.makeText(application, items[item], Toast.LENGTH_SHORT).show();
+				    }
+				});
+				builder.show();
 			}
 		});
 		
 		
 	}
     
-    /**
+	/**
 	 *  Send an article to the service so it can begin reading
 	 * @param article
 	 * @param newsSource
@@ -347,6 +375,39 @@ public class ArticleViewerActivity extends Activity {
 		currentArticle.setContent(Utils.getStringFromInputStream(conn.getInputStream()));
 		currentArticle.setDownloaded(true);
     }
+    
+    /**
+     * Return the entities associated with the articles
+     * @return
+     * @throws IOException, JSONException 
+     */
+    private CharSequence[] getArticleEntities() throws IOException, IOException, JSONException {
+    	Article currentArticle = feed.getItem(currentArticleIndex);
+    	
+    	// Construct the AppEngine URL for the ArticleServlet
+		String link = getString(R.string.appengine_url2) + ENTITY_SERVLET;
+		
+		String postArgs = URLEncoder.encode("url", "UTF-8") + "=" + URLEncoder.encode(currentArticle.getUrl(), "UTF-8") + "&";
+		postArgs += URLEncoder.encode("format", "UTF-8") + "=" + URLEncoder.encode("json", "UTF-8");
+		
+		// Get the response from AppEngine
+		URL articleUrl = new URL(link);
+		URLConnection conn = articleUrl.openConnection();
+		Utils.postVars(conn, postArgs);
+		
+		JSONObject response = new JSONObject(Utils.getStringFromInputStream(conn.getInputStream()));
+		
+		JSONArray entitiesJSON = response.getJSONArray("entities");
+		CharSequence[] entities = new CharSequence[entitiesJSON.length()];
+		JSONObject entityObj;
+		
+		for (int index = 0; index < entitiesJSON.length(); index++) {
+			entityObj = entitiesJSON.getJSONObject(index); 
+			entities[index] = entityObj.getString("text");
+	 	}
+		
+		return entities;
+	}
     
     /**
      * Class to make a list of views visible or invisible
