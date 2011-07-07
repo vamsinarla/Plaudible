@@ -22,7 +22,7 @@
         android:textSize="15sp"
         android:maxHeight="62sp"
         android:maxLines="3"
-        android:textColor="#333333"
+       	style="@style/DarkTheme"
         android:typeface="serif"
         android:drawableRight="@drawable/down_arrow"
         android:layout_below="@id/ArticleTitle"/>

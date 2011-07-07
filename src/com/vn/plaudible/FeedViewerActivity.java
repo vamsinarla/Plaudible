@@ -3,18 +3,22 @@ package com.vn.plaudible;
 import java.util.ArrayList;
 import java.util.concurrent.ExecutionException;
 
+import android.R.color;
 import android.app.ListActivity;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
+import android.graphics.Color;
 import android.media.AudioManager;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.IBinder;
+import android.preference.PreferenceManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -50,6 +54,7 @@ public class FeedViewerActivity extends ListActivity {
 	private FeedListAdapter adapter;
 	private NewsSource currentNewsSource;
 	private SpeechService mSpeechService;
+	private SharedPreferences preferences;
 	
 	private SlidingDrawer slidingDrawer;
 	private Tracker tracker;
@@ -91,6 +96,9 @@ public class FeedViewerActivity extends ListActivity {
         loadFeed();
         
         bindSpeechService();
+        
+        // Load application preferences
+        preferences = PreferenceManager.getDefaultSharedPreferences(this);
     }
 	
     @Override

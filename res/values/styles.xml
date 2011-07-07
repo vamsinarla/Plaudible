@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-	<style name="LightThemeSelector" parent="android:Theme.Light">
-		<item name="android:windowNoTitle">true</item>
+	<style name="LightTheme" parent="android:Theme.Light">
+		<item name="android:textColor">#333333</item>
+	</style>
+	
+	<style name="DarkTheme" parent="android:Theme">
+		<item name="android:textColor">#DDDDDD</item>
 	</style>
 </resources>

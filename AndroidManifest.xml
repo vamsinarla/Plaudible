@@ -17,8 +17,7 @@
         <activity android:name=".NewsSourcesActivity"
                   android:label="@string/app_name"
                   android:configChanges="orientation"
-                  android:windowSoftInputMode="adjustPan|stateHidden"
-                  android:theme="@android:style/Theme">
+                  android:windowSoftInputMode="adjustPan|stateHidden">
             <intent-filter>
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
