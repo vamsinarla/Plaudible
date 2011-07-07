@@ -28,6 +28,13 @@
 			android:defaultValue="Black on White"
 			android:entries="@array/color_scheme_pref_entries"
 			android:entryValues="@array/color_scheme_pref_entryValues" />
+			
+	<Preference
+			android:title="@string/auto_update_pref_title"
+			android:summary="@string/auto_update_pref_summary"
+			android:key="@string/auto_update_pref_key"
+			android:persistent="false"/>
+			
 		
                     
 </PreferenceScreen>
