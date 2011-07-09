@@ -5,7 +5,8 @@
       android:versionName="3.4">
     <application android:label="@string/app_name"
                  android:description="@string/app_desc" 
-                 android:icon="@drawable/podcast2">
+                 android:icon="@drawable/podcast2"
+                 android:debuggable="true">
                  
         <activity android:name=".FeedViewerActivity"
                   android:label="@string/app_name"

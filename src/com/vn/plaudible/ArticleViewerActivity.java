@@ -342,7 +342,7 @@ public class ArticleViewerActivity extends Activity {
         // Load the page from app Engine's article servlet
         String postData = URLEncoder.encode("format") + "=" + URLEncoder.encode("json") + "&";
         postData += URLEncoder.encode("url") + "=" + URLEncoder.encode(articleUrl) + "&";
-        postData += URLEncoder.encode("type") + "=" + URLEncoder.encode("html");
+        postData += URLEncoder.encode("response") + "=" + URLEncoder.encode("html");
         
         currentWebView.postUrl(appEngineUrl, EncodingUtils.getBytes(postData, "BASE64"));
         
