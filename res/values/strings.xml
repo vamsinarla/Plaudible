@@ -63,7 +63,7 @@
 <string name="newsspeak_help">Help</string>
 <string name="entities_list_dialog">News related to</string>
 <string name="entity_fetch_error">Could not fetch related news at this time. Please try again later</string>
-<string name="article_share_dialog_title">Open this article in</string>
+<string name="article_share_dialog_title">Share this article using</string>
 <string name="auto_update_pref_title">Set automatic updates</string>
 <string name="auto_update_pref_summary">Allows NewsSpeak to be updated automatically while you sleep</string>
 <string name="auto_update_pref_key">allowautoupdates</string>

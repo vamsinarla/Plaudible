@@ -3,7 +3,6 @@ package com.vn.plaudible;
 import java.util.ArrayList;
 import java.util.concurrent.ExecutionException;
 
-import android.R.color;
 import android.app.ListActivity;
 import android.content.ComponentName;
 import android.content.Context;
@@ -11,7 +10,6 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
-import android.graphics.Color;
 import android.media.AudioManager;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -251,11 +249,13 @@ public class FeedViewerActivity extends ListActivity {
    private class FeedListAdapter extends ArrayAdapter<Article> implements View.OnClickListener {
 	   
 	   private Feed feed;
+	   private Context context;
 	   
 	   public FeedListAdapter(Context context, int textViewResourceId, Feed feed) {
 		   super(context, textViewResourceId, feed.getItems());
 		   
 		   this.feed = feed;
+		   this.context = context;
 		   setNotifyOnChange(true);
 	   }
 	   
@@ -307,6 +307,7 @@ public class FeedViewerActivity extends ListActivity {
 		@Override
 		public void onClick(View view) {
 			ViewHolder holder = (ViewHolder) view.getTag();
+			final Context application = context;
 						
 			// Get the View of the dropDownBar
 			View dropDownBar = view.findViewById(R.id.dropDownBar);
@@ -319,6 +320,24 @@ public class FeedViewerActivity extends ListActivity {
         	timer.start();
         	
         	// Set the functionality of the drop down bar
+        	// The share button
+        	Button shareButton = (Button) dropDownBar.findViewById(R.id.shareButton);
+        	shareButton.setTag(holder.position);
+        	shareButton.setOnClickListener(new View.OnClickListener() {
+				@Override
+				public void onClick(View v) {
+					Integer position = (Integer) v.getTag();
+					
+					Intent shareIntent = new Intent(android.content.Intent.ACTION_SEND);
+					shareIntent.setType("text/plain");
+					shareIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, getBaseContext().getString(R.string.article_share_subject) +
+																" - " +
+																feed.getItem(position).getTitle());
+					shareIntent.putExtra(android.content.Intent.EXTRA_TEXT, Utils.generateTinyUrl(feed.getItem(position).getUrl()));
+					startActivity(Intent.createChooser(shareIntent, application.getString(R.string.article_share_dialog_title)));
+				}	
+        	});
+        
         	// The browser button
         	Button browserButton = (Button) dropDownBar.findViewById(R.id.browserButton);
         	browserButton.setTag(holder.position);

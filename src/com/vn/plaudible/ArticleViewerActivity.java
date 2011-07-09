@@ -182,8 +182,10 @@ public class ArticleViewerActivity extends Activity {
 			public void onClick(View v) {
 				Intent shareIntent = new Intent(android.content.Intent.ACTION_SEND);
 				shareIntent.setType("text/plain");
-				shareIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, getBaseContext().getString(R.string.share_subject));
-				shareIntent.putExtra(android.content.Intent.EXTRA_TEXT, getBaseContext().getString(R.string.share_body));
+				shareIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, getBaseContext().getString(R.string.article_share_subject) +
+															" - " +
+															feed.getItem(currentArticleIndex).getTitle());
+				shareIntent.putExtra(android.content.Intent.EXTRA_TEXT, Utils.generateTinyUrl(feed.getItem(currentArticleIndex).getUrl()));
 				startActivity(Intent.createChooser(shareIntent, application.getString(R.string.article_share_dialog_title)));
 			}
 		});
