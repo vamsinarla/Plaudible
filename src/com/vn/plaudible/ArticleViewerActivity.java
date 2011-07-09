@@ -133,8 +133,6 @@ public class ArticleViewerActivity extends Activity {
 				switch(event.getAction()){
 		        case MotionEvent.ACTION_DOWN:
 		        		viewVisibilityController.setViewVisibility(View.VISIBLE);
-		        		
-		        		
 		        		ArticleViewerUIOverlayTimer timer = new ArticleViewerUIOverlayTimer(VISIBILITY_TIMEOUT, viewVisibilityController);
 		        		timer.start();
 		                break;
@@ -149,8 +147,7 @@ public class ArticleViewerActivity extends Activity {
 				switch(event.getAction()){
 		        case MotionEvent.ACTION_DOWN:
 			        	viewVisibilityController.setViewVisibility(View.VISIBLE);
-		        		
-			        	ArticleViewerUIOverlayTimer timer = new ArticleViewerUIOverlayTimer(VISIBILITY_TIMEOUT, viewVisibilityController);
+		        		ArticleViewerUIOverlayTimer timer = new ArticleViewerUIOverlayTimer(VISIBILITY_TIMEOUT, viewVisibilityController);
 		        		timer.start();
 		                break;
 				}
@@ -235,13 +232,19 @@ public class ArticleViewerActivity extends Activity {
 					Toast.makeText(application, application.getString(R.string.entity_fetch_error), Toast.LENGTH_SHORT).show();
 					return;
 				}
-				 
+				
 				AlertDialog.Builder builder = new AlertDialog.Builder(application);
 				builder.setTitle(application.getString(R.string.entities_list_dialog));
 				builder.setItems(items, new DialogInterface.OnClickListener() {
 					
 				    public void onClick(DialogInterface dialog, int item) {
-				    	Toast.makeText(application, items[item], Toast.LENGTH_SHORT).show();
+				    	// Start Plaudible
+						Intent listArticlesInFeed = new Intent();
+						listArticlesInFeed.setClass(application, FeedViewerActivity.class);
+						listArticlesInFeed.putExtra(FeedViewerActivity.INTENT_NEWSSOURCE,
+											Utils.generateGoogleNewsSource(items[item].toString()));
+						
+						application.startActivity(listArticlesInFeed);
 				    }
 				});
 				builder.show();

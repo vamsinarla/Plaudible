@@ -404,7 +404,7 @@ public class NewsSourcesActivity extends ListActivity implements TextToSpeech.On
 			ViewHolder holder = (ViewHolder) view.getTag();
 			NewsSource source = getItem(holder.position);
 			
-			if (INSTANT_NEWS_SEARCH_POSITION != holder.position) {
+			if (!(filterText.getText().length() > 0 && holder.position == INSTANT_NEWS_SEARCH_POSITION)) {
 				// Our NewsSource objects are incomplete. Fetch the full NewsSource now.
 				source = mDbAdapter.getNewsPaper(source.getTitle());
 			}
