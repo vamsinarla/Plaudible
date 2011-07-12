@@ -245,6 +245,12 @@ public class SearchPage extends Activity {
 		
 	}
 	
+	protected void onResume() {
+		super.onResume();
+		
+		Utils.setCurrentTheme(this);
+	}
+	
 	/**
 	 * Class that handles the adapter for the search results
 	 * @author vnarla

@@ -23,11 +23,11 @@
     </string-array>
     
     <string-array name="color_scheme_pref_entries">
-    	<item>White on Black</item>
     	<item>Black on White</item>
+    	<item>White on Black</item>
     </string-array>
     <string-array name="color_scheme_pref_entryValues">
-    	<item>White on Black</item>
-    	<item>Black on White</item>
+    	<item>LightTheme</item>
+    	<item>DarkTheme</item>
     </string-array>
 </resources>

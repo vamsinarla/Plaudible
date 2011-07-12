@@ -69,7 +69,7 @@ public class FeedViewerActivity extends ListActivity {
         
         // Set view related stuff
         setContentView(R.layout.articles_list);
- 
+        
         // Get the intent and the related extras
         Intent intent = getIntent();
         currentNewsSource = (NewsSource) intent.getSerializableExtra(INTENT_NEWSSOURCE);
@@ -99,6 +99,14 @@ public class FeedViewerActivity extends ListActivity {
         preferences = PreferenceManager.getDefaultSharedPreferences(this);
     }
 	
+    /**
+     * Set the current theme based on the preferences
+     */
+    protected void onResume() {
+    	super.onResume();
+    	Utils.setCurrentTheme(this);
+    }
+    
     @Override
     protected void onDestroy() {
     	unBindSpeechService();
@@ -429,20 +437,7 @@ public class FeedViewerActivity extends ListActivity {
         	playlistButton.setOnClickListener(new View.OnClickListener() {
 				@Override
 				public void onClick(View v) {
-					Integer position = (Integer) v.getTag();
-					ImageButton playlistButton = (ImageButton) v;
-					
-					Playlist<Article> playlist = mSpeechService.getPlaylist();
-					
-					// Check if it exists in the playlist
-					Article article = feed.getItem(position);
-					if (playlist.contains(article)) {
-						playlistButton.setImageResource(R.drawable.add_article);
-						playlist.removeItem(article);
-					} else {
-						playlistButton.setImageResource(R.drawable.remove_article);
-						playlist.addItem(article);
-					}
+					Toast.makeText(application, "Bookmarking is coming soon in future updates", Toast.LENGTH_LONG).show();
 				}
 			});
         	

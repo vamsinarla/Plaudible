@@ -18,12 +18,15 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
 
-import com.vn.plaudible.types.NewsSource;
-
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.SharedPreferences;
+import android.content.res.Resources;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.preference.PreferenceManager;
+
+import com.vn.plaudible.types.NewsSource;
 
 /**
  * Simple Utility functions
@@ -182,5 +185,21 @@ public class Utils {
 	   if (spinningWheel.isShowing()) {
 		   spinningWheel.cancel();
 	   }
+   	}
+   	
+   	/**
+   	 * Set the current Theme for the application
+   	 * @param context
+   	 */
+   	public static void setCurrentTheme(Context context) {
+   		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+   		String[] themes = context.getResources().getStringArray(R.array.color_scheme_pref_entryValues); 
+   		String theme = prefs.getString(context.getString(R.string.color_scheme_pref_key), themes[0]);
+   		
+   		if (theme.equalsIgnoreCase(themes[0])) {
+   			context.setTheme(R.style.LightTheme);
+   		} else {
+   			context.setTheme(R.style.DarkTheme);
+   		}
    	}
 }

@@ -69,6 +69,8 @@ public class ReorderNewsSourcesPageActivity extends ListActivity {
 	protected void onResume() {
 		super.onResume();
 		
+		Utils.setCurrentTheme(this);
+		
 		if (mDbAdapter == null) {
 			mDbAdapter = new NewsSpeakDBAdapter(this);
 		    mDbAdapter.open(NewsSpeakDBAdapter.READ_WRITE);

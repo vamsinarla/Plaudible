@@ -164,6 +164,8 @@ public class NewsSourcesActivity extends ListActivity implements TextToSpeech.On
 	protected void onResume() {
 		super.onResume();
 		
+		Utils.setCurrentTheme(this);
+		
 		// Clear the adapter data first
 		allSources.clear();
 		

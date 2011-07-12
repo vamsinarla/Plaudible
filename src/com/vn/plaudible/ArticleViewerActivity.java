@@ -160,7 +160,7 @@ public class ArticleViewerActivity extends Activity {
         
         setBottomBarListeners();
         
-        // 
+        // Dismiss the progress dialog
         Utils.suspendSpinningWheel();
         
         // Bind speech service
@@ -328,6 +328,7 @@ public class ArticleViewerActivity extends Activity {
     @Override
     public void onResume() {
     	super.onResume();
+    	Utils.setCurrentTheme(this);
     	
     	displayArticle(currentArticleIndex);
     }
