@@ -192,7 +192,7 @@ public class Utils {
    	 * @param context
    	 */
    	public static void setCurrentTheme(Context context) {
-   		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+   		/*SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
    		String[] themes = context.getResources().getStringArray(R.array.color_scheme_pref_entryValues); 
    		String theme = prefs.getString(context.getString(R.string.color_scheme_pref_key), themes[0]);
    		
@@ -200,6 +200,6 @@ public class Utils {
    			context.setTheme(R.style.LightTheme);
    		} else {
    			context.setTheme(R.style.DarkTheme);
-   		}
+   		}*/
    	}
 }

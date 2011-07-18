@@ -2,13 +2,16 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical"
     android:layout_width="fill_parent"
-    android:layout_height="fill_parent">
+    android:layout_height="fill_parent"
+    android:background="@android:color/white">
    
     <ListView android:id="@android:id/list"
     android:layout_width="fill_parent" 
     android:layout_height="wrap_content"
     android:layout_alignWithParentIfMissing="true"
     android:layout_above="@+id/articlelistbottombar"
+    android:background="@android:color/white"
+    android:cacheColorHint="@android:color/white"
     android:layout_weight="1"/>
     
     <TextView android:id="@id/android:empty"
@@ -17,6 +20,7 @@
     android:layout_weight="1"
     android:layout_centerInParent="true"
     android:gravity="center"
+    android:background="@android:color/white"
     android:drawableTop="@drawable/podcast2"
     android:textSize="20sp"
     android:text="@string/no_articles_to_show"/>
@@ -65,11 +69,14 @@
         android:id="@+id/contentLayout" 
         android:orientation="vertical" 
         android:gravity="center|top"
+        android:background="@android:color/white"
         android:layout_height="fill_parent">
            
            <ListView android:id="@+id/categoriesListView"
            android:layout_width="fill_parent"
-           android:layout_height="fill_parent"/>
+           android:layout_height="fill_parent"
+           android:background="@android:color/white"
+           android:cacheColorHint="@android:color/white"/>
             
         </LinearLayout>
     </SlidingDrawer>

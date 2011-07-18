@@ -20,7 +20,7 @@ public class TTSDataAdapter<Item> {
 	TTSDataAdapter() {
 		// Init state
 		currentItem = null;
-		playlist = null;
+		playlist = new Playlist<Item>();
 		chunkIndex = 0;
 		chunks = null;
 	}

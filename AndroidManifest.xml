@@ -73,7 +73,7 @@
             </intent-filter>
         </activity>
 
-        <service android:name=".SpeechService"></service>
+        <service android:name=".tts.SpeechService"></service>
     </application>
    
     <uses-sdk android:minSdkVersion="7" />

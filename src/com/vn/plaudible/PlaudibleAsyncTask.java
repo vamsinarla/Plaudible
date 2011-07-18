@@ -1,6 +1,8 @@
 package com.vn.plaudible;
 
+import java.io.BufferedInputStream;
 import java.io.InputStream;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
@@ -9,13 +11,13 @@ import java.net.URLEncoder;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
-import com.vn.plaudible.types.Article;
-import com.vn.plaudible.types.Feed;
-import com.vn.plaudible.types.NewsSource;
-
 import android.app.ProgressDialog;
 import android.os.AsyncTask;
 import android.util.Log;
+
+import com.vn.plaudible.types.Article;
+import com.vn.plaudible.types.Feed;
+import com.vn.plaudible.types.NewsSource;
 
 /**
  * AsyncTask which takes care of all downloading , feeds and articles.
@@ -70,6 +72,7 @@ public class PlaudibleAsyncTask extends AsyncTask<PlaudibleAsyncTask.Payload, Ar
 		Feed feed;
 		NewsSource source;
 		InputStream responseStream;
+		HttpURLConnection urlConnection = null;
 		String link;
 		
 		try {
@@ -93,13 +96,13 @@ public class PlaudibleAsyncTask extends AsyncTask<PlaudibleAsyncTask.Payload, Ar
 					// Construct the FeedHandler(SAXParser) and parse the response from AppEngine
 					URL feedUrl = new URL(link);
 					FeedHandler feedHandler = new FeedHandler(feed);
-					URLConnection conn = feedUrl.openConnection();
+					urlConnection = (HttpURLConnection) feedUrl.openConnection();
 
 					// Write the POST vars
-					Utils.postVars(conn, args);
+					Utils.postVars(urlConnection, args);
 
 					// Get the response and parse it
-					responseStream = conn.getInputStream();
+					responseStream = new BufferedInputStream(urlConnection.getInputStream());
 					parser.parse(responseStream, feedHandler);
 
 					// Write Success
@@ -130,11 +133,11 @@ public class PlaudibleAsyncTask extends AsyncTask<PlaudibleAsyncTask.Payload, Ar
 							
 							// Get the response from AppEngine
 							URL articleUrl = new URL(link);
-							URLConnection conn = articleUrl.openConnection();
-							Utils.postVars(conn, postArgs);
+							urlConnection = (HttpURLConnection) articleUrl.openConnection();
+							Utils.postVars(urlConnection, postArgs);
 							
 							// Set the params for the article and mark as downloaded
-							article.setContent(Utils.getStringFromInputStream(conn.getInputStream()));
+							article.setContent(Utils.getStringFromInputStream(urlConnection.getInputStream()));
 							article.setDownloaded(true);
 							article.setSource(source);
 							
@@ -160,6 +163,10 @@ public class PlaudibleAsyncTask extends AsyncTask<PlaudibleAsyncTask.Payload, Ar
 			Log.e("PlaudibleAsyncTask::doInBackground", exception.getMessage());
 			exception.printStackTrace();
 			payload.result = null;
+		} finally {
+			if (urlConnection != null) {
+				urlConnection.disconnect();
+			}
 		}
 		return payload;
 	}

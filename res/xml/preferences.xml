@@ -20,14 +20,14 @@
 			android:entries="@array/readingSpeed"
 			android:entryValues="@array/readingSpeed_values" />
 
-	<ListPreference
+	<!--   <ListPreference
 			android:title="@string/color_scheme_pref_title"
 			android:summary="@string/color_scheme_pref_summary"
 			android:key="@string/color_scheme_pref_key"
 			android:persistent="true"
 			android:defaultValue="Black on White"
 			android:entries="@array/color_scheme_pref_entries"
-			android:entryValues="@array/color_scheme_pref_entryValues" />
+			android:entryValues="@array/color_scheme_pref_entryValues" /> -->
 			
 	<Preference
 			android:title="@string/auto_update_pref_title"

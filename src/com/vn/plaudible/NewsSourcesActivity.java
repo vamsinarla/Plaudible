@@ -20,7 +20,6 @@ import android.database.SQLException;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
-import android.speech.tts.TextToSpeech;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
@@ -43,7 +42,7 @@ import com.vn.plaudible.types.NewsSource;
  * @author vamsi
  *
  */
-public class NewsSourcesActivity extends ListActivity implements TextToSpeech.OnInitListener {
+public class NewsSourcesActivity extends ListActivity {
 	
 	private ArrayList<NewsSource> allSources;
 	
@@ -51,11 +50,8 @@ public class NewsSourcesActivity extends ListActivity implements TextToSpeech.On
 	private NewsSpeakDBAdapter mDbAdapter;
 	private SpeechService mSpeechService;
 	private EditText filterText;
-
-	private TextToSpeech ttsEngine;
 	
-	private static final int INSTANT_NEWS_SEARCH_POSITION = 0;
-	private static final int TTS_INSTALLED_CHECK_CODE = 1;
+	private static final Integer INSTANT_NEWS_SEARCH_POSITION = 0;
 	
 	static class ViewHolder {
 		ImageView image;
@@ -92,57 +88,19 @@ public class NewsSourcesActivity extends ListActivity implements TextToSpeech.On
 			performFirstRunInitialization();
 		}
 		
-        checkAndInstallTTSEngine();
         bindSpeechService();
         
         // Set the context for Utils
         Utils.setContext(this);
     }
 	
-	/**
-     *  Check for presence of a TTSEngine and install if not found
-     */
-    protected void checkAndInstallTTSEngine() {
-	    Intent checkIntent = new Intent();
-	    checkIntent.setAction(TextToSpeech.Engine.ACTION_CHECK_TTS_DATA);
-	    startActivityForResult(checkIntent, TTS_INSTALLED_CHECK_CODE);
-    }
-    
-    /**
-     *  Called for the intent which checks if TTS was installed and starts TTS up
-     */
-    protected void onActivityResult(
-            int requestCode, int resultCode, Intent data) {
-        if (requestCode == TTS_INSTALLED_CHECK_CODE) {
-            if (resultCode == TextToSpeech.Engine.CHECK_VOICE_DATA_PASS) {
-                // success, create the TTS instance
-                ttsEngine = new TextToSpeech(this, this);
-            } else {
-                // missing data, install it
-                Intent installIntent = new Intent();
-                installIntent.setAction(
-                    TextToSpeech.Engine.ACTION_INSTALL_TTS_DATA);
-                startActivity(installIntent);
-            }
-        }
-    }
-    
-    /**
-     *  OnInitListener for TTSEngine initialization
-     *  Check if the Service is bound and if it is then we can set the TTS Engine it should use
-     */
-	@Override
-	public void onInit(int status) {
-		if (status == TextToSpeech.SUCCESS) {
-	           ttsEngine.setLanguage(Locale.US);	            
-	           
-	           if (mSpeechService != null) {
-	        	   mSpeechService.initializeSpeechService(this.ttsEngine);
-	           }
-		}
-	}
-	
-	private void performFirstRunInitialization() {
+   private void performFirstRunInitialization() {
+	   
+	   	if (!Utils.checkDataConnectivity(this)) {
+	   		Toast.makeText(this, getString(R.string.connection_unavailable), Toast.LENGTH_LONG);
+	   		return;
+	   	}
+	   	
 		// Start a spinning wheel to show we are busy
 		ProgressDialog spinningWheel = ProgressDialog.show(NewsSourcesActivity.this, 
 										"Please wait",
@@ -165,6 +123,8 @@ public class NewsSourcesActivity extends ListActivity implements TextToSpeech.On
 		super.onResume();
 		
 		Utils.setCurrentTheme(this);
+		
+		this.getListView().invalidate();
 		
 		// Clear the adapter data first
 		allSources.clear();

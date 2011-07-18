@@ -1,6 +1,7 @@
 package com.vn.plaudible;
 
 import java.util.ArrayList;
+import java.util.Locale;
 import java.util.concurrent.ExecutionException;
 
 import android.app.ListActivity;
@@ -8,7 +9,6 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.media.AudioManager;
 import android.net.Uri;
@@ -17,6 +17,7 @@ import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
+import android.speech.tts.TextToSpeech;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -33,9 +34,8 @@ import com.vn.plaudible.tts.SpeechService;
 import com.vn.plaudible.types.Article;
 import com.vn.plaudible.types.Feed;
 import com.vn.plaudible.types.NewsSource;
-import com.vn.plaudible.types.Playlist;
 
-public class FeedViewerActivity extends ListActivity {
+public class FeedViewerActivity extends ListActivity  implements TextToSpeech.OnInitListener {
 	
 	/**
 	 *  ViewHolder pattern for efficient ListAdapter usage
@@ -52,7 +52,9 @@ public class FeedViewerActivity extends ListActivity {
 	private FeedListAdapter adapter;
 	private NewsSource currentNewsSource;
 	private SpeechService mSpeechService;
-	private SharedPreferences preferences;
+	private TextToSpeech ttsEngine;
+	
+	private static final int TTS_INSTALLED_CHECK_CODE = 1;
 	
 	private SlidingDrawer slidingDrawer;
 	private Tracker tracker;
@@ -93,12 +95,55 @@ public class FeedViewerActivity extends ListActivity {
         // Load feed will automatically load the correct feed as per the current newssource
         loadFeed();
         
-        bindSpeechService();
+        // bindSpeechService();
+        // checkAndInstallTTSEngine();
         
-        // Load application preferences
-        preferences = PreferenceManager.getDefaultSharedPreferences(this);
+        PreferenceManager.getDefaultSharedPreferences(this);
     }
+    
+    /**
+     *  OnInitListener for TTSEngine initialization
+     *  Check if the Service is bound and if it is then we can set the TTS Engine it should use
+     */
+	@Override
+	public void onInit(int status) {
+		if (status == TextToSpeech.SUCCESS) {
+	           ttsEngine.setLanguage(Locale.US);	            
+	           
+	           if (mSpeechService != null) {
+	        	   mSpeechService.initializeSpeechService(this.ttsEngine);
+	           }
+		}
+	}
 	
+	/**
+     *  Check for presence of a TTSEngine and install if not found
+     */
+    protected void checkAndInstallTTSEngine() {
+	    Intent checkIntent = new Intent();
+	    checkIntent.setAction(TextToSpeech.Engine.ACTION_CHECK_TTS_DATA);
+	    startActivityForResult(checkIntent, TTS_INSTALLED_CHECK_CODE);
+    }
+    
+    /**
+     *  Called for the intent which checks if TTS was installed and starts TTS up
+     */
+    protected void onActivityResult(
+            int requestCode, int resultCode, Intent data) {
+        if (requestCode == TTS_INSTALLED_CHECK_CODE) {
+            if (resultCode == TextToSpeech.Engine.CHECK_VOICE_DATA_PASS) {
+                // success, create the TTS instance
+                ttsEngine = new TextToSpeech(this, this);
+            } else {
+                // missing data, install it
+                Intent installIntent = new Intent();
+                installIntent.setAction(
+                    TextToSpeech.Engine.ACTION_INSTALL_TTS_DATA);
+                startActivity(installIntent);
+            }
+        }
+    }
+    
     /**
      * Set the current theme based on the preferences
      */
@@ -562,6 +607,9 @@ public class FeedViewerActivity extends ListActivity {
 		@Override
 		public void onServiceConnected(ComponentName name, IBinder service) {
 			mSpeechService = ((SpeechService.SpeechBinder)service).getService();
+			if (mSpeechService != null) {
+	        	   mSpeechService.initializeSpeechService(ttsEngine);
+	           }
 		}
 
 		@Override
