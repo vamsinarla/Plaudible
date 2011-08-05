@@ -2,14 +2,17 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical"
     android:layout_width="fill_parent"
-    android:layout_height="fill_parent">
+    android:layout_height="fill_parent"
+    android:background="@android:color/white">
    
     <ListView android:id="@android:id/list"
     android:layout_width="fill_parent" 
     android:layout_height="wrap_content"
     android:layout_alignWithParentIfMissing="true"
     android:layout_above="@+id/articlelistbottombar"
-    android:layout_weight="1"/>
+    android:layout_weight="1"
+    android:background="@android:color/white"
+    android:cacheColorHint="@android:color/white"/>
     
     <TextView android:id="@id/android:empty"
     android:layout_width="fill_parent"
@@ -17,6 +20,7 @@
     android:layout_weight="1"
     android:layout_centerInParent="true"
     android:gravity="center"
+    android:background="@android:color/white"
     android:drawableTop="@drawable/podcast2"
     android:textSize="20sp"
     android:text="@string/no_articles_to_show"/>
@@ -26,21 +30,29 @@
     android:layout_height="wrap_content"
     android:orientation="horizontal"
     android:layout_alignParentBottom="true"
-    android:background="@android:drawable/bottom_bar"
+    android:background="#dd000000"
     android:visibility="gone">
     
-	    <ImageButton android:id="@+id/articleListBottomBarIcon"
+	    <Button android:id="@+id/articleListBottomBarPauseButton"
          android:layout_width="wrap_content" 
-         android:layout_height="fill_parent"
-         android:background="@android:color/transparent"
-         android:layout_gravity="center"
-         android:src="@drawable/play64"/>
+         android:layout_height="wrap_content"
+         android:layout_gravity="center_vertical"
+         android:text="Pause"
+         android:textSize="12sp"/>
+         
+        <Button android:id="@+id/articleListBottomBarStopButton"
+         android:layout_width="wrap_content" 
+         android:layout_height="wrap_content"
+         android:layout_gravity="center_vertical"
+         android:text="Stop"
+         android:textSize="12sp"/>
  
 	    <TextView android:id="@+id/articleListBottomBarText"
 	    android:layout_width="wrap_content"
-	    android:layout_height="fill_parent"
-	    android:textSize="16sp"
-	    android:textColor="#000000"/>
+	    android:layout_height="wrap_content"
+	    android:textSize="14sp"
+	    android:typeface="serif"
+	    android:textColor="@android:color/white"/>
 	            
     </LinearLayout>
      
@@ -69,7 +81,9 @@
            
            <ListView android:id="@+id/categoriesListView"
            android:layout_width="fill_parent"
-           android:layout_height="fill_parent"/>
+           android:layout_height="fill_parent"
+           android:background="@android:color/white"
+           android:cacheColorHint="@android:color/white"/>
             
         </LinearLayout>
     </SlidingDrawer>
