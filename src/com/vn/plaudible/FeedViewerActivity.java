@@ -17,6 +17,7 @@ import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
+import android.text.Html;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -33,7 +34,6 @@ import com.vn.plaudible.tts.SpeechService;
 import com.vn.plaudible.types.Article;
 import com.vn.plaudible.types.Feed;
 import com.vn.plaudible.types.NewsSource;
-import com.vn.plaudible.types.Playlist;
 
 public class FeedViewerActivity extends ListActivity {
 	
@@ -56,6 +56,7 @@ public class FeedViewerActivity extends ListActivity {
 	
 	private SlidingDrawer slidingDrawer;
 	private Tracker tracker;
+	
 	
 	// Intents and extra strings
 	public static final String INTENT_NEWSSOURCE = "newssource";
@@ -99,17 +100,25 @@ public class FeedViewerActivity extends ListActivity {
         preferences = PreferenceManager.getDefaultSharedPreferences(this);
     }
 	
+    
+	
     /**
      * Set the current theme based on the preferences
      */
     protected void onResume() {
     	super.onResume();
+    	
+    	// Restore current theme
     	Utils.setCurrentTheme(this);
+    	
+    	// Suspend the spinning wheel
+		Utils.suspendSpinningWheel();
+		
+    	displayBottomBar();
     }
     
     @Override
     protected void onDestroy() {
-    	unBindSpeechService();
     	super.onDestroy();
     }
     
@@ -234,9 +243,6 @@ public class FeedViewerActivity extends ListActivity {
 		   // Close the drawer
 		   slidingDrawer.animateClose();
 		   
-	       // Show the spinning wheel
-	       Utils.showSpinningWheel(FeedViewerActivity.this, "", getString(R.string.loading_articles));
-	       
 	       // Set the title and the category
 	       currentNewsSource.setCurrentCategoryIndex(holder.position);
 	       setTitle(currentNewsSource.getTitle() + " : " + currentNewsSource.getCurrentCategoryName());
@@ -291,7 +297,12 @@ public class FeedViewerActivity extends ListActivity {
 		   convertView.setOnClickListener(this);
 		   
 		   holder.title.setText(feed.getItem(position).getTitle());
-		   holder.description.setText(feed.getItem(position).getDescription());
+		   
+		   if (Utils.isGoogleNewsFeed(feed.getUrl())) {
+			   holder.description.setText(Html.fromHtml(feed.getItem(position).getDescription()));
+		   } else {
+			   holder.description.setText((feed.getItem(position).getDescription()));
+		   }
 		   holder.position = position;
 
 		   return convertView;
@@ -334,6 +345,9 @@ public class FeedViewerActivity extends ListActivity {
         	shareButton.setOnClickListener(new View.OnClickListener() {
 				@Override
 				public void onClick(View v) {
+					// Track the event of article being spoken out
+					tracker.trackEvent("article", "share", currentNewsSource.getTitle());
+					
 					Integer position = (Integer) v.getTag();
 					
 					Intent shareIntent = new Intent(android.content.Intent.ACTION_SEND);
@@ -477,28 +491,47 @@ public class FeedViewerActivity extends ListActivity {
         	
         	// Set the text on the bottom bar
         	TextView bottomBarText = (TextView) findViewById(R.id.articleListBottomBarText);
-        	String text = mSpeechService.getCurrentItem().getSource().getTitle() + " - " + mSpeechService.getCurrentItem().getTitle();
-         	bottomBarText.setText(text);
-        	
-        	// Set the correct icon on the bottom bar
-        	ImageButton bottomBarIcon = (ImageButton) findViewById(R.id.articleListBottomBarIcon);
-        	if (mSpeechService.isReading()) {
-        		bottomBarIcon.setImageResource(R.drawable.pause64);
-            } else {
-            	bottomBarIcon.setImageResource(R.drawable.play64);
+        	String text = null;
+        	try {
+        		text = mSpeechService.getCurrentItem().getSource().getTitle() + " - " + mSpeechService.getCurrentItem().getTitle();
+        	} catch (Exception e) {
+        		text = "";
+        	} finally {
+        		bottomBarText.setText(text);
         	}
         	
-        	bottomBarIcon.setOnClickListener(new View.OnClickListener() {
+        	// Set the correct play/pause icon on the bottom bar
+        	Button pauseButton = (Button) findViewById(R.id.articleListBottomBarPauseButton);
+        	if (mSpeechService.isReading()) {
+        		pauseButton.setText("Pause");
+            } else {
+            	pauseButton.setText("Play");
+        	}
+        	
+        	final View speechControllerBar = bottomBar; 
+        	pauseButton.setOnClickListener(new View.OnClickListener() {
 				@Override
 				public void onClick(View v) {
-					ImageButton button = (ImageButton) v;
+					Button button = (Button) v;
 					if (mSpeechService.isReading()) {
-						button.setImageResource(R.drawable.play64);
-		        		mSpeechService.pauseReading();
+						mSpeechService.pauseReading();
+		        		button.setText("Play");
 		            } else {
-		            	button.setImageResource(R.drawable.pause64);
 		            	mSpeechService.resumeReading();
+		            	button.setText("Pause");
 		        	}
+				}
+			});
+        	
+        	Button stopButton = (Button) findViewById(R.id.articleListBottomBarStopButton);
+        	stopButton.setOnClickListener(new View.OnClickListener() {
+				@Override
+				public void onClick(View v) {
+					if (mSpeechService.isReading()) {
+						mSpeechService.stopReading();
+						View bottomBar = findViewById(R.id.articlelistbottombar);
+						bottomBar.setVisibility(View.GONE);
+					}
 				}
 			});
         }

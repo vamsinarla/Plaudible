@@ -20,6 +20,8 @@ import com.vn.plaudible.FeedViewerActivity;
 import com.vn.plaudible.R;
 import com.vn.plaudible.Utils;
 import com.vn.plaudible.types.Article;
+import com.vn.plaudible.types.Event;
+import com.vn.plaudible.types.EventListener;
 import com.vn.plaudible.types.Playlist;
 
 /**
@@ -78,6 +80,19 @@ public class SpeechService extends Service {
 				pauseReading();
 				state = State.PAUSED_ON_CALL;
 			}
+		}
+	}
+	
+	/**
+	 * Class that listens to completion of speech 
+	 * @author vnarla
+	 *
+	 */
+	class ArticlePlaybackCompletionListener implements EventListener {
+		@Override
+		public void actionPerformed(Event e) {
+			Log.d("SpeechService", "Article playback complete");
+			stopReading();
 		}
 	}
 	
@@ -147,7 +162,6 @@ public class SpeechService extends Service {
 		Notification notification = new Notification(notificationIcon, text,
 													System.currentTimeMillis());
 		notification.flags |= Notification.FLAG_ONGOING_EVENT;
-		notification.flags |= Notification.FLAG_NO_CLEAR;
 		
 		Intent notificationIntent = new Intent(this, FeedViewerActivity.class);
 		notificationIntent.putExtra("NewsSource", ttsDataAdapter.getCurrentItem().getSource());
@@ -186,10 +200,13 @@ public class SpeechService extends Service {
 		
 		// Select preferences for TTS Engine and speak "init text"
 		ttsController.setTTSPreferences(this);
-		ttsController.speak(article.getContentForSpeech());
+		ttsController.speak(article.getContentForSpeech(), null); 
 
 		// Start reading
 		ttsController.speakFromPlaylist();
+		
+		// Set the playback completion listener
+		ttsController.setItemCompletionListner(new ArticlePlaybackCompletionListener());
 		
 		// Change the state
 		state = State.PLAYING;
@@ -225,5 +242,13 @@ public class SpeechService extends Service {
 
 	public Playlist getPlaylist() {
 		return ttsDataAdapter.getPlaylist();
+	}
+
+	public void stopReading() {
+		if (state == State.PLAYING) {
+			state = State.NOT_PLAYING;
+			ttsController.stop();
+			notificationManager.cancelAll();
+		}
 	}
 }

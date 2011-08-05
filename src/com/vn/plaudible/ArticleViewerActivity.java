@@ -180,6 +180,9 @@ public class ArticleViewerActivity extends Activity {
 		shareButton.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
+				// Track the event of article being spoken out
+				tracker.trackEvent("article", "share", currentNewsSource.getTitle());
+				
 				Intent shareIntent = new Intent(android.content.Intent.ACTION_SEND);
 				shareIntent.setType("text/plain");
 				shareIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, getBaseContext().getString(R.string.article_share_subject) +
@@ -204,8 +207,12 @@ public class ArticleViewerActivity extends Activity {
 					e.printStackTrace();
 				}
 				
+				// Attach the newssource to the article
+				Article article = feed.getItem(currentArticleIndex);
+				article.setSource(currentNewsSource);
+				
 				// Send the article for reading
-				sendArticleForReading(feed.getItem(currentArticleIndex));
+				sendArticleForReading(article);
 			}
 		});
 		
@@ -226,6 +233,9 @@ public class ArticleViewerActivity extends Activity {
 		similaritiesButton.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
+				// Track the event of article being spoken out
+				tracker.trackEvent("article", "entity", currentNewsSource.getTitle());
+				
 				// Show the list dialog to show the entities
 				final CharSequence[] items;
 				try {
@@ -366,11 +376,11 @@ public class ArticleViewerActivity extends Activity {
     	Article currentArticle = feed.getItem(currentArticleIndex);
     	
     	// Construct the AppEngine URL for the ArticleServlet
-		String link = getString(R.string.appengine_url) + "article2";
+		String link = getString(R.string.appengine_url2) + CONTENT_SERVLET;
 		
-		String postArgs = URLEncoder.encode("source", "UTF-8") + "=" + URLEncoder.encode(currentNewsSource.getTitle(), "UTF-8") + "&";
-		postArgs += URLEncoder.encode("link", "UTF-8") + "=" + URLEncoder.encode(currentArticle.getUrl(), "UTF-8") + "&";
-		postArgs += URLEncoder.encode("type", "UTF-8") + "=" + URLEncoder.encode("text", "UTF-8");
+		String postArgs = URLEncoder.encode("url", "UTF-8") + "=" + URLEncoder.encode(currentArticle.getUrl(), "UTF-8") + "&";
+		postArgs += URLEncoder.encode("response", "UTF-8") + "=" + URLEncoder.encode("text", "UTF-8") + "&";
+		postArgs += URLEncoder.encode("format", "UTF-8") + "=" + URLEncoder.encode("json", "UTF-8");
 		
 		// Get the response from AppEngine
 		URL articleUrl = new URL(link);

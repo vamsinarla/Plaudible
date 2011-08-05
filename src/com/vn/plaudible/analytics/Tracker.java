@@ -4,7 +4,6 @@ import android.content.Context;
 
 import com.google.android.apps.analytics.GoogleAnalyticsTracker;
 import com.vn.plaudible.R;
-import com.vn.plaudible.Utils;
 
 public class Tracker {
 	private static final int ANALYTICS_REPORTING_INTERVAL = 60;
@@ -24,7 +23,7 @@ public class Tracker {
 	    tracker = GoogleAnalyticsTracker.getInstance();
 	    
 	    // Start the tracker in auto dispatch mode to update every few seconds
-	    tracker.start(Utils.getStringFromResourceId(R.string.analytics_id), ANALYTICS_REPORTING_INTERVAL, context);
+	    tracker.start(context.getString(R.string.analytics_id), ANALYTICS_REPORTING_INTERVAL, context);
 	}
 	
 	public static synchronized Tracker getInstance(Context context) {

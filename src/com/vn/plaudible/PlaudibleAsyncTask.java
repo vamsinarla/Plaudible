@@ -9,13 +9,13 @@ import java.net.URLEncoder;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
-import com.vn.plaudible.types.Article;
-import com.vn.plaudible.types.Feed;
-import com.vn.plaudible.types.NewsSource;
-
 import android.app.ProgressDialog;
 import android.os.AsyncTask;
 import android.util.Log;
+
+import com.vn.plaudible.types.Article;
+import com.vn.plaudible.types.Feed;
+import com.vn.plaudible.types.NewsSource;
 
 /**
  * AsyncTask which takes care of all downloading , feeds and articles.
@@ -27,6 +27,8 @@ public class PlaudibleAsyncTask extends AsyncTask<PlaudibleAsyncTask.Payload, Ar
 	public static final int FEED_DOWNLOADER_TASK = 1001;
 	public static final int ARTICLE_DOWNLOADER_TASK = 1002;
 	public static final int FEATURED_SOURCES_DOWNLOAD_TASK = 1003;
+	
+	private static final String CONTENT_SERVLET = "/article/content";
 	
 	@Override
 	/**
@@ -82,19 +84,26 @@ public class PlaudibleAsyncTask extends AsyncTask<PlaudibleAsyncTask.Payload, Ar
 					// Extract the URL and arraylist of articles from the payload data
 					feed = (Feed) payload.data[1];
 					
-					// Construct the URL for calling the FeedServlet on AppEngine. Latest version of
-					// app engine URL must be in strings.xml
-					link = activity.getString(R.string.appengine_url2) + "feed";
-					
-					// POST args
-					String args = URLEncoder.encode("url", "UTF-8") + "=" + 
-									URLEncoder.encode(feed.getUrl(), "UTF-8");
-					
+					String args = "";
+					// HACK: Workaround for stupid Google blocking requests from AppEngine
+					// If news.google is not found in the URL
+					if (!Utils.isGoogleNewsFeed(feed.getUrl())) {
+							
+						// Construct the URL for calling the FeedServlet on AppEngine. Latest version of
+						// app engine URL must be in strings.xml
+						link = activity.getString(R.string.appengine_url2) + "feed";
+						
+						// POST args
+						args = URLEncoder.encode("url", "UTF-8") + "=" + 
+										URLEncoder.encode(feed.getUrl(), "UTF-8");
+					} else {
+						link = feed.getUrl();
+					}
 					// Construct the FeedHandler(SAXParser) and parse the response from AppEngine
 					URL feedUrl = new URL(link);
 					FeedHandler feedHandler = new FeedHandler(feed);
 					URLConnection conn = feedUrl.openConnection();
-
+				
 					// Write the POST vars
 					Utils.postVars(conn, args);
 
@@ -122,11 +131,11 @@ public class PlaudibleAsyncTask extends AsyncTask<PlaudibleAsyncTask.Payload, Ar
 						if (article.isDownloaded() == false) {
 						
 							// Construct the AppEngine URL for the ArticleServlet
-							link = activity.getString(R.string.appengine_url) + "article2";
+							link = Utils.getStringFromResourceId(R.string.appengine_url2) + CONTENT_SERVLET;
 							
-							String postArgs = URLEncoder.encode("source", "UTF-8") + "=" + URLEncoder.encode(source.getTitle(), "UTF-8") + "&";
-							postArgs += URLEncoder.encode("link", "UTF-8") + "=" + URLEncoder.encode(article.getUrl(), "UTF-8") + "&";
-							postArgs += URLEncoder.encode("type", "UTF-8") + "=" + URLEncoder.encode("text", "UTF-8");
+							String postArgs = URLEncoder.encode("url", "UTF-8") + "=" + URLEncoder.encode(article.getUrl(), "UTF-8") + "&";
+							postArgs += URLEncoder.encode("response", "UTF-8") + "=" + URLEncoder.encode("text", "UTF-8") + "&";
+							postArgs += URLEncoder.encode("format", "UTF-8") + "=" + URLEncoder.encode("json", "UTF-8");
 							
 							// Get the response from AppEngine
 							URL articleUrl = new URL(link);

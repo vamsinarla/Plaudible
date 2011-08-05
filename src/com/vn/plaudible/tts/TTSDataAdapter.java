@@ -12,15 +12,15 @@ public class TTSDataAdapter<Item> {
 	 * Playlist of articles
 	 */
 	private Playlist<Item> playlist;
-	private Item currentItem;
+	private Integer currentItemIndex;
 	
 	private String[] chunks;
 	private Integer chunkIndex;
 	
 	TTSDataAdapter() {
 		// Init state
-		currentItem = null;
-		playlist = null;
+		currentItemIndex = 0;
+		playlist = new Playlist<Item>();
 		chunkIndex = 0;
 		chunks = null;
 	}
@@ -30,7 +30,10 @@ public class TTSDataAdapter<Item> {
 	 * @return
 	 */
 	Item getCurrentItem() {
-		return currentItem;
+		if (currentItemIndex < playlist.getSize())
+			return playlist.get(currentItemIndex);
+		else
+			return null;
 	}
 	
 	/**
@@ -51,7 +54,7 @@ public class TTSDataAdapter<Item> {
 	 *  Split the article's content into sentences
 	 */
 	void prepareChunks() {
-		String chunk = ((Article) currentItem).getContent();
+		String chunk = ((Article) getCurrentItem()).getContent();
 		if (chunk == null || chunk.equalsIgnoreCase("")) {
 			chunk = new String("Sorry, This article could not be read.");
 		}
@@ -69,7 +72,7 @@ public class TTSDataAdapter<Item> {
 			// Finished reading the article.
 			Log.d("::getNextChunk", "Article is finished. No more chunks to read.");
 			moveToNextItem();
-			return Utils.getStringFromResourceId(R.string.article_reading_finished);
+			return null;
 		}
 	}
 
@@ -80,15 +83,7 @@ public class TTSDataAdapter<Item> {
 			chunks = null;
 
 			// Move to the next item in the playlist
-			playlist.removeItem(currentItem);
-			currentItem = null;
-			
-			if (!playlist.isEmpty()) {
-				playlist.moveToNext();
-				
-				currentItem = playlist.getCurrentItem();
-				prepareChunks();
-			}
+			currentItemIndex++;
 		}
 	}
 

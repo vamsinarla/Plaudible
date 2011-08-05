@@ -9,12 +9,20 @@ import android.preference.PreferenceManager;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.TextToSpeech.OnUtteranceCompletedListener;
 
+import com.vn.plaudible.R;
+import com.vn.plaudible.Utils;
+import com.vn.plaudible.types.Event;
+import com.vn.plaudible.types.EventListener;
+
 public class TTSEngineController {
 	/**
 	 * TTS stuff. HashMap used for putting in a synthesis completion listener
 	 */
 	private TextToSpeech ttsEngine;
 	private HashMap<String, String> speechHash;
+	
+	private EventListener completionListener;
+	private PlaybackCompletionListener sentenceCompletionListener;
 	
 	// Data adapter
 	private TTSDataAdapter<?> ttsDataAdapter;
@@ -33,7 +41,12 @@ public class TTSEngineController {
 
 		@Override
 		public void onUtteranceCompleted(String utteranceId) {
-			speakFromPlaylist();
+			if (utteranceCompletionId.equals(utteranceId)) {
+				readNextChunk();
+			} else {
+				setPlaybackCompletionListner(null);
+				completionListener.actionPerformed(new Event("Finished reading article"));
+			}
 		}
 	}
 	
@@ -44,16 +57,32 @@ public class TTSEngineController {
 		// Specify the hashmap for the TTS Engine
 		speechHash = new HashMap<String, String>();
 		speechHash.put(TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID, utteranceCompletionId);
+		
+		sentenceCompletionListener = new PlaybackCompletionListener();
+		setPlaybackCompletionListner(sentenceCompletionListener);
+	}
+
+	void speakFromPlaylist() {
+		// Re-init this
+		speechHash.put(TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID, utteranceCompletionId);
+		setPlaybackCompletionListner(sentenceCompletionListener);
+		ttsDataAdapter.prepareChunks();
+		readCurrentChunk();
 	}
 	
-	void speakFromPlaylist() {
-		ttsDataAdapter.prepareChunks();
+	void readCurrentChunk() {
+		String chunk = ttsDataAdapter.getCurrentChunk();
+		speak(chunk, speechHash);
+	}
+	
+	void readNextChunk() {
 		String chunk = ttsDataAdapter.getNextChunk();
-		ttsEngine.speak(chunk.trim(), TTSEngineQueuePolicy, speechHash);
+		speak(chunk, speechHash);
 	}
 	
 	void stop() {
 		ttsEngine.stop();
+		ttsEngine.setOnUtteranceCompletedListener(null);
 	}
 	
 	void destroy() {
@@ -69,7 +98,8 @@ public class TTSEngineController {
 	}
 
 	void resume() {
-		speakFromPlaylist();
+		setPlaybackCompletionListner(sentenceCompletionListener);
+		readNextChunk();
 	}
 	
 	/**
@@ -91,7 +121,26 @@ public class TTSEngineController {
 		ttsEngine.setSpeechRate(Float.parseFloat(speed));
 	}
 
-	void speak(String text) {
-		ttsEngine.speak(text, TTSEngineQueuePolicy, null);
+	/**
+	 * Speak a given text
+	 * @param text
+	 * @param hashMap
+	 */
+	void speak(String text, HashMap<String, String> hashMap) {
+		if (text != null) {
+			ttsEngine.speak(text.trim(), TTSEngineQueuePolicy, hashMap);
+		} else {
+			// If no text to read we have finished reading the article
+			hashMap.put(TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID, Utils.getStringFromResourceId(R.string.article_reading_finished));
+			ttsEngine.speak(Utils.getStringFromResourceId(R.string.article_reading_finished), TTSEngineQueuePolicy, hashMap);
+		}
+	}
+
+	/**
+	 * Set the item TTS playback listener
+	 * @param listener
+	 */
+	public void setItemCompletionListner(EventListener listener) {
+		completionListener = listener;
 	}
 }

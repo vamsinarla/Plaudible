@@ -33,5 +33,15 @@ public class NewsSpeakPreferencesActivity extends PreferenceActivity {
 					return true;
 				}
 			});
+		
+		Preference ratingPreference = screen.findPreference(getString(R.string.rating_pref_key));
+		ratingPreference.setOnPreferenceClickListener(new OnPreferenceClickListener() {
+				public boolean onPreferenceClick(final Preference preference) {
+					Intent intent = new Intent(Intent.ACTION_VIEW);
+					intent.setData(Uri.parse("market://details?id=com.vn.plaudible"));
+					startActivity(intent);
+					return true;
+				}
+			});
 	}
 }
